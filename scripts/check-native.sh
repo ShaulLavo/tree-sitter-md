@@ -8,3 +8,4 @@ clang -g -O1 -fsanitize=address,undefined -fno-omit-frame-pointer -std=c11 -D_PO
  -o target/c/check-native
 ASAN_OPTIONS=detect_leaks=1 target/c/check-native
 printf 'ASan + UBSan: 2,000 incremental edits passed\n'
+sh scripts/check-cursor.sh

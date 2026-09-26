@@ -1,4 +1,5 @@
 #include "resolver.h"
+#include <assert.h>
 #include <inttypes.h>
 #include <stdio.h>
 
@@ -29,8 +30,11 @@ static void check_seek(TSNode parent, uint32_t byte, TSPoint point, bool by_poin
   TSTreeCursor seek = ts_tree_cursor_new(parent);
   int64_t actual = by_point ? ts_tree_cursor_goto_first_child_for_point(&seek, point)
                            : ts_tree_cursor_goto_first_child_for_byte(&seek, byte);
+  bool matches = actual == expected && ts_node_eq(ts_tree_cursor_current_node(&seek), expected_node);
+  bool restores_parent = actual < 0 || (ts_tree_cursor_goto_parent(&seek) &&
+                                      ts_node_eq(ts_tree_cursor_current_node(&seek), parent));
   checks++;
-  if (actual != expected || !ts_node_eq(ts_tree_cursor_current_node(&seek), expected_node)) {
+  if (!matches || !restores_parent) {
     if (failures < 8)
       fprintf(stderr, "%s seek parent=%s [%u,%u] byte=%u point=%u:%u expected=%" PRId64 " actual=%" PRId64 "\n",
               by_point ? "point" : "byte", ts_node_type(parent), ts_node_start_byte(parent),
@@ -71,6 +75,65 @@ static void put_ascii(Document *d, const char *s) {
   for (uint32_t i = 0; s[i]; i++) input[i] = (unsigned char)s[i];
 }
 static void set_ascii(Document *d, const char *s) { put_ascii(d, s); tsmd_set_text(d); }
+
+static void check_sample(Document *d, TSNode parent, uint32_t pos) {
+  TSPoint point = {0, 0};
+  for (uint32_t i = 0; i < pos; i++) {
+    if (d->text[i] == '\n') { point.row++; point.column = 0; }
+    else point.column += 2;
+  }
+  check_seek(parent, pos * 2, point, false);
+  check_seek(parent, pos * 2 + 1, point, false);
+  check_seek(parent, 0, point, true);
+  check_seek(parent, 0, (TSPoint){point.row, point.column + 1}, true);
+}
+
+static void check_sampled_tree(Document *d) {
+  TSTreeCursor walk = ts_tree_cursor_new(ts_tree_root_node(d->tree));
+  uint32_t visited = 0;
+  bool done = false;
+  while (!done) {
+    TSNode node = ts_tree_cursor_current_node(&walk);
+    if (visited < 2 || visited % 257 == 0) {
+      check_sample(d, node, 0);
+      check_sample(d, node, ts_node_start_byte(node) / 2);
+      check_sample(d, node, ts_node_end_byte(node) / 2);
+      check_sample(d, node, d->len);
+      check_sample(d, node, d->len / 10);
+      check_sample(d, node, d->len / 2);
+      check_sample(d, node, d->len * 95 / 100);
+    }
+    visited++;
+    if (ts_tree_cursor_goto_first_child(&walk)) continue;
+    while (!ts_tree_cursor_goto_next_sibling(&walk)) {
+      if (!ts_tree_cursor_goto_parent(&walk)) { done = true; break; }
+    }
+  }
+  ts_tree_cursor_delete(&walk);
+}
+
+static void check_large_document(uint32_t gfm) {
+  const char block[] = "> outer\n> > nested\n> >\n> > - item\n> >\n> >   continued\n\n";
+  const uint32_t block_len = sizeof(block) - 1, repeats = 500;
+  char *text = malloc(block_len * repeats + sizeof("end\n"));
+  for (uint32_t i = 0; i < repeats; i++) memcpy(text + i * block_len, block, block_len);
+  memcpy(text + block_len * repeats, "end\n", sizeof("end\n"));
+  Document *d = tsmd_new(gfm);
+  set_ascii(d, text);
+  check_sampled_tree(d);
+  TSNode section = ts_node_named_child(ts_tree_root_node(d->tree), 0);
+  assert(ts_node_child_count(section) == repeats + 1);
+  for (uint32_t i = 0; i < repeats; i += 7)
+    check_sample(d, section, (i + 1) * block_len - 1);
+  put_ascii(d, "\n");
+  tsmd_edit(d, block_len * 250, block_len * 250);
+  check_sampled_tree(d);
+  tsmd_reparse(d);
+  check_sampled_tree(d);
+  tsmd_free(d);
+  free(text);
+}
+
 int main(void) {
   const char *fixtures[] = {
     "", "\n", "plain", "one\n\ntwo\n\nthree\n",
@@ -97,5 +160,9 @@ int main(void) {
     tsmd_free(d);
   }
   printf("cursor seek oracle: %" PRIu64 " comparisons, %" PRIu64 " failures\n", checks, failures);
+  uint64_t small_checks = checks, small_failures = failures;
+  for (uint32_t gfm = 0; gfm < 2; gfm++) check_large_document(gfm);
+  printf("large nested cursor oracle: %" PRIu64 " comparisons, %" PRIu64 " failures\n",
+         checks - small_checks, failures - small_failures);
   return failures ? 1 : 0;
 }

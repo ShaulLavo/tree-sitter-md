@@ -8,7 +8,7 @@ await init(process.env.WASM ? readFileSync(process.env.WASM) : undefined)
 for (const gfm of [false, true]) {
   for (const warm of [false, true]) {
     for (const idle of [false, true]) {
-      for (const prefix of ['', '# Title\n\n', 'intro\n\n']) {
+      for (const prefix of ['', '\n\n', '# Title\n\n', 'intro\n\n']) {
         for (const suffix of ['', '\n', '\n\nTail **bold**\n']) {
           test(`reference boundary gfm=${gfm} warm=${warm} idle=${idle} prefix=${JSON.stringify(prefix)} suffix=${JSON.stringify(suffix)}`, () => {
             const before = prefix + '[ref]\n>[ref]:o' + suffix
