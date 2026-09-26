@@ -1,0 +1,51 @@
+name: Performance experiment baseline
+
+on:
+  push:
+    branches:
+      - perf/validate-scanner-capacity-299aa70
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out pinned baseline
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 299aa70be62dfcb7e45896388e893b8a216a2f3c
+          persist-credentials: false
+      - name: Use the documented Node version
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 26.7.0
+      - name: Record environment
+        run: |
+          mkdir -p validation-artifacts
+          { uname -a; node --version; clang --version; git rev-parse HEAD; sha256sum tree-sitter-md.wasm; } > validation-artifacts/environment.txt
+      - name: Focused baseline correctness
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee validation-artifacts/focused-tests.txt
+      - name: Native baseline sanitizers
+        if: always()
+        run: |
+          set -o pipefail
+          sh scripts/check-native.sh 2>&1 | tee validation-artifacts/native-tests.txt
+      - name: Preserve exact sources and state remaining gates
+        if: always()
+        run: |
+          mkdir -p validation-artifacts
+          git archive --format=tar --output=validation-artifacts/baseline-source.tar 299aa70be62dfcb7e45896388e893b8a216a2f3c
+          printf '%s\n' 'This is baseline provisioning, not a passed optimization gate.' 'Full spec/corpus/fuzz/benchmark gates have not been run by this workflow.' 'The private CHAT corpus and pinned Platform/Editor checkouts remain mandatory before a PR.' > validation-artifacts/NOT-FULLY-VALIDATED.txt
+      - name: Upload baseline evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: baseline-validation-299aa70
+          path: validation-artifacts/
+          retention-days: 7
+          if-no-files-found: error
