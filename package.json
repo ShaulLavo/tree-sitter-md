@@ -41,6 +41,6 @@
     "spec": "cd bench && node spec.mjs",
     "corpus": "cd bench && node corpus.mjs",
     "bench": "cd bench && node keystroke.mjs",
-    "test": "node --test tests/resolver.mjs"
+    "test": "node --test tests/*.mjs"
   }
 }

@@ -66,3 +66,30 @@ test('the standalone wasm needs no host imports',async()=>{
   const module=await WebAssembly.compile(bytes);
   assert.deepEqual(WebAssembly.Module.imports(module),[]);
 });
+
+
+test('literal autolinks preserve short hosts, case and bracket boundaries',()=>{
+  for(const [text,expected] of [
+    ['http://a',['http://a']],
+    ['https://a',['https://a']],
+    ['http://a ',['http://a']],
+    ['WWW.example.com',['WWW.example.com']],
+    ['[www.example.com]',['www.example.com']],
+    [']www.example.com',['www.example.com']],
+    ['www.example.com]',['www.example.com']],
+    ['www.example.com](unclosed',['www.example.com']],
+    ['[www.example.com](target)',['[www.example.com](target)']],
+    ['xwww.example.com',[]],
+    ['http://',[]],
+  ]) {
+    const doc=new MarkdownDocument();doc.setText(text);
+    assert.deepEqual(records(doc,text,Kind.Link),expected,text);
+    doc.dispose();
+  }
+});
+test('email scanning cannot reuse an already emitted link',()=>{
+  const text='a@b.com@c.com one@example.org two@example.org';
+  const doc=new MarkdownDocument();doc.setText(text);
+  assert.deepEqual(records(doc,text,Kind.Link),['a@b.com','one@example.org','two@example.org']);
+  doc.dispose();
+});

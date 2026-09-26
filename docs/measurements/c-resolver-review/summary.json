@@ -1,0 +1,60 @@
+{
+  "result": {
+    "rust": {
+      "agents.md": {
+        "runs": 9,
+        "firstFrame": 0.397,
+        "fullParse": 1.46,
+        "decorateWholeDocument": 1.1,
+        "firstKeystroke": 0.443,
+        "firstKeystrokeWithoutIdle": 0.442,
+        "totalMedian": 0.079,
+        "totalP95": 0.148
+      },
+      "big.md": {
+        "runs": 9,
+        "firstFrame": 0.373,
+        "fullParse": 26.506,
+        "decorateWholeDocument": 16.5,
+        "firstKeystroke": 1.593,
+        "firstKeystrokeWithoutIdle": 2.405,
+        "totalMedian": 0.459,
+        "totalP95": 0.967
+      }
+    },
+    "c": {
+      "agents.md": {
+        "runs": 9,
+        "firstFrame": 0.314,
+        "fullParse": 1.382,
+        "decorateWholeDocument": 0.8,
+        "firstKeystroke": 0.367,
+        "firstKeystrokeWithoutIdle": 0.365,
+        "totalMedian": 0.065,
+        "totalP95": 0.129
+      },
+      "big.md": {
+        "runs": 9,
+        "firstFrame": 0.337,
+        "fullParse": 26.731,
+        "decorateWholeDocument": 11.8,
+        "firstKeystroke": 1.651,
+        "firstKeystrokeWithoutIdle": 2.364,
+        "totalMedian": 0.438,
+        "totalP95": 0.891
+      }
+    }
+  },
+  "gates": [
+    {
+      "file": "agents.md",
+      "median": true,
+      "p95": true
+    },
+    {
+      "file": "big.md",
+      "median": true,
+      "p95": true
+    }
+  ]
+}

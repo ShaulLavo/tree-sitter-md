@@ -13,10 +13,7 @@ assert(Object.values(counts).reduce((a,b)=>a+b,0)>=672);
 console.log(run('corpus'));
 const corpus=json('bench/out/corpus-stats.json');
 assert.equal(corpus['chat:tree-sitter-md'].docs,183);assert.equal(corpus['chat:tree-sitter-md'].pass,183);
-const repo=corpus['repo:tree-sitter-md'];
-assert.equal(repo.docs,497);assert(repo.pass>=406);
-for(const [key,limits] of Object.entries({missing:{h:83,hr:85,cspan:3,p:34,a:3},extra:{p:33}}))
-  for(const [kind,count] of Object.entries(repo[key])) assert(count<=(limits[kind]??0),`${key} ${kind}: ${count}`);
+console.log(execFileSync(process.execPath,['scripts/check-repository.mjs'],{encoding:'utf8',maxBuffer:16<<20}));
 for(const [file,edits] of [['agents.md',11000],['big.md',300]]) {
   const result=last(run('fuzz',[`bench/docs/${file}`,String(edits),'1']));
   assert.equal(result.failures,0);assert.equal(result.edits,edits);console.log(result);

@@ -121,6 +121,7 @@ static size_t autolink_delim(uint8_t *data, size_t link_end) {
       closing--;
       link_end--;
       break;
+    case ']':
     case '?':
     case '!':
     case '.':
@@ -158,7 +159,7 @@ static size_t autolink_delim(uint8_t *data, size_t link_end) {
 
 static size_t check_domain(uint8_t *data, size_t size, int allow_short) {
   if (size < 2)
-    return 0;
+    return size && allow_short && is_valid_hostchar(data, size) ? size : 0;
   size_t i, np = 0, uscore1 = 0, uscore2 = 0;
 
   /* The purpose of this code is to reject urls that contain an underscore
@@ -216,9 +217,9 @@ static bool email_protocol(uint8_t *data, size_t at, const char *protocol) {
     return false;
   return at == n || !cmark_isalnum(data[at - n - 1]);
 }
-static size_t email_end(uint8_t *data, size_t size, size_t at, size_t *begin) {
+static size_t email_end(uint8_t *data, size_t size, size_t at, size_t lower, size_t *begin) {
   size_t a = at, b = at + 1, dots = 0;
-  while (a > 0 && (cmark_isalnum(data[a - 1]) || strchr(".+-_", data[a - 1])))
+  while (a > lower && (cmark_isalnum(data[a - 1]) || strchr(".+-_", data[a - 1])))
     a--;
   if (a == at || (a > 0 && data[a - 1] == '/'))
     return 0;
@@ -244,15 +245,25 @@ static size_t email_end(uint8_t *data, size_t size, size_t at, size_t *begin) {
   *begin = a;
   return b;
 }
+static size_t url_end(uint8_t *data, size_t size, size_t begin, size_t finish) {
+  while (finish < size && !cmark_isspace(data[finish]) && data[finish] != '<') {
+    if (data[finish] == ']' && finish + 1 < size &&
+        (cmark_isspace(data[finish + 1]) || strchr("([", data[finish + 1])))
+      break;
+    finish++;
+  }
+  finish = begin + autolink_delim(data + begin, finish - begin);
+  return finish;
+}
 void autolinks(Leaf *l, uint32_t a, uint32_t b, Words *out) {
   uint8_t *data = (uint8_t *)l->text + a;
-  size_t size = b - a;
+  size_t size = b - a, consumed = 0;
   for (size_t i = 0; i < size; i++) {
     size_t begin = i, finish = 0;
     if (data[i] == '@')
-      finish = email_end(data, size, i, &begin);
-    if (size - i >= 4 && !memcmp(data + i, "www.", 4) &&
-        (!i || cmark_isspace(data[i - 1]) || strchr("*_~(", data[i - 1]))) {
+      finish = email_end(data, size, i, consumed, &begin);
+    if (size - i >= 4 && !strncasecmp((char *)data + i, "www.", 4) &&
+        (!i || cmark_isspace(data[i - 1]) || strchr("*_~([]", data[i - 1]))) {
       if (check_domain(data + i, size - i, 0))
         finish = i + 4;
     }
@@ -265,14 +276,12 @@ void autolinks(Leaf *l, uint32_t a, uint32_t b, Words *out) {
     }
     if (!finish)
       continue;
-    if (data[i] != '@') {
-      while (finish < size && !cmark_isspace(data[finish]) && data[finish] != '<')
-        finish++;
-      finish = begin + autolink_delim(data + begin, finish - begin);
-    }
+    if (data[i] != '@')
+      finish = url_end(data, size, begin, finish);
     if (finish <= begin)
       continue;
     record(out, l->starts.v[a + begin], l->ends.v[a + finish - 1], A, 0);
+    consumed = finish;
     i = finish - 1;
   }
 }

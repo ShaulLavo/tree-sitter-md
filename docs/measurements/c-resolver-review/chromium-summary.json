@@ -1,0 +1,34 @@
+{
+  "rust": {
+    "agents.md": {
+      "load": 2.6,
+      "firstFrame": 6.9,
+      "rest": 4.5,
+      "full": 2.3,
+      "warmFull": 2.1
+    },
+    "big.md": {
+      "load": 2.4,
+      "firstFrame": 9.7,
+      "rest": 41,
+      "full": 31.2,
+      "warmFull": 32.3
+    }
+  },
+  "c": {
+    "agents.md": {
+      "load": 2.2,
+      "firstFrame": 7.6,
+      "rest": 3.9,
+      "full": 2.3,
+      "warmFull": 1.9
+    },
+    "big.md": {
+      "load": 2,
+      "firstFrame": 7.9,
+      "rest": 41.4,
+      "full": 32.7,
+      "warmFull": 31.2
+    }
+  }
+}

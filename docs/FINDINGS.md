@@ -206,6 +206,9 @@ Both builds ran on this same recovered input. Its exported JSON SHA-256 is
 `11190fb287db40120997d200e9cd36beaf7bd2410cf0956271313b3eb3c76f53`.
 No private message text is committed.
 
+The current artifact includes subsequent [review fixes](#review-fixes-and-current-artifact),
+with fresh measurements below. The initial measurements here remain as historical evidence.
+
 ### Paired speed
 
 Node 26.7.0, i7-14700K, shared machine, `-O3`. `scripts/compare-builds.sh` runs the unchanged
@@ -317,3 +320,51 @@ pulldown-cmark, the markdown-rs port and their obsolete notices have been remove
 The MIT notice is corrected and the cmark/GFM/libc notices are included. The four existing spec
 failures, public CI wiring, publishing, the supported shared-runtime host and Editor integration
 remain outside this first step. No Plan 189 work was started.
+
+### Review fixes and current artifact
+
+Self-review found autolink cases outside the original corpus: single-character hosts, uppercase
+`WWW`, bracket boundaries and overlapping email records in `a@b.com@c.com`. These now have
+regression tests. The repository gate now checks every normalized mismatch against a Rust-derived
+fixture of document hashes and exact construct ranges. An improvement can no longer offset a new
+mismatch of the same kind. Its tests cover that cancellation case and duplicate differences.
+
+The current artifact passes all 11 focused tests, 2,000 native ASan/UBSan edits, 672/676 spec cases
+with unchanged section scores, 183/183 chat messages, and the exact gate over 497 repository docs.
+The 11,000-edit and 300-edit fuzz runs have zero failures; the control still fails 10/10 checks.
+The following fresh paired measurements supersede the earlier speed and size tables for the
+current artifact. Raw output is in [`measurements/c-resolver-review/`](measurements/c-resolver-review/).
+The recovered Rust wasm's hash matches the independently built baseline above. Benchmark scripts
+are unchanged, with nine runs per case over three paired rounds.
+
+| Milliseconds | Rust 46 KB | C 46 KB | Rust 1 MB | C 1 MB |
+| --- | ---: | ---: | ---: | ---: |
+| First frame, 60 rows | 0.397 | 0.314 | 0.373 | 0.337 |
+| Full block parse | 1.460 | 1.382 | 26.506 | 26.731 |
+| Decorate whole document | 1.100 | 0.800 | 16.500 | 11.800 |
+| Keystroke median | 0.079 | 0.065 | 0.459 | 0.438 |
+| Keystroke p95 | 0.148 | 0.129 | 0.967 | 0.891 |
+| First keystroke after idle reparse | 0.443 | 0.367 | 1.593 | 1.651 |
+| First keystroke without idle reparse | 0.442 | 0.365 | 2.405 | 2.364 |
+
+All four keystroke median/p95 gates pass. The 1 MB full parse and first keystroke after idle
+reparse were slightly slower than Rust in these runs; the table reports those results directly.
+
+| Current C build | Raw bytes | Gzip -9 bytes |
+| --- | ---: | ---: |
+| O3 + LTO | 377,675 | 129,793 |
+| Oz + LTO | 292,837 | 107,543 |
+
+Memory growth is unchanged: Rust/C fully decorated 46 KB both use 0.56 MiB, and at 1 MB use
+8.44/7.88 MiB. Parsed/viewport growth at 1 MB remains 7.50/7.25 MiB.
+
+| Chromium milliseconds | Rust | C |
+| --- | ---: | ---: |
+| 46 KB load | 2.6 | 2.2 |
+| 46 KB cold first frame | 6.9 | 7.6 |
+| 1 MB load | 2.4 | 2.0 |
+| 1 MB cold first frame | 9.7 | 7.9 |
+| 1 MB warm full parse | 32.3 | 31.2 |
+
+The 46 KB cold first-frame regression remains visible. The side-module experiment and its
+unconfirmed rebuilt-host size/performance are unchanged by these resolver fixes.
