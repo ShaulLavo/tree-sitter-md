@@ -1,0 +1,19 @@
+--- a/grammar/src/scanner.c
++++ b/grammar/src/scanner.c
+@@ -260,7 +260,7 @@
+ // `serizalize` and `deserialize` should be fully symmetric.
+ static void deserialize(Scanner *s, const char *buffer, unsigned length) {
+     s->open_blocks.size = 0;
+-    s->open_blocks.capacity = 0;
++    // Retain the allocation and its capacity across scanner-state restores.
+     s->state = 0;
+     s->matched = 0;
+     s->indentation = 0;
+@@ -1569,6 +1569,7 @@
+ void *tree_sitter_markdown_external_scanner_create(void) {
+     Scanner *s = (Scanner *)malloc(sizeof(Scanner));
+     s->open_blocks.items = (Block *)calloc(1, sizeof(Block));
++    s->open_blocks.capacity = 0;
+ #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+     _Static_assert(ATX_H6_MARKER == ATX_H1_MARKER + 5, "");
+ #else
