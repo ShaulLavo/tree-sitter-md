@@ -301,6 +301,10 @@ static inline int64_t ts_tree_cursor_goto_first_child_for_byte_and_point(
     }
   } while (did_descend);
 
+  // All visible descendants of this hidden entry end before the goal.
+  // The next visible sibling is the answer; its index is already counted.
+  if (self->stack.size > initial_size && ts_tree_cursor_goto_next_sibling(_self))
+    return visible_child_index;
   self->stack.size = initial_size;
   return -1;
 }
