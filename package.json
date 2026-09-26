@@ -27,12 +27,20 @@
     "type": "git",
     "url": "git+https://github.com/ShaulLavo/tree-sitter-md.git"
   },
-  "keywords": ["markdown", "commonmark", "gfm", "tree-sitter", "wasm", "editor"],
+  "keywords": [
+    "markdown",
+    "commonmark",
+    "gfm",
+    "tree-sitter",
+    "wasm",
+    "editor"
+  ],
   "scripts": {
     "build": "sh scripts/build.sh",
     "generate": "cd grammar && tree-sitter generate",
     "spec": "cd bench && node spec.mjs",
     "corpus": "cd bench && node corpus.mjs",
-    "bench": "cd bench && node keystroke.mjs"
+    "bench": "cd bench && node keystroke.mjs",
+    "test": "node --test tests/*.mjs"
   }
 }

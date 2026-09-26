@@ -2,14 +2,14 @@
 
 Markdown for editors in one wasm module: a tree-sitter block grammar (a fork of
 [tree-sitter-markdown](https://github.com/tree-sitter-grammars/tree-sitter-markdown) with one
-token per line) and a Rust inline resolver (CommonMark's delimiter and bracket stacks,
+token per line) and a C inline resolver (cmark 0.31.2's delimiter and bracket stacks,
 document-wide reference definitions, GFM autolink literals). JavaScript gets compact records for
 the rows it asks about: decoration ranges and kinds, highlight captures, fold ranges and fence
 injections. The tree never crosses into JS.
 
 Status: a measured spike (2026-09-26), not a release. Results are in
-[docs/FINDINGS.md](docs/FINDINGS.md): 672/676 CommonMark + GFM examples, 0.49 ms median keystroke
-at 1 MB, 193 KB gzip.
+[docs/FINDINGS.md](docs/FINDINGS.md): 672/676 CommonMark + GFM examples, 0.401 ms median
+keystroke at 1 MB, and a measured C migration against the Rust baseline. The JS API is unchanged.
 
 ## Use
 
@@ -40,28 +40,34 @@ dependencies (Vite's `optimizeDeps`) should exclude the package, or pass the was
 | Path | What |
 | --- | --- |
 | `grammar/` | The block grammar (`grammar.js`), generated `src/parser.c`, the external scanner |
-| `src/doc.rs` | A document: UTF-16 text, the incremental tree, definitions, the per-block inline cache, the record walks |
-| `src/inline.rs` | One leaf block (paragraph, heading, table cell) through pulldown-cmark's inline pass |
-| `src/defs.rs` | Document-wide link reference definitions and which blocks depend on which labels |
-| `src/autolink.rs` | GFM autolink literals, ported from markdown-rs |
-| `src/highlight.rs` | Highlight captures (the Editor's markdown capture names) from records |
-| `src/wasm.rs`, `js/` | The C-ABI exports and the JS binding |
+| `src/document.c` | UTF-16 document, incremental tree, definitions, per-leaf cache, record walks and wasm exports |
+| `src/leaf.c` | Leaf content and continuation mapping; cmark inline pass with no block parse |
+| `src/autolink.c` | GFM autolink literals ported from cmark-gfm |
+| `src/highlight.c` | Highlight captures derived from decoration records |
+| `vendor/` | cmark 0.31.2 inline dependencies and tree-sitter 0.27.0 C runtime |
+| `js/` | The unchanged JS binding and types |
 | `bench/` | Spec runner, corpus runner, keystroke benchmark, fuzz test, Chromium cold load, memory |
 
 ## Build
 
-Needs Rust (pinned in `rust-toolchain.toml`, target `wasm32-unknown-unknown`), clang with the
-wasm32 target and `llvm-ar` (set in `.cargo/config.toml`), and the tree-sitter CLI only to
-regenerate the grammar.
+Uses one C toolchain for the grammar, scanner, tree-sitter runtime and resolver: WASI SDK 34
+with clang 23, wasi-libc and dlmalloc. The SDK defaults to
+`/work/cache/wasi-sdk-34.0-x86_64-linux`; set `WASI_SDK` for another installation.
+[SDK releases](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-34) provide other
+host platforms. No Rust or Emscripten installation is needed.
 
 ```sh
-npm run generate   # grammar/grammar.js -> grammar/src/parser.c (tree-sitter CLI 0.26)
-npm run build      # wasm into ./tree-sitter-md.wasm, plus the native `tsmd` driver
+npm run generate   # only when changing the grammar; tree-sitter CLI 0.26
+npm run build      # -O3 + LTO, tree-sitter-md.wasm
+OPT=-Oz npm run build
+npm test           # focused wasm API regressions
+sh scripts/check-native.sh  # native clang, ASan + UBSan, 2,000 incremental edits
 ```
 
-`scripts/build.sh` defaults `RUSTUP_HOME` and `CARGO_HOME` to `/work/cache`; set them to use
-another toolchain home. `target/release/tsmd file.md` prints the records (`TREE=1` adds the
-tree, `MEM=1` the Rust heap).
+The wasm module has no imports. Its allocator grows and reuses linear memory; the host supplies
+no filesystem, process or clock services. The normal output remains the standalone wasm module.
+The [side-module experiment](experiments/side-module/README.md) documents sharing the Editor's
+web-tree-sitter runtime and the required host changes.
 
 ## Benchmarks and the spec suite
 
@@ -70,11 +76,16 @@ cd bench && bun install
 node spec.mjs [--fail]                 # CommonMark 0.31.2 + GFM examples against micromark, beside lezer
 CHAT=chat.json node corpus.mjs         # repository docs (Platform, Editor at pinned commits) and chat messages
 node keystroke.mjs docs/big.md         # first frame, full parse, 200 keystrokes, lezer on the same edits
-node fuzz.mjs docs/agents.md 3000 1    # incremental result equals a fresh parse after random edits
+node fuzz.mjs docs/agents.md 11000 1    # incremental result equals a fresh parse after random edits
 node memory.mjs                        # wasm memory per document
 bun chromium.mjs                       # cold load and first frame in Chromium, beside lezer
 sh run-all.sh                          # the three-run keystroke set used in FINDINGS.md
 ```
+
+For the full correctness gate, run `CHAT=/path/to/chat.json node scripts/check-gates.mjs`
+from the repository root. This checks the per-section spec floor, corpus, both edit counts and
+the negative control. Paired timing checks use `scripts/compare-builds.sh` and
+`scripts/summarize.mjs` as described in FINDINGS.
 
 The normalizer (`bench/constructs.mjs`) and method are Plan 176's in the Platform repository, so
 numbers compare with its lezer and tree-sitter measurements. `corpus.mjs` reads the chat corpus
@@ -82,5 +93,5 @@ from a path you supply; it is not part of this repository.
 
 ## Licensing
 
-MIT, see [LICENSE](LICENSE). Ported and compiled-in work is also MIT; see [NOTICE.md](NOTICE.md)
-and `licenses/`.
+MIT, see [LICENSE](LICENSE). Third-party code includes BSD-2-Clause, MIT and CC0 components. See
+[NOTICE.md](NOTICE.md) and `licenses/`.

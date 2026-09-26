@@ -1,0 +1,22 @@
+[wave-heavy] slot 2 acquired for 'tsmd-c: build and sanitize review fixes' after 0s
+wasm: 377675 raw, 129793 gzip -9
+ASan + UBSan: 2,000 incremental edits passed
+✔ corpus gate permits improvements to specific allowed differences (0.411287ms)
+✔ corpus gate rejects replacements with identical aggregate counts (0.492352ms)
+✔ corpus gate rejects duplicated differences and changed input (0.314699ms)
+✔ unmatched long backticks preserve later short closers (4.149338ms)
+✔ reference edits invalidate successful and unsuccessful lookups, first definition wins (1.371812ms)
+✔ continuation layout and UTF-16 offsets survive edits (0.813677ms)
+✔ GFM option controls single and double tilde strikethrough and literal autolinks (0.268203ms)
+✔ GFM email protocols include the prefix and XMPP resource (0.172464ms)
+✔ the standalone wasm needs no host imports (3.578687ms)
+✔ literal autolinks preserve short hosts, case and bracket boundaries (0.613957ms)
+✔ email scanning cannot reuse an already emitted link (0.111757ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 73.87332

@@ -1,5 +1,8 @@
 # Spike findings: custom tree-sitter grammar + Rust inline resolver (2026-09-26)
 
+The original Rust measurements below are preserved as the baseline. See [C resolver](#c-resolver)
+for the C replacement, paired gates and current build.
+
 Question (Platform Plan 176, owner direction 2026-09-26): can one markdown parser, a custom
 tree-sitter block grammar plus a Rust post-pass in one wasm module, clear the bar lezer set?
 
@@ -157,3 +160,211 @@ with every inline resolved. lezer measured about 600 KB and 4.6 MB for 1.36 MB (
 6. **Size and memory, if they matter** (M): `opt-level=z` plus wasm-opt; sharing one tree-sitter
    runtime with web-tree-sitter (the grammar as a web-tree-sitter language, the resolver as its own
    module) at the cost of the tree crossing a module boundary.
+
+## C resolver
+
+Measured 2026-09-26 on `c-resolver`, against a Rust build from `4214f0c`. This section supersedes
+Rust-specific production recommendations above. No publishing, Editor integration, remaining
+spec fixes, frontmatter option or Plan 189 extensions are included.
+
+The resolver is now C throughout. `vendor/cmark/` contains cmark 0.31.2's inline pass and its
+required dependencies. `inline_resolve` takes one leaf's UTF-8 content, its byte-to-document
+continuation mapping, definitions and options, and returns decoration records and looked-up
+labels. It runs no block pass and inserts no virtual indentation. GFM strikethrough and autolink
+literals come from cmark-gfm's extensions; its 0.29 core is absent. Document-wide first-wins
+references, changed-label invalidation, text/layout cache keys, lazy visible-leaf resolution,
+records, highlights, folds and fence injections retain the existing JS and wasm API.
+
+Two adapter fixes were necessary to reach the floor: definition destinations must accept leaf
+EOF, and cmark's backtick cache must retain its furthest observed closer after an unsuccessful
+long-run scan. The latter has a focused regression test. ASan found an absent-title null-pointer
+copy that was invisible in wasm; nullable reference ownership and comparison are now explicit.
+The final native ASan/UBSan run checks 2,000 incremental edits with leak detection enabled.
+
+### Correctness gates
+
+| Gate | Rust | C |
+| --- | ---: | ---: |
+| CommonMark 0.31.2 + GFM | 672/676 | 672/676 |
+| Per-section floor | baseline | every section equal |
+| Chat messages | 183/183 | 183/183 |
+| Repository real mismatches | 0 | 0 |
+| Repository docs identical to micromark | 406/497 | 406/497 |
+| Incremental/fresh differences, 11,000 edits at 46 KB | 0 | 0 |
+| Incremental/fresh differences, 300 edits at 1 MB | 0 | 0 |
+| Negative control, 100 edits / 10 checks | fails 10/10 | fails 10/10 |
+
+The same four spec examples fail: 96, 98, 216, 260. Repository inputs remain Platform
+`c130dd35a` and Editor `74e76be`. A direct Rust/C comparison found **identical normalized
+construct lists in every one of the 497 documents**. The 208 missing / 33 extra constructs
+against micromark are the same three explained shape differences as the Rust spike.
+
+The original private chat JSON had been deleted. A read-only backup at
+`/work/backups/platform/20260926T133030Z/prod/fs-metadata.sqlite` recovered 183 assistant messages,
+64,199 characters and 859 normalized constructs, matching the earlier corpus description.
+Both builds ran on this same recovered input. Its exported JSON SHA-256 is
+`11190fb287db40120997d200e9cd36beaf7bd2410cf0956271313b3eb3c76f53`.
+No private message text is committed.
+
+The current artifact includes subsequent [review fixes](#review-fixes-and-current-artifact),
+with fresh measurements below. The initial measurements here remain as historical evidence.
+
+### Paired speed
+
+Node 26.7.0, i7-14700K, shared machine, `-O3`. `scripts/compare-builds.sh` runs the unchanged
+`bench/run-all.sh` for both builds in each of three rounds, reversing build order in round two.
+Each invocation has three repetitions, so each row below is the median of nine runs of the
+same 200 seeded edits. Both builds and Chromium runs held one wave-heavy slot for the whole
+comparison. Raw results, hashes and summaries are in [`measurements/c-resolver/`](measurements/c-resolver/).
+
+| Milliseconds | Rust 46 KB | C 46 KB | Rust 1 MB | C 1 MB |
+| --- | ---: | ---: | ---: | ---: |
+| First frame, 60 rows | 0.382 | 0.306 | 0.355 | 0.308 |
+| Full block parse | 1.416 | 1.364 | 25.749 | 24.954 |
+| Decorate whole document | 1.100 | 0.700 | 15.800 | 10.400 |
+| Keystroke median | 0.076 | 0.062 | 0.442 | 0.401 |
+| Keystroke p95 | 0.139 | 0.119 | 0.936 | 0.845 |
+| First keystroke after idle reparse | 0.434 | 0.344 | 1.482 | 1.148 |
+| First keystroke without idle reparse | 0.436 | 0.356 | 2.336 | 2.001 |
+
+The initial C implementation scanned cache dependencies on every edit. Rust only does so when
+reference definitions change. Matching that behavior reduced C's initial 1 MB median from about
+0.458 ms to below Rust's floor. No layout or parser redesign was needed.
+
+### Size, memory and Chromium
+
+Exact bytes, compressed with `gzip -9n`. Rust's size build uses `opt-level=z`; its C build script
+continues to compile the grammar at `-O3`. The C size build applies `-Oz` to every component.
+The shipped C artifact is the measured `-O3` build; `-Oz` is a size report, not a speed claim.
+
+| Build | Raw bytes | Gzip -9 bytes |
+| --- | ---: | ---: |
+| Rust `opt-level=3` | 561,739 | 193,422 |
+| C `-O3` + LTO | 377,481 | 129,730 |
+| Rust `opt-level=z` | 465,319 | 163,783 |
+| C `-Oz` + LTO | 292,714 | 107,471 |
+
+`bench/memory.mjs` reports growth of linear memory, a high-water mark, in MiB:
+
+| Document / stage | Rust | C |
+| --- | ---: | ---: |
+| 46 KB parsed / viewport decorated | 0.50 | 0.50 |
+| 46 KB wholly decorated | 0.56 | 0.56 |
+| 1 MB parsed / viewport decorated | 7.50 | 7.25 |
+| 1 MB wholly decorated | 8.44 | 7.88 |
+
+Chromium via Playwright 1.63. Each round is the unchanged harness's median of five fresh browser
+contexts, `no-store`; these are the medians of the three paired rounds, milliseconds:
+
+| Document / stage | Rust | C |
+| --- | ---: | ---: |
+| 46 KB load | 2.2 | 1.8 |
+| 46 KB cold first frame | 6.5 | 7.7 |
+| 1 MB load | 2.0 | 1.9 |
+| 1 MB cold first frame | 9.4 | 8.0 |
+| 1 MB warm full parse | 31.0 | 28.7 |
+
+Cold first frame at 46 KB regressed by 1.2 ms in these runs. The browser measurements were a
+reporting requirement; the keystroke median/p95 gates and the warm first-frame comparison pass.
+There is no claim that all cold-load cases improved.
+
+### Toolchain and allocator
+
+WASI SDK 34.0, clang/LLVM 23.1.0 (`895aa2c896ad`), wasi-libc
+`2e6fb9d8ee0cdf9e431fbcabe8af3115de000a13`. Installed at
+`/work/cache/wasi-sdk-34.0-x86_64-linux` after checking the `/work` mount and free space.
+The x86_64 Linux archive SHA-256 is
+`b761e3a0721dbae9c09a0059e5fdb2bf917d1b4a8a7b430fb3b5aafb0984b2c4`.
+
+One clang invocation compiles grammar, scanner, runtime and resolver, with LTO and a 1 MiB stack.
+The libc is wasi-libc's musl-derived C library; its default allocator is dlmalloc 2.8.6, confirmed
+in `libc.a`. It provides realloc/free and reuses released blocks, which both tree-sitter and
+cmark need. Choosing the SDK allocator avoids adding an allocator implementation to this spike.
+No binaryen pass is used.
+
+The standalone wasm imports nothing. `src/host.c` supplies the C library's process/stdio bridge:
+no command-line arguments, unsupported I/O and entropy return WASI errors, exit traps. The parser
+uses none of those services during successful operation. A bounds/allocator abort stays a wasm
+trap. The wasm ABI and `js/index.js` / `js/index.d.ts` are unchanged.
+
+### One tree-sitter runtime
+
+**Possible with a host export change; not a drop-in replacement for stock web-tree-sitter.**
+The [minimal experiment](../experiments/side-module/README.md) loads the real grammar and cmark
+inline code in one PIC side module through web-tree-sitter 0.27.0. The host parses a block and
+JS calls the inline function on the same module using host-allocated memory. It passes.
+
+The full resolver side module omits tree-sitter's runtime. It loads, but its first call fails
+because stock web-tree-sitter exports JS wrapper APIs, leaving 19 raw C APIs unresolved.
+The source and executable export audit agree. Rebuilding the host with those exports and exposing
+the side module's resolver exports would allow one runtime and one memory; no tree transfer to
+JS is required. Headers/runtime versions must match.
+
+The unresolved full side artifact is 233,031 bytes raw / 75,300 gzip. That is not the final combined
+payload: the host's additional exports retain code and must also be measured. The duplicate
+roughly 96 KB runtime can go, but combined gzip, cold load and the performance of that rebuilt
+host remain unconfirmed. The full integration was outside the authorized spike.
+
+### Reproduction and remaining scope
+
+`npm run build`, `npm test`, `sh scripts/check-native.sh`, then, in a heavy-run slot:
+
+```sh
+CHAT=/path/to/private-chat.json node scripts/check-gates.mjs
+bash scripts/compare-builds.sh /path/to/rust-baseline /path/to/results
+node scripts/summarize.mjs /path/to/results
+```
+
+A Rust baseline can be rebuilt from `4214f0c` in a separate worktree. Rust source, Cargo files,
+pulldown-cmark, the markdown-rs port and their obsolete notices have been removed from this branch.
+The MIT notice is corrected and the cmark/GFM/libc notices are included. The four existing spec
+failures, public CI wiring, publishing, the supported shared-runtime host and Editor integration
+remain outside this first step. No Plan 189 work was started.
+
+### Review fixes and current artifact
+
+Self-review found autolink cases outside the original corpus: single-character hosts, uppercase
+`WWW`, bracket boundaries and overlapping email records in `a@b.com@c.com`. These now have
+regression tests. The repository gate now checks every normalized mismatch against a Rust-derived
+fixture of document hashes and exact construct ranges. An improvement can no longer offset a new
+mismatch of the same kind. Its tests cover that cancellation case and duplicate differences.
+
+The current artifact passes all 11 focused tests, 2,000 native ASan/UBSan edits, 672/676 spec cases
+with unchanged section scores, 183/183 chat messages, and the exact gate over 497 repository docs.
+The 11,000-edit and 300-edit fuzz runs have zero failures; the control still fails 10/10 checks.
+The following fresh paired measurements supersede the earlier speed and size tables for the
+current artifact. Raw output is in [`measurements/c-resolver-review/`](measurements/c-resolver-review/).
+The recovered Rust wasm's hash matches the independently built baseline above. Benchmark scripts
+are unchanged, with nine runs per case over three paired rounds.
+
+| Milliseconds | Rust 46 KB | C 46 KB | Rust 1 MB | C 1 MB |
+| --- | ---: | ---: | ---: | ---: |
+| First frame, 60 rows | 0.397 | 0.314 | 0.373 | 0.337 |
+| Full block parse | 1.460 | 1.382 | 26.506 | 26.731 |
+| Decorate whole document | 1.100 | 0.800 | 16.500 | 11.800 |
+| Keystroke median | 0.079 | 0.065 | 0.459 | 0.438 |
+| Keystroke p95 | 0.148 | 0.129 | 0.967 | 0.891 |
+| First keystroke after idle reparse | 0.443 | 0.367 | 1.593 | 1.651 |
+| First keystroke without idle reparse | 0.442 | 0.365 | 2.405 | 2.364 |
+
+All four keystroke median/p95 gates pass. The 1 MB full parse and first keystroke after idle
+reparse were slightly slower than Rust in these runs; the table reports those results directly.
+
+| Current C build | Raw bytes | Gzip -9 bytes |
+| --- | ---: | ---: |
+| O3 + LTO | 377,675 | 129,793 |
+| Oz + LTO | 292,837 | 107,543 |
+
+Memory growth is unchanged: Rust/C fully decorated 46 KB both use 0.56 MiB, and at 1 MB use
+8.44/7.88 MiB. Parsed/viewport growth at 1 MB remains 7.50/7.25 MiB.
+
+| Chromium milliseconds | Rust | C |
+| --- | ---: | ---: |
+| 46 KB load | 2.6 | 2.2 |
+| 46 KB cold first frame | 6.9 | 7.6 |
+| 1 MB load | 2.4 | 2.0 |
+| 1 MB cold first frame | 9.7 | 7.9 |
+| 1 MB warm full parse | 32.3 | 31.2 |
+
+The 46 KB cold first-frame regression remains visible. The side-module experiment and its
+unconfirmed rebuilt-host size/performance are unchanged by these resolver fixes.

@@ -1,0 +1,3327 @@
+{
+  "baseline": "4214f0c",
+  "description": "Exact normalized Rust mismatches on pinned Plan 176 inputs. Only these differences may remain; improvements are allowed.",
+  "documents": [
+    {
+      "name": "platform/.agents/skills/desloppify/SKILL.md",
+      "sha256": "a2b64bfd8e4e24a225802e46815da51967baf7184786169de5b2e5c05379e2c6",
+      "missing": [
+        "h@4-288:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/dnd-kit-implementation/SKILL.md",
+      "sha256": "5dc0d82d9f9550b0c00d9d87efa936c58d67538bed31d0572a4e2a72aa8e9a33",
+      "missing": [
+        "h@4-379:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/frontend-design/SKILL.md",
+      "sha256": "b81e2ff87ed8fa4d6c377ccb127a7254c9e6a77e3ae94f21e6b514f7bb2945a0",
+      "missing": [
+        "h@4-481:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/improve/SKILL.md",
+      "sha256": "4eff79aae7acc3b629a7cc33ea37ebb8ba81813befe25be0350a656f4767445a",
+      "missing": [
+        "h@4-718:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/mac-app/SKILL.md",
+      "sha256": "03af0eadb24044f50e91b5298be444c40eca98d49614f34597d938b937149169",
+      "missing": [
+        "h@4-228:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/swiftui-expert-skill/SKILL.md",
+      "sha256": "6aba5e1f209b98d8d33ae83ecd622adb5bb0f6a48467bd30efb62f325c6ddad1",
+      "missing": [
+        "cspan@152-165",
+        "cspan@234-243",
+        "cspan@369-377",
+        "h@4-461:2",
+        "hr@0-3",
+        "p@10162-10226",
+        "p@10229-10271",
+        "p@10431-10485",
+        "p@9435-9472",
+        "p@9475-9530",
+        "p@9620-9693",
+        "p@9794-9919"
+      ],
+      "extra": [
+        "p@10166-10226",
+        "p@10233-10271",
+        "p@10435-10485",
+        "p@9439-9472",
+        "p@9479-9530",
+        "p@9624-9693",
+        "p@9798-9919"
+      ]
+    },
+    {
+      "name": "platform/.agents/skills/tailwind-css-patterns/SKILL.md",
+      "sha256": "645579f7c39fbcd91f39fb8a7e3e8b58b20c6579b700a0877fd25eb10493b126",
+      "missing": [
+        "h@4-420:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/SKILL.md",
+      "sha256": "9614e15ca9303f895814118db8b83c3e33a2f003d17eafc79a5a284f2538d0e7",
+      "missing": [
+        "h@4-250:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/cache-gc-time.md",
+      "sha256": "d25ac7d7c3f5f5a646e0c15b76724bfa910746623df2045429ef3d8c898ef816",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/cache-invalidation.md",
+      "sha256": "ffa153b567a74d28811e8a2960a0adb42ad59eb30925bcbd7cc0f3a0877fdbe5",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/cache-placeholder-vs-initial.md",
+      "sha256": "d2cb14ea48196481a731535af287b8f634d39217b102b10a8b5d562e55738315",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/cache-stale-time.md",
+      "sha256": "b006949c167d3141ec818856761e24e1af40a4cf57a573e3db799edb9f6a27b4",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/err-error-boundaries.md",
+      "sha256": "a9db54fe835036324923f1d054908642e89965f90349eddae8775a11b2042d5e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/imperative-queries.md",
+      "sha256": "b82ba0b7f0ebc4bf2d720c79c4954fa5bcfff2d1551eb074b14a38e5d068cfba",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/inf-page-params.md",
+      "sha256": "e4c5c0909f8b3d3cb60cb682e8cff1c395b070351cea7c7e1b76d6710248740e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/mut-invalidate-queries.md",
+      "sha256": "cbfe273ac0a952972105d13f85fedd418ca06e146101317f2c3bb06ab1782c45",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/mut-mutation-state.md",
+      "sha256": "cefd47db3ce551549e41370fc5f4ea88f465d7aa20703b69a80d8bcfe60c8f50",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/mut-optimistic-updates.md",
+      "sha256": "ee7feac30d6267349c54794f7ec32bf90d5d8472a906cf79588f4ccb163e0c48",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/network-mode.md",
+      "sha256": "5c49f1335aaa233f615702652f9b933419a2c47e6abc6be247fd4da586cce3a7",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/parallel-use-queries.md",
+      "sha256": "c9cff9289ff424de1522f4bd0647a743ee92c2c90127c8003a84fb5e834358b4",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/perf-select-transform.md",
+      "sha256": "b6d5d491cabd50502edfb77f9588d9d237d2359df2f2b91a30ca03a4c43f77fe",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/persist-queries.md",
+      "sha256": "ca547f06055b01ef790c0c38e9cb0d5637b1c2c0d6b849170c4a476552c3768f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/pf-intent-prefetch.md",
+      "sha256": "ff44f9a1b0eb22498736bf3e52658d006239114a36883bb3f9839903cb066d45",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/qk-array-structure.md",
+      "sha256": "b870e3c29c4af8e1aaf97110d0a9e5f6496ede75882e7909ee33f83b1bbd89e8",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/qk-factory-pattern.md",
+      "sha256": "32b8f930a8caac029b6abc687f179693c1d4da430fce75c408904f7efbb18266",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/qk-hierarchical-organization.md",
+      "sha256": "e8c2b9133374743e98d88c92e73aba32e61365ddf07eb38714c81ff7cdfb1134",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/qk-include-dependencies.md",
+      "sha256": "60067bc8cfa26da49a6e022b3133f646aaa26960b722934240fe189d005b61d7",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/qk-serializable.md",
+      "sha256": "e5fe0734defea0e765893ae2fd9bb26fab3849725a7f1cd5402f2d8d46a84129",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/query-cancellation.md",
+      "sha256": "c6948a75a680985df7b44f2b424df4e80d0653cef244826fffd98db10052e8fa",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/tanstack-query-best-practices/rules/ssr-dehydration.md",
+      "sha256": "cfb13cd8300e85d4da7f637bc6dfe30b79fb97ffd010ed55b87744310441df73",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/AGENTS.md",
+      "sha256": "fc93e7421177bbf869cce892bc60a6c83a4517d974bc3bf65c4e2c1e58a6ccf6",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/README.md",
+      "sha256": "9eafb2123d3b8b2aef41fba0db2648a3f4f49996f8c7c8bb2c86263befd8b48a",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/SKILL.md",
+      "sha256": "71ed7794962fa6e803ee83030517b5b93a9f70fbfeb431ec4535c5480a8d8355",
+      "missing": [
+        "h@4-443:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/_sections.md",
+      "sha256": "01c59969e4e867f0708c8f8ef9c6d87fab9a07d0586244f429ff84013db8a115",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/_template.md",
+      "sha256": "99df2a3ea088c6c22de2484ddc7e964d0e9923846f44c63380343ecc64455442",
+      "missing": [
+        "h@4-141:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/advanced-effect-event-deps.md",
+      "sha256": "55ed8f9f27a1bff803d6fa55828176207714b02123cbb97ddb8a90d88024a723",
+      "missing": [
+        "h@4-202:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/advanced-event-handler-refs.md",
+      "sha256": "a3097edeecfb2ff6851cd66ed8cdf0617c3c88180504bee824aa6e75a215bbbc",
+      "missing": [
+        "h@4-153:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/advanced-init-once.md",
+      "sha256": "3e4dc22173eb0e2b6dcf583e3babd862b8696328f8f59aee7c4d746c5bc05f6c",
+      "missing": [
+        "h@4-183:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/advanced-use-latest.md",
+      "sha256": "8a3f64dfe5a77d1564248faf17fe662ae75b55d497a243cb30b38eb07ccbbf9a",
+      "missing": [
+        "h@4-167:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/async-api-routes.md",
+      "sha256": "523338540d73427dc14c0cbb19f2741ebccdf8b105a7b2c1b33d2905cf237a42",
+      "missing": [
+        "h@4-169:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/async-cheap-condition-before-await.md",
+      "sha256": "03107c1f70a293cd58a8abc5474c5548e20ea4efdf01b6d45aae7ad0ac1cb32c",
+      "missing": [
+        "h@4-219:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/async-defer-await.md",
+      "sha256": "f3c142d090615abdcc99d31c123be37b31f0f1ed8d9ec9f7789a3bc6883ae0fb",
+      "missing": [
+        "h@4-151:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/async-dependencies.md",
+      "sha256": "16ef469f877e30c6b8e1e1b4bc3e527312fa3c6318cb785a4eca186ea236131a",
+      "missing": [
+        "h@4-156:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/async-parallel.md",
+      "sha256": "6d2f841896279e976dfcdc1ac89e70771ac188baadfd43c096b5706cb838b961",
+      "missing": [
+        "h@4-160:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/async-suspense-boundaries.md",
+      "sha256": "de05fedac2eb7ae563b887b5a424464ec3dfaf84e5b7797467ebe2a796ac8afc",
+      "missing": [
+        "h@4-144:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/bundle-analyzable-paths.md",
+      "sha256": "62090b5c815fd71bf1133dce754f51abc16a9456d0ccd025fd627de27726e92a",
+      "missing": [
+        "h@4-188:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/bundle-barrel-imports.md",
+      "sha256": "e648f6d54525f07a691357040ca5bff6ea3424788a91ff63812adb29622a671b",
+      "missing": [
+        "h@4-174:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/bundle-conditional.md",
+      "sha256": "09c8259c3efb04fc0abb8e412ccbda217c222ae8118516283e571c995fe3a7d4",
+      "missing": [
+        "h@4-155:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/bundle-defer-third-party.md",
+      "sha256": "3719fb47b191e8db4fe22686ec88448ad5af9e6838585425abbe103d0b642e37",
+      "missing": [
+        "h@4-155:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/bundle-dynamic-imports.md",
+      "sha256": "401817a7369f315fc5a68a1095742ff7d53d0461906880dc9d64a41495ee1986",
+      "missing": [
+        "h@4-175:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/bundle-preload.md",
+      "sha256": "d1f7cc28da7cd5ab249acd287edc5b761afcfb194e9cb62cd44c5f3543db2de2",
+      "missing": [
+        "h@4-145:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/client-event-listeners.md",
+      "sha256": "242a873349febc1ce685e85617994784dbab92c2eaa68aed7fed5a83e7680e93",
+      "missing": [
+        "h@4-162:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/client-localstorage-schema.md",
+      "sha256": "0fb7cdf9dc93fdf22f87e3669f953fb9d4ac9b0be42eec4a29fe9a2560610b88",
+      "missing": [
+        "h@4-202:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/client-passive-event-listeners.md",
+      "sha256": "1f35016f9053de69e884ee9be00654e37979c2ca85f5e57764dc2626ff7acb4b",
+      "missing": [
+        "h@4-220:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/client-swr-dedup.md",
+      "sha256": "644652c39c6cc00de8d1c77a7273612e868dc3f7edda30764164c12ec0f764a3",
+      "missing": [
+        "h@4-161:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-batch-dom-css.md",
+      "sha256": "480b891b9eaf96e929dc1e964274a4828e3a78009b7d00ccd965a0d425215959",
+      "missing": [
+        "h@4-209:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-cache-function-results.md",
+      "sha256": "3daaa11d24f4295cb6be8bc6f407f2ce83cc7b5bd1f0e68891ea8ab835721dc7",
+      "missing": [
+        "h@4-156:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-cache-property-access.md",
+      "sha256": "73e47431e74878a927061bf0ddc7cd91a7556cb35d2573f3421e82300d9ae311",
+      "missing": [
+        "h@4-146:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-cache-storage.md",
+      "sha256": "11b826b0433898c1ece2d3547010d8e77db9fb240185748c45db91493de9b6cc",
+      "missing": [
+        "h@4-160:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-combine-iterations.md",
+      "sha256": "71add08aeeb43091d4ff4c0b2842cce8b4bdef8ad3e732cc034bb5a84827e746",
+      "missing": [
+        "h@4-150:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-early-exit.md",
+      "sha256": "925ce5ce87f3347186ca62212f29cc6baa2b8c85a96d2720ad07c3d0abf781c0",
+      "missing": [
+        "h@4-167:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-flatmap-filter.md",
+      "sha256": "9e5b166a41914d975bef7635467f8fb32cd98b5c3126c0bc6f163490812fb5f0",
+      "missing": [
+        "h@4-179:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-hoist-regexp.md",
+      "sha256": "f9e9aef2f7c2307dd7310f283df85dcada45fc43e9bb941b0c3aa414dec21ec4",
+      "missing": [
+        "h@4-144:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-index-maps.md",
+      "sha256": "5df1bdc2cfabb2c98abd55d26762e5c18189535c2e686184f426082e62920391",
+      "missing": [
+        "h@4-166:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-length-check-first.md",
+      "sha256": "8b54a311c826b299272f29187fc58bc55772a04c4a72eeb29456ee96dc9fc624",
+      "missing": [
+        "h@4-206:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-min-max-loop.md",
+      "sha256": "87dfb67e2f39df6ad8bcfb5b78c5fb364d3c07554ad188a202408d99f3763421",
+      "missing": [
+        "h@4-168:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-request-idle-callback.md",
+      "sha256": "ee08f83905b4011abbc33d594033157d77561b5bbd9b36b04f0f409581ffec32",
+      "missing": [
+        "h@4-200:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-set-map-lookups.md",
+      "sha256": "a7fd781a6ba9ad49065961b6f9a90ef486bf6b648390e1a08704025f98e1642b",
+      "missing": [
+        "h@4-151:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/js-tosorted-immutable.md",
+      "sha256": "d0a5e1b0fec48a0a81397957e2f068e224329f7c42cb5feeed8aae6fa64025e8",
+      "missing": [
+        "h@4-204:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rendering-activity.md",
+      "sha256": "1e5e7eaf3555e61d6a2e900089c676527d26259501db5594f59544b6c664f85a",
+      "missing": [
+        "h@4-163:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rendering-animate-svg-wrapper.md",
+      "sha256": "9c6ae0ca7a51434e803887c64cded760956579a1452ccb80a461a03f9c937c77",
+      "missing": [
+        "h@4-168:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rendering-conditional-render.md",
+      "sha256": "2ec2fa23c4148285144687050c52369adba3da2fbe3d486f8d3e0aad8f06f2bc",
+      "missing": [
+        "h@4-156:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rendering-content-visibility.md",
+      "sha256": "64eee6d5b916fe74df33363994b27fc7f71bea3bcedc7ee04bda23107ca3e6e4",
+      "missing": [
+        "h@4-159:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rendering-hoist-jsx.md",
+      "sha256": "93b229560fae92005ed9a2a829064607b39b2e984e92d221d05b2d41df2b7c0e",
+      "missing": [
+        "h@4-133:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rendering-hydration-no-flicker.md",
+      "sha256": "dc7ab358c67c177bca6e6f360fbc935ebe4efa928c0ba3ebd3f9f3d9e2000ca3",
+      "missing": [
+        "h@4-192:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rendering-hydration-suppress-warning.md",
+      "sha256": "915bacb934e2927d84b37a3f3d225a47b309ac8f9e494ed2bcb66ce07c5676a2",
+      "missing": [
+        "h@4-185:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rendering-resource-hints.md",
+      "sha256": "351b1095d641717b930f1b2253282b7120af3023bc74e06c17675168d4286864",
+      "missing": [
+        "h@4-179:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rendering-script-defer-async.md",
+      "sha256": "4cea07b7875ba7fc2c7465ff23b63a2bb334f90aaf2d9293d38d67b05fdb32ab",
+      "missing": [
+        "h@4-158:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rendering-svg-precision.md",
+      "sha256": "ed468533f6e95f622859c884b122cf21f9f593ed6bb3d500a54de4b9f9bcb9fb",
+      "missing": [
+        "h@4-127:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rendering-usetransition-loading.md",
+      "sha256": "3a1249c3f13026b6f54ab5712c388df219d6af01b12aa542749acd99a46f4bc1",
+      "missing": [
+        "h@4-195:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-defer-reads.md",
+      "sha256": "234050a77faf50cb306be10a9e15bd4421134ab5907e75f13e6d78e2bd262dc9",
+      "missing": [
+        "h@4-171:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-dependencies.md",
+      "sha256": "17eb5830956fb56486fd3cfc7431f5849d39751730c05ad9e77dd4f0c27169c5",
+      "missing": [
+        "h@4-151:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-derived-state-no-effect.md",
+      "sha256": "cb11ec76f50aa7b6847269f02d79b120c889a30d9ecd2c1d578f75144419c77a",
+      "missing": [
+        "h@4-178:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-derived-state.md",
+      "sha256": "1c326bb67b01fb084eb00c8911b0a7cff54681c2315b629f88e49b64eaa6481d",
+      "missing": [
+        "h@4-160:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-functional-setstate.md",
+      "sha256": "5e68df6b2ae8058e67f476ff1ac67bde159f5a9d18df439e46eabcdeb7b52e58",
+      "missing": [
+        "h@4-204:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-lazy-state-init.md",
+      "sha256": "4ae844740f266fc8cbf050701230286624a2440ec5be67b9a63d9edc3c580573",
+      "missing": [
+        "h@4-171:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-memo-with-default-value.md",
+      "sha256": "81c47476564ad8a79fc68fc442734255ca7d6829424359464503fda0a9f9a0dd",
+      "missing": [
+        "hr@0-3",
+        "hr@223-226",
+        "p@5-221"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-memo.md",
+      "sha256": "1f258990c2f27ff6256b3cc5c43300631bb3f0d81f749aed08d07fcdcc131dd1",
+      "missing": [
+        "h@4-145:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-move-effect-to-event.md",
+      "sha256": "abc2cbf167bee056743023351e96806a411d3398da8802093620aecf0721f029",
+      "missing": [
+        "h@4-199:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-no-inline-components.md",
+      "sha256": "1cc32907a770272524ba682eef9e7efdd8ad4533b6f89b718a1fcd7d1d0eb6a3",
+      "missing": [
+        "h@4-170:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-simple-expression-in-memo.md",
+      "sha256": "5bdcf2d1558ba5204e643c887b7b4060f89630969425651eb68e96427d97f800",
+      "missing": [
+        "h@4-197:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-split-combined-hooks.md",
+      "sha256": "6f45d703343484ef9acef9388397f3642966ae6a5a258899a0cf1f9977cfbf6c",
+      "missing": [
+        "h@4-181:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-transitions.md",
+      "sha256": "60f4033909a62df5e5b8c601494f9e50a562e2f8c1c2d81eac24f38142265f1c",
+      "missing": [
+        "h@4-173:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-use-deferred-value.md",
+      "sha256": "8c3579576a61a949884167745dcfaf1d5426ba305cc61fd0a79602d70fda4909",
+      "missing": [
+        "h@4-206:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/rerender-use-ref-transient-values.md",
+      "sha256": "f1a649af9d1d0b5c762f6c9c4c1c70c90d7df82aa10296ee87aadb78c1b76c54",
+      "missing": [
+        "h@4-173:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/server-after-nonblocking.md",
+      "sha256": "d0b8d24a3db9f0f65f9e2bddbf230b0e03a5f60e1229d93a4a18f5e7a991c7c2",
+      "missing": [
+        "h@4-164:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/server-auth-actions.md",
+      "sha256": "a2ca8aa102839251c7971ec784560fab943c20b36fe6f80365d4110c13260c23",
+      "missing": [
+        "h@4-213:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/server-cache-lru.md",
+      "sha256": "1924b64561841923b88a657085097a0aeba3e0ba2d5470b9f5c15cc10d6ae70f",
+      "missing": [
+        "h@4-135:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/server-cache-react.md",
+      "sha256": "fddeea6c870bb3da4134b61d54b7d09b83d2603f929b7547cd3dc1dc269edd5c",
+      "missing": [
+        "h@4-169:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/server-dedup-props.md",
+      "sha256": "c2747424cdac46be62f835f245a0aa887b0090b416d28e2ac8676702645eeb37",
+      "missing": [
+        "h@4-207:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/server-hoist-static-io.md",
+      "sha256": "5abea4dd882b13661bd5f7dfb93f9e547d5f08176c61c448ade91b210ed5d49f",
+      "missing": [
+        "h@4-189:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/server-no-shared-module-state.md",
+      "sha256": "4d869bf1cd2f1632e5ca4c0e64b1cf0e71c5f5a0f940bc8a22174d205e735ed7",
+      "missing": [
+        "h@4-191:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/server-parallel-fetching.md",
+      "sha256": "569a2e9fc04f9606686cd75c5894ef8781b502786a7fffe241396846c7733472",
+      "missing": [
+        "h@4-184:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/server-parallel-nested-fetching.md",
+      "sha256": "ad5d9656984d4a959997a2367bf59cc6632297b4634a1dd13a087939d83f30b3",
+      "missing": [
+        "h@4-169:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/vercel-react-best-practices/rules/server-serialization.md",
+      "sha256": "f4c7d68b29c82381baad059c4a7f09e868e71ec9c3115a26ad3ae7d24c0dfe1f",
+      "missing": [
+        "h@4-154:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/SKILL.md",
+      "sha256": "90d717af0fcf3cfbc0060d88f7cc4bae00b59c4d1c63b630e672502e62baa06d",
+      "missing": [
+        "h@4-404:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/README.md",
+      "sha256": "24a983dd0f6fa2fa41e3d2229b2d84cabcc4299c53cc1850b2b6b6d948a9940d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/address.md",
+      "sha256": "e88736e96a616f6b89e7a6f0a4bdf3db9ad3c48ff87f0ec9ec8fafc90e80623f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/chat.md",
+      "sha256": "5e9abe23ba8d2123a57dd870f563b380859e07f9b821060f961232e491ae06a9",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/editor.md",
+      "sha256": "12ed5a6599100bd2a6891b217be63455ace8c9cb12fe4be16ab45e9090c5ffc6",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/file-icons.md",
+      "sha256": "dc4bd5a711199f6a79df08228df8a9014edd9579f923f682122405503f353348",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/file-tree.md",
+      "sha256": "b3ec479cdcb1ec4d8d740108ce90d422cb3db422996661d633b7146050f85fd9",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/git.md",
+      "sha256": "84574aecfc86572ad24f325c06c6285be7946733db381745336530cb2138abf5",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/keyboard.md",
+      "sha256": "9684eb720f495d32e029bf84d99f21c0b008f5275e3d991eb9f279c86a3be3b2",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/landing.md",
+      "sha256": "0e497e0163a8555b514715224d31ee4840154ee42ed933f6ec9d7bb940790c4e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/logs.md",
+      "sha256": "e1ce86d2e0e9199c431c3917d88f3f7f79b564f6f9be05feffbca894de341344",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/patterns.md",
+      "sha256": "ef75e00b22c6a51b002404d17c5472f4899334682046f4e9038b9f6f8ea25b0d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/problems.md",
+      "sha256": "68928e76c5c081f18c43b451370d25c2f4112f998a74a420d14dd15264fa0198",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/quick-open.md",
+      "sha256": "a2526109d59faefe97a8bbe1b9a6180c615d8e2578ff5115bc81bb939377288f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/search.md",
+      "sha256": "bbc9718666db1ea57510a4cc62033169b591c039b767d5a78d26ee81ba677aae",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/settings.md",
+      "sha256": "290ee73b894ff5a0e06c71cef9b5f6218fa5ef24ae029e07894c1c495ff697d8",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.agents/skills/verify-fregat/features/terminal.md",
+      "sha256": "61e8f4fb3b0fec14d421f392e8fb055342e76c94f2cf605b80943bb48c334a84",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.audit/plan126-workflow.md",
+      "sha256": "034c33d69099b0ca6575b4a0b9b51d2b1f29e2819297192fb457b4d78cbf73d4",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/.claude/skills/desloppify/SKILL.md",
+      "sha256": "c481221a7b7dde073ac42c0603ba44d9b59c0868f4c70e960ab6974fc7a11902",
+      "missing": [
+        "h@4-288:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/AGENTS.md",
+      "sha256": "930a3da27a32aa289e63888e6ebab69d23aff7fff8a6a9f32439bbe860c1d3d7",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/AUDIT-FINDINGS-PLAN.md",
+      "sha256": "22d000ccf003cb9777edb8fa468828882896942c5b4fb216303d94e7f82e596e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/BASELINE.md",
+      "sha256": "b59ff8bc6991f65eef3ecb207d36935a4e1db680067b2735e94c6d5a0ce8d3e7",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/CLAUDE.md",
+      "sha256": "a54ff182c7e8acf56acfd6e4b9c3ff41e2c41a31c9b211b2deb9df75d9a478f9",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/PLAN.md",
+      "sha256": "97b0920029a2a435ecbd425b4f2908f20aae332aacd84c95d459bf2101d02deb",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/README.md",
+      "sha256": "37ab575c530fe8257fa0e3f1fe44a0c737a9c409e3f8958fdd55895c9433fd85",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/apps/mac/README.md",
+      "sha256": "ffcd5e07b011f28fe3e1b5d6e3306ed6aee2c00f820df4161e0113444cd3e3c9",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/apps/server/src/themes/wallpapers/assets/README.md",
+      "sha256": "b35bc329e22fa28c38dd26a179b7cd02eec0dd163d8047ba97e94cc4f72f7f1f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/apps/tui/README.md",
+      "sha256": "d4a3043a88a1a81cf28b8fe753d86de73d406c7b1dbeafa1c95cd69db11479a1",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/async-operation-ownership.md",
+      "sha256": "ff90d676eee174850b2df1baf14617d9bcb67e5fb52c3d60e5594e8ffc7068a8",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/chat-and-logs-wiring-notes.md",
+      "sha256": "d74318616ac2daf6f50c7d6c291223a11f176681e6c5147bd694ed7854a1f152",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/chat-t3code-parity.md",
+      "sha256": "dfbab17572fa6d7bd2a9474c5e0a8ca1d594b215db9f882b7adfbe9a005e483b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/command-palette-vscode-parity-backlog.md",
+      "sha256": "39291995b12caf3167ee5de2acbd990a7f645ee8ac88d18dae739078f9e36ff5",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/completion-wave.md",
+      "sha256": "319f176e577552d35fe972cec69f33932de83a97718281b628fea7310ed0bfe5",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/delta-db-implementation-plan.md",
+      "sha256": "d83b10e4d003afed2b90fc2d40632b3fb75a61d4f332f5430738f33c0c48244e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/deployment-design.md",
+      "sha256": "3db00f9a98b111a65a78b946b1e50c0aeddf14560634729494165e31d18773e5",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/development.md",
+      "sha256": "04780d34bdb5edee6d582085441cf17eaf7d3a602573375aec3df8a219773917",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/diagnostic-ai-fix-plan.md",
+      "sha256": "f6fdbb322fc1bc950fb4b10450c9435973e844cb66f0583800c75db080760b70",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/document-and-tab-domain.md",
+      "sha256": "e5a39789a333f05bbe92fdae23c45d06aedfb8e1dca0484bb9e283bf00e0a1e9",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/document-contributions/baseline-and-inventory.md",
+      "sha256": "844cf1ed8522f167b45a8da35065bdfc613d11d36c084d51e223264a4c5b26b9",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/documents/library-survey.md",
+      "sha256": "643389bd663a2339d26ce0431262f94fb5dd2970432712a3fd4b58b00accdc5b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/duplicate-defect-regressions.md",
+      "sha256": "98a5a1b8f26b24597d111b2acee2d7e987e5b5e36a781df077e170a59434693f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/editor-1000-parity-plan.md",
+      "sha256": "d9d827317005106ba4f0a1ba3eae9bd3e77e25552fafd7145a130f2493406920",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/editor-decorations/survey.md",
+      "sha256": "7cf74861116e07083ced8d63072b6c77d20c1043e343e7c84517208fad6ea2ef",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/editor-first-paint-design.md",
+      "sha256": "5b5bf80b82d371383e40e7c6e10dd3ae9f33a97ba6d350dabeade10fca692561",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/editor-first-paint-verification.md",
+      "sha256": "600720629d9505e2022e03931e9a6b17aab657b35027e162f2912f6a3c5bdf72",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/editor-parity-gap-matrix.md",
+      "sha256": "2e5972d75d84069585f9db6f577f2f6fb59e4369a2c8b8bd96b793474074b251",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/editor-parity-implementation-plan.md",
+      "sha256": "f3b3f8402cf9715ee87fc096353b2ff7a9403f735879735d5df78d198c50f6d1",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/environments-and-remote-plan.md",
+      "sha256": "aea1cc22b334ba5908ab9b064e1e66d5237d05a3a979b185301cc72f2217507a",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/external-edit-lsp-findings.md",
+      "sha256": "558332cc661142d0e3bc3da97b453ddc03b8af2b84a680b0efcdf466de64d3c7",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/federated-environments.md",
+      "sha256": "978492491b26124af49fec71fd5a5edd8e1925c0ebdb17924aeec8847279691b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/filesystem-boundaries.md",
+      "sha256": "92b5df4f2c6ac559ba4f153d3e43e68922b36b105da1572ce2447514a652d4cc",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ghostty-webgpu-brief.md",
+      "sha256": "3496846e09973be7e551ea4d2e0670adb7304cf53626bb85d1de570c676ee6fa",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/git-feature-comparison.md",
+      "sha256": "9f1f52ea0675ea8a31479dc7e330d166485db177388e8a75f9d9ae938e2580e5",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/git-panel-implementation-plan.md",
+      "sha256": "3c48acf8626e06466a1e281df68125a1db7abb8271663cbad52aaf26d6d4c8f4",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/instant-reload-design.md",
+      "sha256": "595de919dd61b6092bbb1b0d210a6ed4e10322ef4c8c211d186d903b68eb0b3d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/instant-reload-implementation.md",
+      "sha256": "58cc2c8d2f67a5589223b0284aed7651b61720f11d970855ebd004d7d2754938",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/keymap/baseline.md",
+      "sha256": "66b2884b22ec75ee092a4dbff90f040ed5cf611c51df8ae407ac43512d8b72cc",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/keymap/delivery.md",
+      "sha256": "975424eaea3eb3f1a9bdd6cde769c0177fd4f71d8872eb3952e38131e58158f1",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/keymap/modes.md",
+      "sha256": "874ddb93369d50870ecfb3534192fe24ba4456f98ce936231c77799214df2b5a",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/large-file-ceiling/README.md",
+      "sha256": "eb792f1e7e51dd92f5cadd7456e43278575d2398bafd60de7dc1c6497b008123",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/log-audit-prompts.md",
+      "sha256": "e92f6522b34a20cb1c33da39af7a407d2bcba41f9b3b7ea527cde8dbbd91e896",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/logseq-parity-gap-matrix.md",
+      "sha256": "46df0ea032391905545ebfa0ee1e2fd7058ca04c988584868d8eec40dbd77a4e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/logseq-parity-implementation-plan.md",
+      "sha256": "5616c776dcd706e0652557caa91df2da26fb7ac92a6bb8a0a3896f4c4eb5bab2",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/logseq-port-map.md",
+      "sha256": "e862a58dada9c181f184b740631111a544bf08821ce9ad2cd393b50bbd8c6aa1",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/native-bench-harness.md",
+      "sha256": "3f8ef8017d65bdf2954f881b6e4a8bb15b225c1132cc1b317078049f6451d51e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/native-editor-core-design.md",
+      "sha256": "0ce1819f32b6335304b6694645a627f54807f03db8cdf612451640bdf0d2663e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/native-editor-internals-research.md",
+      "sha256": "d94f5fc97ac3068ac81774ac8144275908475c2d8de262f184e0cb344b2a270b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/native-plan-of-plans.md",
+      "sha256": "78142a3cbbdb8f89f99a81ea2d44ebc52424f632104b358222300382884a9b73",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/native-plan-prompts.md",
+      "sha256": "84ede68ddb8fe729806a09bcfaa9a7fba0359277567170c864e478730fc946dc",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/native-syntax-coverage-plan.md",
+      "sha256": "e49ea62db1dc60c59579add709b57e563c1f245676a0b8b1e21bb192e7095b3d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/native-syntax-coverage.md",
+      "sha256": "8c496c5aa3f7b12a3db7b22353044dfea33c31881039639416eb83326fe87658",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/native-syntax-implementation.md",
+      "sha256": "24a26c3149f5f774145fd9f3b8211f3cbdf4554661b1ffc9c10bfdadbfa66ce0",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/native-syntax-mdx-sql.md",
+      "sha256": "9b68fa9a59d1c9ed5c01f1a59c4747f3676020f73b76ddfd3a52d3eb78eccd81",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/observability-overhead.md",
+      "sha256": "e3f996f111d1421ec2bb6528a0e7a9c918194200fd438b3b348b7347b258a9f3",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/page-subscriptions.md",
+      "sha256": "32dc54d89c2fc76033cab6bdd3d9f82134393cb01fc451363bd04d5f47e678be",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/pane-zoom-plan.md",
+      "sha256": "ecb81f7f2fd9e2c9a1e0241f5ce183532f863e83cb96849a5318dc2c0d733b0d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/pattern-layer.md",
+      "sha256": "640072a14d99fc8537e29194ad05bb1eea4a069c7e2cdb1e00dcc691191cb6b0",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/prelaunch-file-system.md",
+      "sha256": "a0098d3af540c82b0367a0a75acac6296478048b1d0a0442a9477ec9b85b8b44",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/product-vision.md",
+      "sha256": "4692e5a299f8971d385005e8ab6e0b93349aecc7c6b504b3bdcafb5f23b86e32",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/remote-server-releases.md",
+      "sha256": "ee03ba05f0b38b30d743e081c24861a5c547658008abc48da87279522cc10dda",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/research/wallpaper-library.md",
+      "sha256": "c8f4d8a9fa38c56917758560ae0e7012c4027630459f5ae1c032717d8886fa47",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/router-evaluation.md",
+      "sha256": "8fa0a3406084cf771f1b716b9e19d3ee5fe5ca0a4be5463e3049e5a6adb35340",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/search-tab-performance-workstreams.md",
+      "sha256": "9442f6b0cc3e90a1e111ae37dba4d2eb521f91676436bd2f03b3398546c0d9cd",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/serena-implementation-comparison.md",
+      "sha256": "56bea296a6a9bacc049ba81374933369a6db779b3d9e7f386cfbb7f7f2e9bc48",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/session-domain.md",
+      "sha256": "5d2ad148ed76ac414d96361b03fcfdd059d8683d15d293569d496d447dcc9a2f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/settings-reference.md",
+      "sha256": "63d988a288572d38db9bbdf8c7678dbc33c9e7b80d356d9a8f3a9a6d2c812d4e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/settings-registry-inventory.md",
+      "sha256": "c916b32838ba623a4c53cf9829337a7c0dc92908e8c420e2ae28acf110edca82",
+      "missing": [
+        "a@undefined-undefined",
+        "a@undefined-undefined",
+        "a@undefined-undefined"
+      ],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/structured-semantic-search-evaluation-plan.md",
+      "sha256": "fd1dab28321748c0b6752df0a89037b43983368012664d3a8dd80fe304ff61c3",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/t3code-chat-parity-gap-analysis.md",
+      "sha256": "720bfeb8071e89b95144cc846a5068004ec851b72fe364d00475908b0a812602",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/t3code-parity-implementation-plan.md",
+      "sha256": "9f5893a9cf64c883c29743d40509efc4696184a8ffc8a8a0bc626df25303965d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/t3code-parity-second-sweep.md",
+      "sha256": "62760cfcd0e134069b5ee810ad13a7a01fff709aca97700a35c4d2aa4a8be2fa",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/t3code-persistence-alignment.md",
+      "sha256": "92279230c8dfe9e43eb9a483808e9a86e89dfd7d5c0b3e59f32391b7f010e830",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/t3code-reference.md",
+      "sha256": "879900fe5cbf6e3a26da9e1f8753630435838fefa6d5963593a4ba5a031a97a6",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/terminal.md",
+      "sha256": "e25cee0503f020e930bfb6758bd6cdd860bb7dd89622476b87d804cb0b3c3f1c",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/theme-bundles.md",
+      "sha256": "9f4dba4e70818d966c018ba1c7b2277d11ec8443ae6173186a627e8964cef5bb",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/theme-standardization-reference.md",
+      "sha256": "6f2a1b28c62089f35c326738cabfc267e5281a6c658db939574f30cd8e217eac",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-agent.md",
+      "sha256": "54ba0ca8fa2d55534bffc9f14d202e157093e907cb5e58e062d1259e0b6e5d20",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-bindings.md",
+      "sha256": "1f0646c982f172a3ce36e5ff9b2da95cf2ca391cd1f05ca9f9637de121e5b5a5",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-foundation.md",
+      "sha256": "4639a4d9fd4d992b34804a017d41ee281aa6b55abc9a452b96e394da3424d065",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-plan.md",
+      "sha256": "d25aee5949afa4165f60122fcad680c81c8a23ccc68de6d71b69f935e90b6c56",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/client-core.md",
+      "sha256": "2109af415646326616d339c26bac1b9ac4b5c9be41dcbbc53112eecba0906ce0",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/codex-tui.md",
+      "sha256": "181f93530e39e5d9a83abc16dc91eaae2bb4fd143e469c1e5deefe0e5385d10e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/completeness-critic.md",
+      "sha256": "8fba582b5a5bbb2955b407342d1ed60504b45a286fdcfb2a54618d959c4b0606",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/crush-tui.md",
+      "sha256": "66a46721a1777bd5e176390e25285a0fd59da25eab97356f37d7798dfc2ec13f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/framework-options.md",
+      "sha256": "1c3cd3d683ea51d91c79db3f2293789879c135b99b1e380aac4578788b192606",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/hard-problems.md",
+      "sha256": "12b2fc174d10b9a68b8ffe34275aa58ef27d26d38e6e855da437e266465a6b72",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/keymap-commands.md",
+      "sha256": "8f55594b97e6abdc6a02dc8d7a2113f9d7a18ef5bb1e887c5d148f56c1fc69b1",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/opencode-tui.md",
+      "sha256": "31b181ff4a9a45a47de6062bc43e1cefd5c96bcee3d77c4c7929e662db3b59cb",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/plans-constraints.md",
+      "sha256": "445f0eaae0e4705477a2c8691ea56d8a53fdc67cb7218b4931a3f8b1319ee86c",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/server-surface.md",
+      "sha256": "2e91097d6780e5d05548eb07b6a5364d33ebdc6b14a2a7bf7f9c7014d75eee23",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/t1code-tui.md",
+      "sha256": "fb435e2094240ef71bc7216eb55aabedfe888d62b98262ea5118021633d33f76",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/terminal-feasibility.md",
+      "sha256": "4311b4ae96fcf908cde9ef0049b501327a7301a34cb62c07ca160021d6b37d59",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/viewer-feasibility.md",
+      "sha256": "419260e1567a664a39f45cdc5a4e7b6e79fe914698264e74e09ea6667ba6b5da",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-research/web-features.md",
+      "sha256": "c645e974f69d095d6de4e45e186c087a58aeba429bc821eb347a7c2325c10c1c",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-workbench.md",
+      "sha256": "9836586159de7d77dd99186f74b6ca50becef73202d178780aee441abcbcc9db",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/tui-worktrees.md",
+      "sha256": "d96a318381cb3354ec63bb72582012df4bcc4b9ee66de0e30731223ae0f173ce",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/README.md",
+      "sha256": "f97c0f143d0154e173f30158f8e3446db6d38631e949a38743fe08401ce39048",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/agentui.md",
+      "sha256": "8507f5978441e6f85997f7d77728e52bad2c87996d17ddc12887e49226b4d6a1",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/ai-elements.md",
+      "sha256": "42fbb3841173cf3a0a282d12248c4088896fbcd157bbcdf779a6db3f5b637999",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/animate-ui.md",
+      "sha256": "6ab4c3415ad27b02873b580604d322c23e6982f39e3c6c0072a1dc3fc9617340",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/benday.md",
+      "sha256": "5720c63c27313b9b390a54b0255e8ace086a05ca87d758177798bb4e8411153a",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/brainless.md",
+      "sha256": "741a1f16abe610561bf1f6a21682fc1d654d0e87c9cce8b2bb53953e7bf69893",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/cligentic.md",
+      "sha256": "650835b579bf23d6baea73e934d9a6bc172ed60b157fac39180b20811da7852c",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/creative-tim.md",
+      "sha256": "9554fbae3d8fc9aecbceacd62b48c5c4b1d0edfd55f9168d0c361c5067bf622b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/cursor-demo.md",
+      "sha256": "bd2125cbd292aa5b8571f12389c8dfcb13bd9cfde8ea417af7a8be75aea7f230",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/extend-ui.md",
+      "sha256": "52c7a2a89244bd97802189d263291ae2819e138e810d8fc9d12ea68ca052e128",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/kokonutui.md",
+      "sha256": "eb6b0d927f85ce784eafe0bf593e99c9fdc9d0722bc18fcefeb1ca19d137e6c3",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/landing-replicas.md",
+      "sha256": "b670e3eb75a1501534c230824bccb0ff6e8cdc49dbaa4f8cd21ef97e599c0ddb",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/manifest-ui.md",
+      "sha256": "5b51e6445f360c47d48850f249893db2a64b654e7272b68aa7f0e390d3abc2e2",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/neon-ui.md",
+      "sha256": "f85268ed990711da0539d9e1ebf63f2a496325b36b18d78b20f60a699e36cb90",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/replay-tools.md",
+      "sha256": "097e47338703a0cce11966a9035ad0d82a191f25d592824975f67f4db6fa17d9",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/scrimui.md",
+      "sha256": "d9c94816a7acc8766af978fabfe2f4b4ed0bc266e9cbbcfd16fcff5dfc0eb2e5",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/seamui.md",
+      "sha256": "3eb05203d91bc27e86e5277b626c3cd5c39738be74961c9eaf878d8d8f58488f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/ui-research/tinkerers-ui.md",
+      "sha256": "f5a431cb6d5f8d8f41a4c5970dc17f43343da96a59de69a42600c8c7e0e3fc41",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/verification/2026-09-14-chat-send.md",
+      "sha256": "392e8708497e996cf8e2e1c50f76385d3fd759f6ba02b5a8a44d0eeea6decb92",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/verification/2026-09-14-demo-startup.md",
+      "sha256": "641614fa832ad17cd3c44a5601fd26f4b6f4ebd0723be749951d9420a81b7606",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/verification/2026-09-14-followups.md",
+      "sha256": "003089a053825bec536077167eb2470500be9e35032004e4245177cc2ad96418",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/verification/2026-09-14-interactive-demo.md",
+      "sha256": "0a74c0a4d8fd3390af08e0e44a95f97155e697a3841331c431c3c3e2c165cd54",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/verification/2026-09-14-landing-hero.md",
+      "sha256": "446be0df0cf0af68935069d90959ef7da4fe14f2ce58a871aba8811f8d3af67e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/verification/2026-09-14-tree-sticky-clipping.md",
+      "sha256": "df4d037edcc611426b23a3e9a15c45f91e30a6299af8ca5b5aa9b9be0daf38ce",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/verification/2026-09-19-chat-follow-up.md",
+      "sha256": "6b515511b542cf91b7d4d974e06d111a0b68a2abb7ed89137f2c6b8fbc727f09",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/verification/2026-09-19-editor-splits-review-fixes.md",
+      "sha256": "4c159bff6902821b556547b494c5a13d00b7f1d2818b2d9f5c119f5beca4cb9f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/verification/2026-09-19-editor-splits.md",
+      "sha256": "81d5212ffe2347af0012ebce9e550e8086b643ef8bbedeb086ded9920840ccfc",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/verification/2026-09-19-shared-helpers.md",
+      "sha256": "6501708acf11a4337c2c2bbaff7d2c1e15660a56ae6e64ad779d6f473994f581",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/verification/2026-09-20-no-duplicates.md",
+      "sha256": "ffdca1f0f8ece47da825e5d07b689e1a2c8f903ac33362050fb7b9ad5d6441e0",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/vscode-keymap-development.md",
+      "sha256": "c68ed409148a01f3a57839361cb36e9625b3d6827c419fa9d32e51559d32bf4d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/web-code-layout.md",
+      "sha256": "4d6fc1990866a6a0a5b2a69ce828073c53dfd8391fb6e8b4a985290ba148143c",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/web-design-language.md",
+      "sha256": "55ae4cc8335faed3eb70ead32e7997009f0b28056325a161380a344b65eba2f2",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/web-layering.md",
+      "sha256": "fa36ec9bf4705896364fd11e66a30d01f7e51a45f29d5d904ee38dd7151fd8b6",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/web-push.md",
+      "sha256": "364c638ffbb1ba6291392caa2653a39ca0c2210cbd532fb055e11a479b4ab76e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/workspace-content-engine-evaluation-plan.md",
+      "sha256": "b1b18d6f04b9721b70031abcb5e76350f7c2464ffb366fb635b04100241c01cd",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/workspace-navigation.md",
+      "sha256": "08681fdca56be6c6de05785e90b2d147ff4241784e280fb50d2d32f0fb423342",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/workspace-rails.md",
+      "sha256": "b5b8e024a21feda6c1a606e0a0e36886266ed6256991bbec6b12dbcb45972918",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/workspace-search-next-steps.md",
+      "sha256": "fcb2641a965c578b59f715f0e3dd109dc9312173cb5b1f1683b53d3e6f1806c3",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/docs/worktree-lifecycle.md",
+      "sha256": "6a125c308270fbf29c9b9be98e956c42dfd0f9391f5bacd6b5899260ce899190",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/packages/pty/README.md",
+      "sha256": "b2f02aa624c2fc62d3d2c8c405293a9aabfb892d396affba32345fbc2ba70a74",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/packages/tree/UPSTREAM.md",
+      "sha256": "92636ff826a3e5544057726c1dff48e1d7827f8f57147282851b8a4dd4aa589f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/071-syntax-highlight-retry.md",
+      "sha256": "86d6acaceae9d5d620cc4683a44990ad8c0ae6dd493ba887d3164b261f070ca3",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/075-terminal-renderer-fallbacks.md",
+      "sha256": "5a112f5706002f9cee12d31e96289590472cca7de5ac0eb4e3e2f2c70158793b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/076-watch-reload-child-reaping.md",
+      "sha256": "ce97f38e9843291ab66e9ce59f6e552144da1b634800958f0204da1881d7edd3",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/087-stateless-mcp.md",
+      "sha256": "a4ff3bbc5b098bf69e37a00d82e1519942e4215b02b70a036ddbf1e414510fe8",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/088-native-code-intelligence.md",
+      "sha256": "1d88c61d9ae667188494196ecd967eeb981fd9e36f5af5fa459dbd0362430f88",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/091-error-and-timing-helpers.md",
+      "sha256": "c8f6e39bfdb98424d46d40cf37f1392c2dca9d8200daf993c8c59f13dafb8c3d",
+      "missing": [
+        "p@40509-40634",
+        "p@40984-41081",
+        "p@41146-41238",
+        "p@41360-41484"
+      ],
+      "extra": [
+        "p@40513-40634",
+        "p@40988-41081",
+        "p@41150-41238",
+        "p@41364-41484"
+      ]
+    },
+    {
+      "name": "platform/plans/092-path-and-uri-helpers.md",
+      "sha256": "6de1075c183ddbefb024b898a8e300948b2191bf6e2b620762d8b92e75774d51",
+      "missing": [
+        "p@36889-37038",
+        "p@37231-37371",
+        "p@37374-37506",
+        "p@37509-37601",
+        "p@37604-37683"
+      ],
+      "extra": [
+        "p@36893-37038",
+        "p@37235-37371",
+        "p@37378-37506",
+        "p@37513-37601",
+        "p@37608-37683"
+      ]
+    },
+    {
+      "name": "platform/plans/093-web-react-and-store-ceremony.md",
+      "sha256": "15c3705cc20706a39d5bb8c363a23ef628a8070942755169d80f593790c45859",
+      "missing": [
+        "p@44644-44721",
+        "p@44724-44815"
+      ],
+      "extra": [
+        "p@44648-44721",
+        "p@44728-44815"
+      ]
+    },
+    {
+      "name": "platform/plans/094-client-core-web-tui-parity.md",
+      "sha256": "a3a687de220743362618b374471da7eb704002308de2a63d619aff1dcd9f8fd8",
+      "missing": [
+        "p@47545-47742",
+        "p@47843-47932"
+      ],
+      "extra": [
+        "p@47549-47742",
+        "p@47847-47932"
+      ]
+    },
+    {
+      "name": "platform/plans/095-server-plumbing.md",
+      "sha256": "6dcab32128db131daec0e381803d02f4e66b62e54a7b04d2a45f2270cc5c8eef",
+      "missing": [
+        "p@29009-29130",
+        "p@29133-29218",
+        "p@29221-29388",
+        "p@29391-29472",
+        "p@29475-29595",
+        "p@29598-29720"
+      ],
+      "extra": [
+        "p@29013-29130",
+        "p@29137-29218",
+        "p@29225-29388",
+        "p@29395-29472",
+        "p@29479-29595",
+        "p@29602-29720"
+      ]
+    },
+    {
+      "name": "platform/plans/099-document-contributions.md",
+      "sha256": "9475409dc4ead7a8590d234ff1ad08cf86873cccd5ec6b4a4a9f71a0590bb3e2",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/102-scroll-and-keyboard-affordance.md",
+      "sha256": "69b615ac40e3c09d730da95c33d2d42589531817acecf62def389c76ae86527c",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/108-markdown-modes.md",
+      "sha256": "c95fa4dc52ba6efb0069159a56e5effbb3d91f36e79a16e7a5bf50105d5bd0ea",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/109-boot-boundaries.md",
+      "sha256": "7bf62a2ec52ce992e5cbea7d52c58d1adde0bc35174b096c21cdc175954cff59",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/110-workspace-indexing.md",
+      "sha256": "0e1b9b3af45d1631b175486ff0edf299ada10c2fde38e9ae223d09c674f1990e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/111-editor-decorations.md",
+      "sha256": "249387ca510daa887d535849a3020b43542d2a4f62e52037a038f36e334c241e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/112-large-file-ceiling.md",
+      "sha256": "e1e474f8ab59e9a936440d62a3608c705335348be234fa0ba9ff666de7cf5c28",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/114-polaron-shell.md",
+      "sha256": "548de8fd4c93241672beca797b5842f2ae3ddd3a34160be27a2c675fbb1ef240",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/122-composable-plugins.md",
+      "sha256": "7455cfc81a5e0bde49f7c516a6ac420b2ee42bcdb496f737f5503acc31258743",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/124-theme-studio.md",
+      "sha256": "26090e40db836781aec18871a4532315f27ea58667350b6cc01e45a5b9f1fcd1",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment.md",
+      "sha256": "d4ea85b50dd0c450904dfc0e57a74054350bf6aaafa21752097f1d2d12c224d7",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/adjacent.md",
+      "sha256": "03568062d335cba275b07c70f314bd3309e8dbed689815eddc5c4a7ee63975b9",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/archive-delivery.md",
+      "sha256": "765be1a2fcb2614b899045d48a92ce9d0294421c29c38b233158cbbe3770ff76",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/async-questions-delivery.md",
+      "sha256": "4f6a0c4b36899cfd46ca5ad0294b16abf31726ff14abd8168292a0b4e388d966",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/attachment-upload-delivery.md",
+      "sha256": "15f49d87abc8fd3771db883a177fdbb4bb65dbc50d796b849e8920ce3047aa9a",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/audit-protocol.md",
+      "sha256": "89e089fcba9bab40f05bab5bf7e457a494c42815d0dd182a997a3cbe2260c6d8",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/background-delivery.md",
+      "sha256": "257aeacd0ef18096c2a1f775795a4aeec1b80bb1c4d4dbd0d5b6803dce64d2a7",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/common-actions-delivery.md",
+      "sha256": "abb0965b90e008e79dc63ad8b880a99a04566a39a0df3242a41562f6f0623c85",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/composer-defaults-delivery.md",
+      "sha256": "5c904327b84085ca828bf5480e31afccae747850cd3957ff47f40bed05141922",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/delta-2026-09-24.md",
+      "sha256": "add8f8cb67bf0a0bbd0df4c44c94e73148597fdb57736264b7c5d95ddb9d0c66",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/draft-recovery-delivery.md",
+      "sha256": "4984cfb66a2947757578b8b0fa11c8f3858eec644e40f9dd18a6fcd3b32aeec7",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/file-preview-delivery.md",
+      "sha256": "93194f86ebbd274ca51ebc159e175cfe7cd7179ac1135d3b69bb3ecf9ce38773",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/interaction.md",
+      "sha256": "5820d0ed3e16bf532dad7a82bb531ec22e89d1d0c5f92ebd97906d9acdd76f71",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/lifecycle-grouping-delivery.md",
+      "sha256": "a6d7b53ecb5a0014db14dca91ecdd17518a219f87f9df9f270e43ec5efae2d43",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/lifecycle-undo-delivery.md",
+      "sha256": "e85e1ad93565c86c12ea45f44471fed1145bc4bb118806b3050bd8c8c3fc14a9",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/lifecycle.md",
+      "sha256": "23adb4625c0bbcdfa13f2d6c7e448354f351f513a90d83a870ea6daf7eb8f030",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/live-delivery-approvals-delivery.md",
+      "sha256": "ae1013ace49cb2143e55c5839f61184d9b6cac920636a0f54f6dc6848ae284c1",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/model-options-delivery.md",
+      "sha256": "54d47fc7cd6cca5199181cbd140c0bf2c2cd4bf826043766c178c85235e10481",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/navigation-delivery.md",
+      "sha256": "806bd41d4da57c1d1c833ef881ca66e2e18cc678bca722235d514ef685302ef4",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/notifications-delivery.md",
+      "sha256": "645f47adfe6f728e33ffc67e3b9048817c4c34bb1502e2c2c59bbcb45aac2eff",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/ordering-delivery.md",
+      "sha256": "de033fcd2232d9764b7df595cf454cbeebe956fa75a0cdfe484328b0615d4c28",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/ordering-implementation.md",
+      "sha256": "9e31280c3ff7cd3217ddd6afe1db5482a3f227129643e24d0000efa16deda255",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/protocol-antigravity.md",
+      "sha256": "12c5e6756f970936d89ecffbed1f82c7cae0b580d2244b61b014d4318acbe184",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/protocol-cursor.md",
+      "sha256": "84845c7ecdf1dc4cc8ae794614e48e78420b7c399ab314ec2367be81ffc3965e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/protocol-grok.md",
+      "sha256": "e4bfa51191288326da4739a24e304639f9633cdcbab15e740018ce96d229cb80",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/protocol-opencode.md",
+      "sha256": "41577a3e31b60edcd33b248e0dd555c511ca968564a8199f431145c0b1e95ace",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/pull-request-badge-delivery.md",
+      "sha256": "963a95cb230ec016ff51d8717a74786a59fbf18c8600cc58cdb71d08c01126e8",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/queue-delivery.md",
+      "sha256": "916fc4d38381e196773714d60e005dafc46104205fdc587edb9376c867e6b76b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/repository-delivery.md",
+      "sha256": "757f549b05713bd20d2fc3e31e8963f47d4366893553d8d8b8c46a345273cd79",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/response-delivery.md",
+      "sha256": "2aaf6a5826e7d71661c1bf12107893ab9759901efaa7bb75f51927db62afd36b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/resumed-execution.md",
+      "sha256": "ec639a7c2af5d573e1128b4fc04b9c86f53e256fcde10eff2000f773a53b939a",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/review-adjacent.md",
+      "sha256": "8143f6e0c8e7222ee66a79d61791153351601c42630431405934cdd70e4e3e24",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/review-interaction.md",
+      "sha256": "2e6c142e135fc24ff00ef83e49ec6f848f7d6331de1d423642bbd383f2ec034e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/review-lifecycle.md",
+      "sha256": "34863b0d8c9d4321e589fee24f28ce4e4ba361a0e41bdca5a0cede30e98ca8b2",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/review-runtime.md",
+      "sha256": "5874024e9619917a151f3764c3fedaeea6c2dbaf64bc3d4310ceac9abb586598",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/rewind-permissions-delivery.md",
+      "sha256": "8942c828892413d940f94700550a9a54716030b376fd46930a596d5f0ee2a509",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/runtime.md",
+      "sha256": "c206f266658c22b5cef6d7bd53501f6660afa78c18d7c8cd88dc6d9703065c27",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/search-delivery.md",
+      "sha256": "c280d3cdfafa2c5b6e8b12c311d5d2d2494c53bc108bfd65c6ade19adb53f546",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/stash-delivery.md",
+      "sha256": "82b5bd9d9c45dc8a782fc338fa224d3e2ce321e100658b418ee86fe7ce48a15a",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/terminal-delivery.md",
+      "sha256": "453d055d06715f8913d87c078e0755a98a2b50a3c56a452bb31340c0ff01bac8",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/title-context-delivery.md",
+      "sha256": "434c4439737705a1fd0d55938e171873718a1c1329040840c77921d67dc9a011",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/title-links-delivery.md",
+      "sha256": "26ecdbeaa64576c2d92ce166ec9be55cdab74b63bcc34d898946e0d97f8c7180",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/titles-delivery.md",
+      "sha256": "f49e07a5bafd76b21c9cac72a41509fdbef13dffa44ccfab695cc11917b0ac81",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/unread-delivery.md",
+      "sha256": "fca6a6ae64ee217e7f1ea9bf3bcd0f767e9634c88dc66d6a6be0593a01147b56",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/126-t3code-alignment/wrap-up.md",
+      "sha256": "feb978b47059f194ca05f1044b67b36e4347ffdc61373b88640c3cfc88579c0b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/128-react-19-patterns.md",
+      "sha256": "814851f5ab44d784ff374f17fd14593e7cc6f76c0173d00529c686aaf1eb581d",
+      "missing": [
+        "p@172642-172816",
+        "p@172819-172911",
+        "p@173240-173395",
+        "p@173398-173543",
+        "p@173546-173772",
+        "p@173775-174002",
+        "p@174005-174179"
+      ],
+      "extra": [
+        "p@172646-172816",
+        "p@172823-172911",
+        "p@173244-173395",
+        "p@173402-173543",
+        "p@173550-173772",
+        "p@173779-174002",
+        "p@174009-174179"
+      ]
+    },
+    {
+      "name": "platform/plans/129-dependency-shape.md",
+      "sha256": "fc23686e449db10eb102c2a73d9a24ea008367c1e0f0ee31a6b049268dd7621c",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/130-ask-the-editor.md",
+      "sha256": "9b79727420e728a464140b4f987a23424ac18dfae22fc57e1e094312457950e3",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/132-process-and-dev-ownership.md",
+      "sha256": "e59f361553dce9ea81cccebdb297d14ae4759bf9592735a8ff3a185e529fe9ae",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/135-tanstack-async-ownership.md",
+      "sha256": "4feb8830ecc836bdbade10250af11fa4428dc2ceaba74364a7c03655c64f39d3",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/139-acting-on-agent-diffs.md",
+      "sha256": "f67d3fde9c6e43b2a61720e9386181fa4e77e3e3dc592100d4f5da8ea324ce73",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/140-editor-agent-advantage.md",
+      "sha256": "fb197aaf4cf9a6de73a8c663ec2ac22f3c7a29c5cc372c93da815027f2cd16b1",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/141-usage-and-rate-limits.md",
+      "sha256": "3e4a48364187b46c7deeaf4a7f26c92c221709e2663dca14627f1e8663529f15",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/143-phone-layout.md",
+      "sha256": "d03b1a4ee77fc45dc0c2488039940e18485f87360c6f9a352a4bbc39d6f52957",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/144-unattended-agent-work.md",
+      "sha256": "c2e19680b12522c315197b9cecb9e171fbd26da28410dcb61bda43bd21edfc1e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/145-harness-controls.md",
+      "sha256": "f0eafb6e9cd71c4f36324bf9e18dc4950b558001b13e7aa0767c82054751d577",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/145-harness-controls/compact.md",
+      "sha256": "1180a807049f435d3f6d544661dc23e3e362017b13c47ece5c2d25a74b33ddab",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/147-log-hygiene-and-noise-gate.md",
+      "sha256": "17fa39a50e82f8e2f0724cf67ee435728a692713311b8e34f5e4b86601de6895",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/148-restart-when-idle.md",
+      "sha256": "cf971c79892be46ff5e611b9a7419fd0aebabb2bbe2d56c254142ad310c821ea",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/149-terminal-host.md",
+      "sha256": "fce51e2d73883260c9a2c0f5f5fd2359f387058607f6af17ccaaa208377243a4",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/153-typescript-worker-backend.md",
+      "sha256": "8789c7f94489e2c21c8d2f76d18c9d8160d857c89bbc7eff43885628ccef3f4d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/154-physical-mode.md",
+      "sha256": "31325bc5aa3d68fe9565c0982151a003c20f5b33bde2b67ddc6407cbdc324f58",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/155-site-demo-replica.md",
+      "sha256": "fbd0eff01b85a5b0f8f4bb95e2e542cfed8e6dcf04574972a235338793c171fb",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/156-documents-in-the-editor.md",
+      "sha256": "92a37b6f7b4de8f1fe79b30b3deef050dc5c6e5c131981f24d713b7276d2d164",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/157-base-components.md",
+      "sha256": "e1400583e3737e38614f29113445bd57580cae675ff867248e6a5f71c49f1b64",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/158-app-polish.md",
+      "sha256": "8c807ce07e92761aea8016691be7603897c64e952a16596956b989f5509c6f99",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/159-file-picker.md",
+      "sha256": "d1a929c90ecc08d1c77d151ba652133da8b91104350288bb869d509addcb8ad0",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/164-what-feels-right-in-neon.md",
+      "sha256": "a69cf523b61ecc585b2a31c4b8b5a0d8e8f1bc51a17843753a6c0c515cd5b114",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/166-shortcuts-editor.md",
+      "sha256": "aab31ff1424e0970317ef418b0740e1eb6f8027c1cfa593ea5b0365e215bc9cc",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/167-settings-and-copy.md",
+      "sha256": "ae7be247d676c54b36b864233750bd877f924e08929acc2ca3357b7ba92c23dd",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/169-agent-review-mode.md",
+      "sha256": "956b3ac987334dee986bdc56eae6152cadfbf314d7c5ad50c5485700b6e3eb4f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/170-language-census.md",
+      "sha256": "7ed1b7bae4e3313d0cf7c2a984d82970911b181e27000caca6f63a0f54d5df0a",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/171-composer-on-our-editor.md",
+      "sha256": "1e7468a557a000bc75908bc555e217b12b6059f18953638884db91b434aeac95",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/172-shared-undo-stack.md",
+      "sha256": "3e51d0d7c1da83ad25a5eec15ce3262e8c68798cdc0ed8009659d7f1f3f0979d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/173-two-devices-one-workspace.md",
+      "sha256": "4a3a617e6a7a8fb900af9767900684119e082d9a7435e76bc2d52054c932d386",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/174-external-mcp-servers.md",
+      "sha256": "42483b058dd645f26c8c509637be6c83f9a0a2047ecdb7af7ec082704225bdf9",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/175-large-folder-open.md",
+      "sha256": "fe4d0abcd09ec04ea6a497c09d3b5215ade9cec018f1d9aab4c908f9576d4d10",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/176-markdown-parser.md",
+      "sha256": "5199f375dc273a442fd20a730cd9c8dab76aac7bf181116f0684c678157dce56",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/177-prefetch-every-press.md",
+      "sha256": "ee2f87d9b7b3ff91f39ea6689fa722fbb912cf7561cd676b6e50b8dba14b785e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app.md",
+      "sha256": "e18fb169c44cab29a16b027c539284cfbd7978b78f8ac124c7354eace3b4252a",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/app-owned-state.md",
+      "sha256": "0a7bab10579e00f2b512c0b121929219739c2be2c763b16ba99fcfd770d20431",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/chrome.md",
+      "sha256": "06f708c4c51efd8916542b9407e629cf8f2214135145260a299e6cb85181652c",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/cleanup.md",
+      "sha256": "e1fd339c0b5bee554ce11cc87ac922c42159595bf6e0f809f8bd64a605405b32",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/context-menu.md",
+      "sha256": "7a878916e72feb07765cd0bcccf300522308dbb7883e38efbe9abba6842c351d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/drag-and-drop.md",
+      "sha256": "e8da99de0c98f08fc1fbc9f4bab3c2f1eb414c44dc549b8012eac61d591d19cf",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/helpers.md",
+      "sha256": "66f257d9d4906f1d2c88ef223935e6e3bb4d9ddf8329518a550e43216329d1c2",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/icons.md",
+      "sha256": "fdb6cb504e8222b4891dc9a507a7a9a72de142cfb10609a8bd0389533f4fb410",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/keyboard-and-selection.md",
+      "sha256": "50290842956fd4b8f0ff54ecd7b1ca1093cad713adec76fa8a56017072e373a3",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/out-of-the-root.md",
+      "sha256": "fdcbb8270c7d7be6ddb1dcd172933fd340a83e850693688c9b0a0c54959f26df",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/parity-harness.md",
+      "sha256": "5fed5db732c6878369213030448b2c06f775bb486723f82f2f7f7bc04fe36447",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/parity-spec.md",
+      "sha256": "e6a913be305aa586467c00083c65e3dbe5490961852ce9191329ca4b6adc0078",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/rows.md",
+      "sha256": "c234a411549791285a0561305c6436579341ccf534a436c1713eec76b758644e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/tree-leads.md",
+      "sha256": "0870fffaa148702c702ba1ecdfd5fef7807a02f96d5c8c15d4cf256b2a27b10e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/178-tree-in-the-app/virtualization.md",
+      "sha256": "a8d041281436d1ca6f4ff8f5492ca5d34cfe34ce797b6e11f80cae8e585d55fd",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/179-isolating-foreign-content.md",
+      "sha256": "6ad6eeb239e096bd7f612854ee81ae75ce3e5f5dc87779cbe1d9a83be06cb1e5",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/180-file-icon-variants.md",
+      "sha256": "a01319af3a246c156327315e4543499f9a0ae8163e466a8d43b6c21a30265758",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/181-chat-timeline-end-anchoring.md",
+      "sha256": "6388f0e818c5ae4b724f9fb523f01985d2fa60a46562136f5e9fafcdca4f180d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/182-search-view-rendering.md",
+      "sha256": "b2203b6a1291a9ef78410d06342b5194cc28d92b886ab12e509fca2f0f40bf65",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/plans/README.md",
+      "sha256": "f01c09855762c5aa3c6a11cf84a24c80a63c4fa16aeb3d925a5abf4dd653b197",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "platform/scripts/parity/README.md",
+      "sha256": "f3d4342885404eb1edb50cecb79c729aff0d419ce922291dfd7e164a8908c044",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/.agents/skills/desloppify/SKILL.md",
+      "sha256": "ca9606d0ca6d5d30cfdec2a2e1c225cac031a356e1f12163d497e2ed6b52f1bb",
+      "missing": [
+        "h@4-288:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "editor/.claude/skills/desloppify/SKILL.md",
+      "sha256": "91b6bfdd2f62efe025d30a998ec716044e7c452438989a553ad172875854797a",
+      "missing": [
+        "h@4-288:2",
+        "hr@0-3"
+      ],
+      "extra": []
+    },
+    {
+      "name": "editor/AGENTS.md",
+      "sha256": "99b74142013cac471117ed6cc561d47792b6800fa9d75786d583b91a32d7b3b2",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/ARCHITECTURE.md",
+      "sha256": "638f46af7f1e58cf4b016a3e520abe9b44ea239d4a8ebca72d76892effd42689",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/PERFORMANCE_TRACE_PLAN.md",
+      "sha256": "1642125c624183669dce201c569e47443134ea22f819ecf50097ccbb5ed5dfbd",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/PROGRESS.md",
+      "sha256": "44df9b42fa075e9eb400cc738b7ba1f14bb7181952c50b825d8102be8dca7982",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/README.md",
+      "sha256": "923bcab8b1650f1f5cd3cf5543a3a773d69613fdabc38e336cecfec14b3bbdad",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/TODO.md",
+      "sha256": "317a52d796b5406f2ca5758acbc370480dcaa9a693d390458d1ae020b9cd48d3",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/architecture-recovery-plan.md",
+      "sha256": "1f7ad907e596d909e7647e9c17b12325c08d918e84a60b9d6804d578ad5f6651",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/architecture/e049-no-silent-misses.md",
+      "sha256": "a2a11569516a419dd4e9c6068590004e136e6c0861deaa1f0e4c0f21e06c8519",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/architecture/e050-host-obligations.md",
+      "sha256": "bf53c3a19d7f8054ebbbbf41b432a4cf6d7ab3228360906abc1a336e7d2d63f1",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/architecture/e054-worker-language-server-parity.md",
+      "sha256": "2a0664eb166519820008a3aac20c01de6420fcd45b6ad44a1c287047a1bc705b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/architecture/extension-hooks.md",
+      "sha256": "3abb03cfa135dcb3381055311e16318af38956b08b6021a61e5d7832c7b7dcfa",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/architecture/phase-0/README.md",
+      "sha256": "011f8c66bc3f859deac7fddfc5c63741b18b8a41bcc0de4b7d89db46438d2780",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/architecture/phase-0/performance-baseline.md",
+      "sha256": "0bef0452d2d9d6b32f9d2dee9f3d9785ad70395fbbc051ae732154fe3add562a",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/architecture/worker-topology.md",
+      "sha256": "75e788467bd2c547c77b8aeedb23176402e059b2e92c1048187c5c737ad6295d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/display/browser-quirks.md",
+      "sha256": "b2871128091d0ffbbcf3aeedea51105e2f3eb4953a19a6960efa9951fc454661",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/display/browser-virtualization.md",
+      "sha256": "42978b37b4ad88c887f5b21a38ca0891023804813d89e105d3b9a527041488a5",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/display/diagnostic-overlays.md",
+      "sha256": "6d79aa9fb103ef5008b306776bd8610e9446997085a21079100ec9b3d49eb208",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/display/e036-monaco-geometry-comparison.md",
+      "sha256": "33f1573c79ff3e2a8a06595691ee9fdd12cab9e49bff14b0a0790efdbfe41272",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/display/e047-point-queries.md",
+      "sha256": "0704434fd6b7da2a7021fa8d3460de4a7685470eca7fad22ce2c941d43441afb",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/display/e048-minimap-document-space.md",
+      "sha256": "95c6a4e911068e89d1140a9d353ccdaafdd307fef120b7748293a1d3d64416ad",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/display/e051-fast-path-equivalence.md",
+      "sha256": "8f6301bed22140c661f784771d3ddbd5baa656c5a23eb0f251305d58a3e8ee83",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/display/transforms.md",
+      "sha256": "b7e5c233b651a97b7a74a573ea620f417aace0a931b21a13be8245f10bf9f82c",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/editing/e018-persisted-undo.md",
+      "sha256": "c6191657df487367563994b41dd937b2bbf270a21f1628b9f6629d622d6c2a46",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/editing/jump-history.md",
+      "sha256": "87f2773fda8d69031a4b9651a0bb26ef654f55b18eb82c66cacb879615a0b435",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/editing/selections-and-undo.md",
+      "sha256": "dab5fa7e4f7cfca9ac0ff6b6c2b9bc6671fc343ab95b4d0c95c3d4857e2728e2",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/editing/undo-graph-viewer.md",
+      "sha256": "4d0e2a6db1ba040cfcdb2fe74eb17729f667f50fe983ed4ef65eb12b001c913f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/editing/undo-graph.md",
+      "sha256": "400db5bc60b2615c0d0227d788fa4831bb76bc49938bac78a2205f4a790e0b6b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/parity-monaco-codemirror.md",
+      "sha256": "262212b1ee60a70a9adb6b9f6699f2729ad8ef77d03a26b04578af33909fa589",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/parity-review.md",
+      "sha256": "b928ef30a4efd7920ee4ff1872df1f9273264b45fb63cf7686c643af60819b80",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e007-consumer-copies.md",
+      "sha256": "7cb51fdac69be4aaa024aff2ae114399debb9d69bd1648c9a5bb42ea24804495",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e008-in-buffer-search.md",
+      "sha256": "27f598dd1e09d40a5211e565c6a398538a2c0dea4a1e2367d4c033edcec8c385",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e031-projection.md",
+      "sha256": "e4e20f1a747498967b158ce0eaa6e9a4e14bd80bf0c4efc1c5d8f4e5de1ac28e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e032-edit-batches.md",
+      "sha256": "feb74d4761d6d2a8c7c3b6adebe8f5b1925232706c72064d147a32049fb7217d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e033-full-text-boundary.md",
+      "sha256": "fa0b6093ab56cb646cdf0aca3b3dc3b3d26418c506911db61a666066ee809c44",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e034-snapshot-indentation-folds.md",
+      "sha256": "51120d488071d40ef50570fe97f4830867e6b0a9b9685193661eeeee799f4cc9",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e035-packed-token-store.md",
+      "sha256": "5b8aa96a362cd9874a2d1d9b2ab36ae738fd55f8bcf9c3acbccbb8f97d32b024",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e037-textbuffer-edit-allocations.md",
+      "sha256": "03e5889f06dabac36663c02ef8c18dd70ce29badba804fcd79f7801c5e162f6b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e038-append-only-buffer-store.md",
+      "sha256": "e2d0c1f315e98cf0c966544ed0f13326e209347a5c8641baf8bdc7158d0d9b6b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e039-reverse-index-cost.md",
+      "sha256": "bee4a27c187e14ff8e9c13c6555f389f29f11b9dc4d171e8cfb7bb6f1ebab77b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e040-balanced-tree.md",
+      "sha256": "892a51704dc34b7a3091ee83f016be4e716176d43cf2453af9fd2dc915a58510",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e041-transient-edits.md",
+      "sha256": "7716f996137516e26966991963e68ec0a6de105a8b060fbb45899adc472c5f25",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e042-fixed-edit-overhead.md",
+      "sha256": "641680a4e80ca1d7fb43503b1af94e723717ee350afc3cadac024885867b772f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e043-one-descent-insert.md",
+      "sha256": "13da354e80456ada7d6cf7b574e22050c6a866cd3f6f66487210b81ed29228ee",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e044-node-summaries.md",
+      "sha256": "e9fb4315f37995336a398b44f0de8fdbab1821865ee310157a609dd7beafdecd",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e045-one-pass-edits.md",
+      "sha256": "08fec2a776e3a0a514499e6a0dba0b43868575f8c426e708320292fcca5a82ea",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e046-one-walk-rows-and-cuts.md",
+      "sha256": "65eafebc6fdf937781700d043796621ebce7db30f496159b4b76ae5b3869f843",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/e055-edit-commands-read-lines.md",
+      "sha256": "1b53a432e4f14e454eb59a59442c92f66f2f1ad1cc3206adb8e058fd9ef78caf",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/first-paint.md",
+      "sha256": "9be186adc9b4d49fae7ecc894c324196973fa70f8fd41099264b8954fea3b323",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/input-latency.md",
+      "sha256": "aa6b091c6b07419b7d1879b8a45a64403c8eefc4029c4233a7e5bceb6b65b199",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/piece-heap-cost.md",
+      "sha256": "bc351dd52c0a9d44279c88ce9e94ed62f43d6a3ee18a05b6658217257eedf4e0",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/performance/sab-transport-2026-09-12.md",
+      "sha256": "49d5657439d8626864214fe9864adeba4b8652ed222d295a75dc0f1347e14f93",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/positions/anchors.md",
+      "sha256": "5439b6026151c2c3d48f4486fe6e1379da6b7c22848f90bee891625f426ea15f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/positions/types-and-conversions.md",
+      "sha256": "b42b5f29d3f35c9ff81953a7f6cb58d940af1cd3800a7298ba740ebfd44c640c",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/storage/e006-reclamation-investigation.md",
+      "sha256": "27eb6628a049a8b3426086e83e28085cc3aca8f255d0ec0da82b8d902eef95cd",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/storage/e006-text-reclamation.md",
+      "sha256": "f626706f5fa42a709437a02458287a3528f7ae4f5055435f92491dc67e30f758",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/storage/e006-tombstone-compaction.md",
+      "sha256": "c9afd2f79543b547a021a8b3457761500c5920f79e91bc53fa7e442b1971367b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/storage/piece-table.md",
+      "sha256": "a7cd7e7533e42e78c3a2b373416d248a577c2969b4baa6f8f2f8ecfac0283d34",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/storage/piece-tree-inspection.md",
+      "sha256": "ff5f1aec63ca87c1d9f13ea73ef64c1d508654bf9b4546554fab25b0e8307e82",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/storage/textbuffer-extraction.md",
+      "sha256": "6e9ce65c17a246d76ea1ac2f0b4118168ae18c32e18ecaa4a05b7972289e941c",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/docs/syntax/tree-sitter.md",
+      "sha256": "84b2e893d0e2a9121712d1566220d5225a1166d3de1da90b71600f4e1d1dbd28",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/examples/stress/README.md",
+      "sha256": "0e7dd65f0f3e2530e56f4a1b323c51c83a546a1459b8e11576be604f46cb1cdc",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/examples/stress/reclamation-cold.md",
+      "sha256": "c82693aedb22b45efbbc43babb5e067233e12bc6b7c87026db1ed41b08402957",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/examples/stress/reclamation-measurements.md",
+      "sha256": "0b3b6c0fc94bef6602b580d1747b9ee02fa04f52e5726cd663b8f62b4d12c614",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/examples/stress/reclamation-paste.md",
+      "sha256": "c291f8ed901b26f899695f6719f0f557a9ad99f98fc9dad52a7fa81405342d74",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/examples/stress/results/README.md",
+      "sha256": "bdbfa98f68b88d6f22c8eba8c2f12d5bd4254c0bc221c13b48235e8e4915b9ef",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/examples/stress/results/e007/README.md",
+      "sha256": "08451c65713859a134f53b19f6b8e753d7676a0e7b0d61c21e897702375f8c5e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/examples/stress/results/first-paint/README.md",
+      "sha256": "bdc8eedcc715881848afc9a538df07d84aece351bb209db790611fd604888c59",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/examples/stress/results/hidden-rendering.md",
+      "sha256": "44427380463cddf7ee82911811dbb51e23ce283f13c16ac2084037dd8f72b9ba",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/examples/stress/results/input-latency/README.md",
+      "sha256": "367e57b75c61c589c3e0ab57cbbc4d7e5a591045b93be400573c115d1152b921",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/examples/stress/results/input-latency/previous-review/README.md",
+      "sha256": "7de8959517ed2a5316361861cf031e98e246f01136ea7502c92e71994440aa6e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/examples/stress/results/input-layout/README.md",
+      "sha256": "06e8f275a2eefedf406b620cb8203aa1d0ddbc6fb0c1f524f249533654aa014e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/examples/stress/results/long-line-fix.md",
+      "sha256": "21cfcbedd432419187709b5089c1ceb70e5b0ab717e0645165129e86c1070fdd",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/examples/stress/results/long-line-profile.md",
+      "sha256": "ad9756e18ac51ba0665d549a0baab82941dd7ffd24ad238d6673da729e6480a1",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/decode/README.md",
+      "sha256": "65841a64e1dc982d5d176761cd6ec2288045013cf52626f4149ed5b40ab6ba50",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/diff/README.md",
+      "sha256": "4a5457f5689ef4295f4f14b8a550b86de8ec321e930ae2564062ca1b174686a0",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/editor/README.md",
+      "sha256": "075dd3f6f1bcb70f81e26c1668da99b80ac595932861c312508dd9aaf1f339f4",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/editor/scripts/unicode/README.md",
+      "sha256": "eae0504a390ff4544c48dd921f3ba56f57b82cedf3d361cd94e5e608dca53614",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/find/README.md",
+      "sha256": "03bb435fd29c9546b6497070bdf876210f5d3054010c760b45ba023fe6dcc23d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/gutters/README.md",
+      "sha256": "0a5e17ec360813c1f0a1e9275879d323ca6e238a3fc7d8d78a658dfe18060d78",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/lsp-plugin/README.md",
+      "sha256": "ff15f9ad91b47e950a772481b69c8d328d8d74d80af56ea939aa2bee8a0d5296",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/lsp/README.md",
+      "sha256": "4c13dd9d529c05eb212f834a5b6088caada857734dd6e364164079c9903021de",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/markdown/README.md",
+      "sha256": "baa20ce9d7cf850325f081079ec957da2195b56419f98a637fc2457752df1072",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/minimap/README.md",
+      "sha256": "3362b13de4746c5895e2bf9a1ed04239caf99444e79a021379cd137fcb7106aa",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/minimap/bench/browser/README.md",
+      "sha256": "7eb7a399befb14fcf668862acf7076be4abf0c17b6fa1093c4729085c7d9db0f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/panes/README.md",
+      "sha256": "d16d3c30363ecd974ead62bdf550f84bb839e5cc221968acc412141e5ebc7264",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/plugin-ui/README.md",
+      "sha256": "fc3ecf8b742e6304b5a1a4d66efa487579d4955f75b0a5bf7cba9a15581dedd6",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/react/README.md",
+      "sha256": "d590735e9cea967a86ebeb8a33c7ac7973f254f1cdc2e9c0b09416d91c8a512b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/scope-lines/README.md",
+      "sha256": "0304bbf09aca78f5b375067fcf97109de01f6cec58661cf182e334e1e955f7cd",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/solid/README.md",
+      "sha256": "59bfc7c0416e86c496f6c5cb857434062f009d3a20476901941d218f2d66e3cf",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/textbuffer/README.md",
+      "sha256": "f37d60640a91ea94c9abb54237eb2789fff48b78a91d1982dd4bcc4f920d1439",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/textbuffer/bench/ATTRIBUTION.md",
+      "sha256": "d7420b2b6f1b2cb0c740ed86285a085ca8b8c081bdb3a04429a9e4a962f9f00d",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/textbuffer/bench/HEIGHT.md",
+      "sha256": "677d383beb41295c2de408703bfe199b817d0d3d3658752820d10838dab10be0",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/textbuffer/bench/PROFILING.md",
+      "sha256": "b079a6e86a2f97d007323a4e12579e44642f7c784734962c8d4c3f7be74c5618",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/textbuffer/bench/README.md",
+      "sha256": "28419350b99669672b27a004691592e31f0af9c46bfda6033ee0144245e3749e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/tree-sitter-languages/README.md",
+      "sha256": "b1337b21b490a31d9b1946590a9397f8a26c280c3a15e69a7574f496092ebc4e",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/tree-sitter/README.md",
+      "sha256": "8003fbaf520a3804371ffea65e033b888ab4e62f29a4d04e2611bf852fc43a31",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/packages/typescript-lsp/README.md",
+      "sha256": "ec387ae6954fc7ff0749e5987ece30a81502a789a72a69fdb31e457efac3ce57",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/AUTHORING.md",
+      "sha256": "16998d943327f24aa1d4e32f3b82bff1f1c0ec72060240f0280be6fe9eb42caf",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/README.md",
+      "sha256": "60f7623b33349fbe468415558570a3910ffeb2182a1da2c661769fb2d1fa71ec",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e011-packed-piece-tree.md",
+      "sha256": "e02b41e7d7d298801cdb83589b762ec48230ebef86b72633e6ac4aa1443d2e38",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e014-parallel-search.md",
+      "sha256": "c17d59d6e82b1fbf1461896166ab3db28286ba9e42661b7f670a8c0b3e6782da",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e015-massive-file-loading.md",
+      "sha256": "2f6ae9865082befdd96b9f10545001adbcb57542b8d078d653758085ea49d80f",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e016-bounded-structural-parsing.md",
+      "sha256": "76bb8bad20021491393e01079a30f062b9d2ec82dbd0e70152e9f4ac65fbd487",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e021-styled-clipboard.md",
+      "sha256": "81754fd80e643ee2a656826b495125d838c5638f77fe30f16459782ff04288ce",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e023-instrumentation-panel.md",
+      "sha256": "3ffe23f5af569428478e223e6477417f1b60da90ce1104a50af5667b4a2427b1",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e024-syntax-tree-inspector.md",
+      "sha256": "46f360bfbd614e831fc60ec2f0cce1a43759b9becce3c382153049e201b2d4b6",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e025-runtime-plugins.md",
+      "sha256": "6d1c1b2995745c532f372ee44f1fe49c624cff92a483412f5430436ec3fa6d49",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e026-command-metadata.md",
+      "sha256": "f05f9109edb8d4cb421631cb1c409e242ee940add747fcf7e0be2a6bb2ed6045",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e027-extension-hooks.md",
+      "sha256": "7841d7d177f0a05bd58f8fc6c512e19d116e999dfe9434a2f15dad1b2ed11df6",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e028-modal-input-prototype.md",
+      "sha256": "0588a1f52779f445f437bf5b440a6f4764409fd8ce252a76dff0988967b7ad11",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e029-runtime-and-serialized-data.md",
+      "sha256": "ba07818fd5ac1ed4a4262e0cfe4cb50d0a64be1654ed37d9d94acce224e293c4",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e052-proportional-font-extents.md",
+      "sha256": "27e5b93e82a119fc1e000e2f27435c3e22efc91599a5e78916704f2c9942065b",
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "editor/plans/e057-delete-sab-transport.md",
+      "sha256": "41c98692612ce8a3dfafb91308c2b7ff08d23f15a02a23eacb1e63219588252b",
+      "missing": [],
+      "extra": []
+    }
+  ]
+}

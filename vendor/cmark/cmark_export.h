@@ -1,0 +1,2 @@
+#define CMARK_EXPORT
+#define CMARK_NO_EXPORT
