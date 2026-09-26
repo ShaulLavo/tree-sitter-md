@@ -37,14 +37,36 @@ static void clear_sources(Document *d) {
 static uint64_t mix(uint64_t h, uint64_t x) {
   return ((h << 5 | h >> 59) ^ x) * UINT64_C(0x517cc1b727220a95);
 }
-static uint64_t layout_key(Document *d, TSNode node, uint32_t base, uint64_t h) {
-  for (uint32_t i = 0; i < ts_node_named_child_count(node); i++) {
-    TSNode c = ts_node_named_child(node, i);
+static uint64_t layout_cursor(Document *d, TSTreeCursor *cursor, uint32_t base, uint64_t h) {
+  if (!ts_tree_cursor_goto_first_child(cursor))
+    return h;
+  do {
+    TSNode c = ts_tree_cursor_current_node(cursor);
+    if (!ts_node_is_named(c))
+      continue;
     if (is(c, d->ids.block_continuation))
       h = mix(h, (start(c) - base) | (uint64_t)(end(c) - base) << 32);
     else if (ts_node_named_child_count(c))
-      h = layout_key(d, c, base, h);
+      h = layout_cursor(d, cursor, base, h);
+  } while (ts_tree_cursor_goto_next_sibling(cursor));
+  ts_tree_cursor_goto_parent(cursor);
+  return h;
+}
+static uint64_t layout_key(Document *d, TSNode node, uint32_t base, uint64_t h) {
+  uint32_t count = ts_node_named_child_count(node);
+  if (count <= 16) {
+    for (uint32_t i = 0; i < count; i++) {
+      TSNode c = ts_node_named_child(node, i);
+      if (is(c, d->ids.block_continuation))
+        h = mix(h, (start(c) - base) | (uint64_t)(end(c) - base) << 32);
+      else if (ts_node_named_child_count(c))
+        h = layout_key(d, c, base, h);
+    }
+    return h;
   }
+  TSTreeCursor cursor = ts_tree_cursor_new(node);
+  h = layout_cursor(d, &cursor, base, h);
+  ts_tree_cursor_delete(&cursor);
   return h;
 }
 static uint64_t leaf_key(Document *d, TSNode node, int kind) {
@@ -119,17 +141,21 @@ static void table(Document *d, TSNode node, Words *out, Labels *deps) {
   Words cells = {0};
   uint32_t at = out->n;
   record(out, start(node), 0, TABLE, 0);
-  for (uint32_t i = 0; i < ts_node_named_child_count(node); i++) {
-    TSNode row = ts_node_named_child(node, i);
-    if (is(row, d->ids.block_continuation))
-      continue;
-    last = end(row);
-    split_cells(d, start(row), last, &cells);
-    bool delimiter = is(row, d->ids.pipe_table_delimiter_row);
-    if (delimiter)
-      columns = cells.n / 2;
-    aligns |= table_cells(d, &cells, delimiter, out, deps);
+  TSTreeCursor cursor = ts_tree_cursor_new(node);
+  if (ts_tree_cursor_goto_first_child(&cursor)) {
+    do {
+      TSNode row = ts_tree_cursor_current_node(&cursor);
+      if (!ts_node_is_named(row) || is(row, d->ids.block_continuation))
+        continue;
+      last = end(row);
+      split_cells(d, start(row), last, &cells);
+      bool delimiter = is(row, d->ids.pipe_table_delimiter_row);
+      if (delimiter)
+        columns = cells.n / 2;
+      aligns |= table_cells(d, &cells, delimiter, out, deps);
+    } while (ts_tree_cursor_goto_next_sibling(&cursor));
   }
+  ts_tree_cursor_delete(&cursor);
   while (last > start(node) && (d->text[last - 1] == '\n' || d->text[last - 1] == '\r'))
     last--;
   out->v[at + 1] = last;

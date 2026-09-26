@@ -119,12 +119,26 @@ void leaf_build(Document *d, TSNode node, int kind) {
   }
   bool line_start = true;
   count = ts_node_named_child_count(in);
-  for (uint32_t i = 0; i < count; i++) {
-    TSNode c = ts_node_named_child(in, i);
-    if (!is(c, d->ids.block_continuation))
-      continue;
-    push_lines(d, a, start(c), &line_start);
-    a = end(c);
+  if (count <= 16) {
+    for (uint32_t i = 0; i < count; i++) {
+      TSNode c = ts_node_named_child(in, i);
+      if (!is(c, d->ids.block_continuation))
+        continue;
+      push_lines(d, a, start(c), &line_start);
+      a = end(c);
+    }
+  } else {
+    TSTreeCursor cursor = ts_tree_cursor_new(in);
+    if (ts_tree_cursor_goto_first_child(&cursor)) {
+      do {
+        TSNode c = ts_tree_cursor_current_node(&cursor);
+        if (!ts_node_is_named(c) || !is(c, d->ids.block_continuation))
+          continue;
+        push_lines(d, a, start(c), &line_start);
+        a = end(c);
+      } while (ts_tree_cursor_goto_next_sibling(&cursor));
+    }
+    ts_tree_cursor_delete(&cursor);
   }
   push_lines(d, a, b, &line_start);
   word(&d->leaf.starts, b);
