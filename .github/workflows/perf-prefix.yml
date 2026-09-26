@@ -1,0 +1,67 @@
+name: ASCII prefix with scalar Unicode fallback
+on:
+  push:
+    branches: [perf/validate-ascii-prefix-680433b]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    env:
+      BASELINE: 680433b989ded6d633139614fd24514859200cc0
+      HARNESS: 06971c1d152c516082af5f7237b20eda62a9dd42
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 26.7.0
+      - name: Install hash-verified compiler
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-34/wasi-sdk-34.0-x86_64-linux.tar.gz -o "$RUNNER_TEMP/wasi-sdk.tar.gz"
+          echo 'b761e3a0721dbae9c09a0059e5fdb2bf917d1b4a8a7b430fb3b5aafb0984b2c4  '"$RUNNER_TEMP/wasi-sdk.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/wasi-sdk.tar.gz" -C "$RUNNER_TEMP"
+          echo "WASI_SDK=$RUNNER_TEMP/wasi-sdk-34.0-x86_64-linux" >> "$GITHUB_ENV"
+      - name: Validate one patch and benchmark ASCII, Hebrew, Chinese and emoji separately
+        run: bash experiments/perf-next/validate-prefix.sh
+      - name: Preserve validated source and rebuilt WASM on a separate review branch
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test -f validation/PASS.txt
+          branch=perf/ascii-prefix-680433b
+          test -z "$(git ls-remote origin "refs/heads/$branch")"
+          git worktree add --detach "$RUNNER_TEMP/publish" "$BASELINE"
+          for path in src/leaf.c tree-sitter-md.wasm tests/leaf-map.c scripts/check-perf-native.sh; do
+            cp "work/candidate/$path" "$RUNNER_TEMP/publish/$path"
+          done
+          mkdir -p "$RUNNER_TEMP/publish/experiments/perf-next"
+          cp experiments/perf-next/stress.mjs experiments/perf-next/bench-targets.mjs experiments/perf-next/warm-keystroke.mjs experiments/perf-next/bench-encodings.mjs experiments/perf/keystroke-isolated.mjs experiments/perf/public-checks.mjs "$RUNNER_TEMP/publish/experiments/perf-next/"
+          printf 'ASCII prefix batching with original scalar conversion for the remainder of mixed/non-ASCII segments.\nBaseline: %s\nValidation: https://github.com/ShaulLavo/tree-sitter-md/actions/runs/%s\n\nOriginal correctness gates and comparative stress ran before branch publication. Existing baseline failures remain recorded; benchmark success is not automatic performance approval. The one-off validation workflow is deliberately not part of this branch.\n' "$BASELINE" "$GITHUB_RUN_ID" > "$RUNNER_TEMP/publish/experiments/perf-next/README.md"
+          git -C "$RUNNER_TEMP/publish" add src/leaf.c tree-sitter-md.wasm tests/leaf-map.c scripts/check-perf-native.sh experiments/perf-next
+          git -C "$RUNNER_TEMP/publish" -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'perf: batch ASCII prefixes while retaining scalar Unicode conversion'
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -C "$RUNNER_TEMP/publish" -c http.extraheader="AUTHORIZATION: basic $auth" push origin "HEAD:refs/heads/$branch"
+          git -C "$RUNNER_TEMP/publish" rev-parse HEAD > validation/published-commit.txt
+      - name: Preserve all logs, timings, source and dependencies
+        if: always()
+        run: |
+          mkdir -p validation/harness
+          cp -a experiments/perf-next/. validation/harness/
+          cp experiments/perf/keystroke-isolated.mjs experiments/perf/public-checks.mjs validation/harness/ || true
+          if [ -d work/candidate ]; then tar -czf validation/replay-workspace.tar.gz -C work candidate; fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: perf-main-ascii-prefix
+          path: validation/
+          retention-days: 14
+          if-no-files-found: error
