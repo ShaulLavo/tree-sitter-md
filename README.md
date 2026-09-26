@@ -82,5 +82,5 @@ from a path you supply; it is not part of this repository.
 
 ## Licensing
 
-No license chosen yet. Ported and compiled-in work is MIT; see [NOTICE.md](NOTICE.md) and
-`licenses/`.
+MIT, see [LICENSE](LICENSE). Ported and compiled-in work is also MIT; see [NOTICE.md](NOTICE.md)
+and `licenses/`.

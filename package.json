@@ -17,9 +17,11 @@
     "js/index.js",
     "js/index.d.ts",
     "tree-sitter-md.wasm",
+    "LICENSE",
     "NOTICE.md",
     "licenses/"
   ],
+  "license": "MIT",
   "sideEffects": false,
   "repository": {
     "type": "git",

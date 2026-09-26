@@ -2,6 +2,7 @@
 name = "tree-sitter-md"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
 publish = false
 description = "Markdown for editors: a tree-sitter block grammar and a CommonMark inline resolver in one wasm module"
 
