@@ -1,6 +1,6 @@
 // Real content against micromark + GFM: the repository docs Plan 176 used (Platform c130dd35a,
-// Editor 74e76be) and the assistant messages from a state store copy (CHAT=path/to/chat.json,
-// a JSON array of strings; not in this repo). Same normalizer and ignore set as Plan 176.
+// Editor 74e76be) and the assistant messages in corpus/chat.json (override with CHAT=path).
+// Same normalizer and ignore set as Plan 176.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { execSync } from 'node:child_process'
 import { fromMarkdown } from 'mdast-util-from-markdown'
@@ -21,7 +21,8 @@ for (const [repo, root, rev] of REPOS) {
   const files = execSync(`git -C ${root} ls-tree -r --name-only ${rev}`, { encoding: 'utf8' }).split('\n').filter((f) => f.endsWith('.md'))
   for (const f of files) docs.push({ name: `${repo}/${f}`, kind: 'repo', text: execSync(`git -C ${root} show ${rev}:${JSON.stringify(f).slice(1, -1)}`, { encoding: 'utf8', maxBuffer: 1 << 26 }) })
 }
-if (process.env.CHAT) JSON.parse(readFileSync(process.env.CHAT, 'utf8')).forEach((text, i) => docs.push({ name: `chat/${i}`, kind: 'chat', text }))
+const chatPath = process.env.CHAT ?? new URL('./corpus/chat.json', import.meta.url)
+JSON.parse(readFileSync(chatPath, 'utf8')).forEach((text, i) => docs.push({ name: `chat/${i}`, kind: 'chat', text }))
 
 const ignore = new Set(['tight', 'math', 'imath'])
 const doc = new MarkdownDocument({ gfm: true })

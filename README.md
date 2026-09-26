@@ -74,7 +74,7 @@ web-tree-sitter runtime and the required host changes.
 ```sh
 cd bench && bun install
 node spec.mjs [--fail]                 # CommonMark 0.31.2 + GFM examples against micromark, beside lezer
-CHAT=chat.json node corpus.mjs         # repository docs (Platform, Editor at pinned commits) and chat messages
+node corpus.mjs                       # repository docs (Platform, Editor at pinned commits) and chat messages
 node keystroke.mjs docs/big.md         # first frame, full parse, 200 keystrokes, lezer on the same edits
 node fuzz.mjs docs/agents.md 11000 1    # incremental result equals a fresh parse after random edits
 node memory.mjs                        # wasm memory per document
@@ -88,8 +88,8 @@ the negative control. Paired timing checks use `scripts/compare-builds.sh` and
 `scripts/summarize.mjs` as described in FINDINGS.
 
 The normalizer (`bench/constructs.mjs`) and method are Plan 176's in the Platform repository, so
-numbers compare with its lezer and tree-sitter measurements. `corpus.mjs` reads the chat corpus
-from a path you supply; it is not part of this repository.
+numbers compare with its lezer and tree-sitter measurements. `corpus.mjs` reads the bundled [183-message chat corpus](bench/corpus/README.md)
+by default. Set `CHAT=/path/to/chat.json` to supply another corpus.
 
 ## Licensing
 
