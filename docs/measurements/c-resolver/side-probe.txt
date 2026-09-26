@@ -1,0 +1,23 @@
+imports [
+  { module: 'env', name: 'memory', kind: 'memory' },
+  { module: 'env', name: '__indirect_function_table', kind: 'table' },
+  { module: 'env', name: '__stack_pointer', kind: 'global' },
+  { module: 'env', name: '__memory_base', kind: 'global' },
+  { module: 'env', name: '__table_base', kind: 'global' },
+  { module: 'env', name: 'calloc', kind: 'function' },
+  { module: 'env', name: 'realloc', kind: 'function' },
+  { module: 'env', name: 'free', kind: 'function' },
+  { module: 'env', name: 'abort', kind: 'function' },
+  { module: 'env', name: 'strlen', kind: 'function' },
+  { module: 'env', name: 'memchr', kind: 'function' },
+  { module: 'env', name: 'strncmp', kind: 'function' },
+  { module: 'env', name: 'qsort', kind: 'function' },
+  { module: 'env', name: 'strcmp', kind: 'function' },
+  { module: 'env', name: 'bsearch', kind: 'function' },
+  { module: 'env', name: 'malloc', kind: 'function' },
+  { module: 'GOT.func', name: 'calloc', kind: 'global' },
+  { module: 'GOT.func', name: 'realloc', kind: 'global' },
+  { module: 'GOT.func', name: 'free', kind: 'global' }
+]
+block tree (document (section (paragraph (inline))))
+inline strong count 1

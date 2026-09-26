@@ -1,0 +1,121 @@
+--- a/src/inlines.c
++++ b/src/inlines.c
+@@ -93,0 +94,2 @@
++  e->source_start = start_column;
++  e->source_end = end_column + 1;
+@@ -346 +348 @@
+-    if (numticks <= MAXBACKTICKS) {
++    if (numticks <= MAXBACKTICKS && subj->pos - numticks > subj->backticks[numticks]) {
+@@ -585 +587 @@
+-  if ((can_open || can_close) && (!(c == '\'' || c == '"') || smart)) {
++  if ((c != '~' || numdelims == 1 || numdelims == 2) && (can_open || can_close) && (!(c == '\'' || c == '"') || smart)) {
+@@ -658 +660 @@
+-  bufsize_t openers_bottom[15] = {stack_bottom, stack_bottom, stack_bottom,
++  bufsize_t openers_bottom[17] = {stack_bottom, stack_bottom, stack_bottom,
+@@ -662 +664 @@
+-                                  stack_bottom, stack_bottom, stack_bottom};
++                                  stack_bottom, stack_bottom, stack_bottom, stack_bottom, stack_bottom};
+@@ -684,0 +687,3 @@
++      case '~':
++        openers_bottom_index = 14 + closer->length;
++        break;
+@@ -701 +706,2 @@
+-          if (!(closer->can_open || opener->can_close) ||
++          if ((closer->delim_char == '~' && opener->length == closer->length) ||
++              (closer->delim_char != '~' && (!(closer->can_open || opener->can_close) ||
+@@ -703 +709 @@
+-              (opener->length + closer->length) % 3 != 0) {
++              (opener->length + closer->length) % 3 != 0))) {
+@@ -711 +717 @@
+-      if (closer->delim_char == '*' || closer->delim_char == '_') {
++      if (closer->delim_char == '*' || closer->delim_char == '_' || closer->delim_char == '~') {
+@@ -811,0 +818,5 @@
++  emph->source_start = opener_inl->source_end - use_delims;
++  emph->source_end = closer_inl->source_start + use_delims;
++  opener_inl->source_end -= use_delims;
++  closer_inl->source_start += use_delims;
++  if (opener->delim_char == '~') emph->type = CMARK_NODE_STRIKETHROUGH;
+@@ -1083 +1094 @@
+-  if (i >= input->len || nb_p != 0)
++  if (nb_p != 0)
+@@ -1114 +1125 @@
+-  if (i >= input->len)
++  if (i > input->len || input->data[i - 1] != '>')
+@@ -1232,0 +1244,4 @@
++  inl->source_start = opener->inl_text->source_start;
++  inl->source_end = subj->pos;
++  inl->label_start = opener->position;
++  inl->label_end = initial_pos - 1;
+@@ -1319,0 +1335 @@
++    if ((options & CMARK_OPT_GFM) && subj->input.data[n] == '~') return n;
+@@ -1336,0 +1353 @@
++  bufsize_t source_start = subj->pos;
+@@ -1357,0 +1375,6 @@
++  case '~':
++    if (!(options & CMARK_OPT_GFM)) {
++      advance(subj);
++      new_inl = make_str(subj, source_start, source_start, cmark_chunk_literal("~"));
++      break;
++    }
+@@ -1401,0 +1425,16 @@
++    new_inl->source_start = source_start;
++    new_inl->source_end = subj->pos;
++    if (new_inl->type == CMARK_NODE_LINEBREAK) {
++      if (c == '\n' || c == '\r') {
++        while (new_inl->source_start > 0 && subj->input.data[new_inl->source_start - 1] == ' ')
++          new_inl->source_start--;
++      }
++      int e = source_start + 1;
++      if (c == '\\') e++;
++      if (e < subj->input.len && subj->input.data[e - 1] == '\r' && subj->input.data[e] == '\n') e++;
++      new_inl->source_end = e;
++    }
++    if (new_inl->type == CMARK_NODE_LINK) {
++      new_inl->label_start = source_start + 1;
++      new_inl->label_end = subj->pos - 1;
++    }
+@@ -1469 +1508 @@
+-  if ((matchlen = manual_scan_link_url(&subj.input, subj.pos, &url)) > -1) {
++  if ((matchlen = manual_scan_link_url(&subj.input, subj.pos, &url)) > 0) {
+@@ -1489 +1528 @@
+-  if (!skip_line_end(&subj)) {
++  if (!skip_line_end(&subj) && !is_eof(&subj)) {
+@@ -1493 +1532 @@
+-      if (!skip_line_end(&subj)) {
++      if (!skip_line_end(&subj) && !is_eof(&subj)) {
+--- a/src/references.c
++++ b/src/references.c
+@@ -124 +124 @@
+-  if (map == NULL || !map->size)
++  if (map == NULL)
+@@ -130,0 +131,2 @@
++  if (map->lookup_label) map->lookup_label(map->lookup_context, (char *)norm);
++  if (!map->size) { map->mem->free(norm); return NULL; }
+--- a/src/references.h
++++ b/src/references.h
+@@ -22,0 +23,2 @@
++  void (*lookup_label)(void *, const char *);
++  void *lookup_context;
+--- a/src/node.c
++++ b/src/node.c
+@@ -22 +22 @@
+-         node->type <= CMARK_NODE_LAST_INLINE;
++         node->type <= CMARK_NODE_STRIKETHROUGH;
+--- a/src/node.h
++++ b/src/node.h
+@@ -69,0 +70,3 @@
++  int source_start, source_end;
++  int label_start, label_end;
++
+--- a/src/cmark.h
++++ b/src/cmark.h
+@@ -704,0 +705,3 @@
++
++#define CMARK_NODE_STRIKETHROUGH (CMARK_NODE_IMAGE + 1)
++#define CMARK_OPT_GFM (1 << 20)
+--- a/src/buffer.c
++++ b/src/buffer.c
+@@ -44,3 +43,0 @@
+-    fprintf(stderr,
+-      "[cmark] cmark_strbuf_grow requests buffer with size > %d, aborting\n",
+-         (INT32_MAX / 2));

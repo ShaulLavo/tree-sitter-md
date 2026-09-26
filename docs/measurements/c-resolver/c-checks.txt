@@ -1,0 +1,126 @@
+[wave-heavy] slot 1 acquired for 'tsmd-c: release artifact gates' after 0s
+wasm: 377481 raw, 129730 gzip -9
+
+> tree-sitter-md@0.1.0 test
+> node --test tests/resolver.mjs
+
+✔ unmatched long backticks preserve later short closers (4.128711ms)
+✔ reference edits invalidate successful and unsuccessful lookups, first definition wins (1.37703ms)
+✔ continuation layout and UTF-16 offsets survive edits (0.78839ms)
+✔ GFM option controls single and double tilde strikethrough and literal autolinks (0.278996ms)
+✔ GFM email protocols include the prefix and XMPP resource (0.178121ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 77.754447
+| Section | n | tree-sitter-md | lezer+refcheck |
+| --- | --: | --: | --: |
+| Tabs | 11 | 11 | 10 |
+| Backslash escapes | 13 | 13 | 13 |
+| Entity and numeric character references | 17 | 17 | 17 |
+| Precedence | 1 | 1 | 1 |
+| Thematic breaks | 19 | 19 | 19 |
+| ATX headings | 18 | 18 | 18 |
+| Setext headings | 27 | 25 | 27 |
+| Indented code blocks | 12 | 12 | 12 |
+| Fenced code blocks | 29 | 29 | 29 |
+| HTML blocks | 44 | 44 | 43 |
+| Link reference definitions | 27 | 26 | 26 |
+| Paragraphs | 8 | 8 | 8 |
+| Blank lines | 1 | 1 | 1 |
+| Block quotes | 25 | 25 | 25 |
+| List items | 48 | 47 | 46 |
+| Lists | 26 | 26 | 26 |
+| Inlines | 1 | 1 | 1 |
+| Code spans | 22 | 22 | 22 |
+| Emphasis and strong emphasis | 132 | 132 | 132 |
+| Links | 90 | 90 | 84 |
+| Images | 22 | 22 | 22 |
+| Autolinks | 19 | 19 | 19 |
+| Raw HTML | 20 | 20 | 17 |
+| Hard line breaks | 15 | 15 | 15 |
+| Soft line breaks | 2 | 2 | 2 |
+| Textual content | 3 | 3 | 3 |
+| GFM Tables (extension) | 8 | 8 | 8 |
+| GFM Task list items (extension) | 2 | 2 | 2 |
+| GFM Strikethrough (extension) | 2 | 2 | 2 |
+| GFM Autolinks (extension) | 11 | 11 | 11 |
+| GFM Disallowed Raw HTML (extension) | 1 | 1 | 1 |
+| **Total** | 676 | 672 (99.4%) | 662 (97.9%) |
+
+tree-sitter-md failing: 96 98 216 260
+
+repo:tree-sitter-md: docs 406/497 identical (84 of the rest start with frontmatter); constructs 105952; missing 208 {"h":83,"hr":85,"cspan":3,"p":34,"a":3}; extra 33 {"p":33}
+repo:lezer: docs 488/497 identical (1 of the rest start with frontmatter); constructs 105952; missing 43 {"p":33,"a":3,"cspan":7}; extra 46 {"p":33,"a":6,"cspan":7}
+chat:tree-sitter-md: docs 183/183 identical (0 of the rest start with frontmatter); constructs 859; missing 0 {}; extra 0 {}
+chat:lezer: docs 183/183 identical (0 of the rest start with frontmatter); constructs 859; missing 0 {}; extra 0 {}
+
+{ file: 'agents.md', edits: 11000, checks: 1100, failures: 0 }
+{ file: 'big.md', edits: 300, checks: 30, failures: 0 }
+{
+  control: { file: 'agents.md', edits: 100, checks: 10, failures: 10 }
+}
+{
+  "result": {
+    "rust": {
+      "agents.md": {
+        "runs": 9,
+        "firstFrame": 0.382,
+        "fullParse": 1.416,
+        "decorateWholeDocument": 1.1,
+        "firstKeystroke": 0.434,
+        "firstKeystrokeWithoutIdle": 0.436,
+        "totalMedian": 0.076,
+        "totalP95": 0.139
+      },
+      "big.md": {
+        "runs": 9,
+        "firstFrame": 0.355,
+        "fullParse": 25.749,
+        "decorateWholeDocument": 15.8,
+        "firstKeystroke": 1.482,
+        "firstKeystrokeWithoutIdle": 2.336,
+        "totalMedian": 0.442,
+        "totalP95": 0.936
+      }
+    },
+    "c": {
+      "agents.md": {
+        "runs": 9,
+        "firstFrame": 0.306,
+        "fullParse": 1.364,
+        "decorateWholeDocument": 0.7,
+        "firstKeystroke": 0.344,
+        "firstKeystrokeWithoutIdle": 0.356,
+        "totalMedian": 0.062,
+        "totalP95": 0.119
+      },
+      "big.md": {
+        "runs": 9,
+        "firstFrame": 0.308,
+        "fullParse": 24.954,
+        "decorateWholeDocument": 10.4,
+        "firstKeystroke": 1.148,
+        "firstKeystrokeWithoutIdle": 2.001,
+        "totalMedian": 0.401,
+        "totalP95": 0.845
+      }
+    }
+  },
+  "gates": [
+    {
+      "file": "agents.md",
+      "median": true,
+      "p95": true
+    },
+    {
+      "file": "big.md",
+      "median": true,
+      "p95": true
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "missingRawRuntimeExports": [
+    "ts_node_end_byte",
+    "ts_node_is_null",
+    "ts_node_named_child",
+    "ts_node_named_child_count",
+    "ts_node_parent",
+    "ts_node_start_byte",
+    "ts_node_symbol",
+    "ts_node_type",
+    "ts_parser_new",
+    "ts_parser_parse_string_encoding",
+    "ts_tree_cursor_current_node",
+    "ts_tree_cursor_delete",
+    "ts_tree_cursor_goto_first_child_for_byte",
+    "ts_tree_cursor_goto_next_sibling",
+    "ts_tree_cursor_goto_parent",
+    "ts_tree_cursor_new",
+    "ts_tree_edit",
+    "ts_tree_get_changed_ranges",
+    "ts_tree_root_node"
+  ]
+}
+Expected stock-host failure: resolved is not a function

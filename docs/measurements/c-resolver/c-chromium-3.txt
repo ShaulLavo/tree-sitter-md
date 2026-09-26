@@ -1,0 +1,4 @@
+tree-sitter-md agents.md {"load":1.7,"firstFrame":7.7,"rest":3.6,"full":2.3,"warmFull":1.8}
+tree-sitter-md big.md {"load":1.7,"firstFrame":7.6,"rest":37.7,"full":29.7,"warmFull":28.2}
+lezer agents.md {"load":3.6,"firstFrame":7.8,"rest":0,"full":5.8,"warmFull":3.9}
+lezer big.md {"load":3.3,"firstFrame":6.5,"rest":0,"full":56,"warmFull":45.2}

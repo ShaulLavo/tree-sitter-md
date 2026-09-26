@@ -1,0 +1,37 @@
+[
+  {
+    "build": "Rust",
+    "opt": "O3",
+    "raw": 561739,
+    "gzip9": 193422,
+    "sha256": "cd4c309bc4aa38fcf5f76428c709188f9b55407d1bac80badaa498a7ba376a13"
+  },
+  {
+    "build": "Rust",
+    "opt": "Oz",
+    "raw": 465319,
+    "gzip9": 163783,
+    "sha256": "c3e05e6ac0f309efb911928c9e21ebf4d6f22b31ba8b6512825b3b349a7e20cd"
+  },
+  {
+    "build": "C",
+    "opt": "O3",
+    "raw": 377481,
+    "gzip9": 129730,
+    "sha256": "d33080a8ec98f21bec558610cd9b0ba64585ee80e0246264fb203ccd1b52cf15"
+  },
+  {
+    "build": "C",
+    "opt": "Oz",
+    "raw": 292714,
+    "gzip9": 107471,
+    "sha256": "25d7335d0df12194ed421d5a13906ca52da50eb3805c2b21ce6fda0730d9bce2"
+  },
+  {
+    "build": "C side module",
+    "opt": "O3",
+    "raw": 233031,
+    "gzip9": 75300,
+    "sha256": "36a4ea5db63cd7cf2173f13483c2c6d37afe1fa75505cd40130d5f0989bc214a"
+  }
+]

@@ -1,0 +1,4 @@
+repo:tree-sitter-md: docs 406/497 identical (84 of the rest start with frontmatter); constructs 105952; missing 208 {"h":83,"hr":85,"cspan":3,"p":34,"a":3}; extra 33 {"p":33}
+repo:lezer: docs 488/497 identical (1 of the rest start with frontmatter); constructs 105952; missing 43 {"p":33,"a":3,"cspan":7}; extra 46 {"p":33,"a":6,"cspan":7}
+chat:tree-sitter-md: docs 183/183 identical (0 of the rest start with frontmatter); constructs 859; missing 0 {}; extra 0 {}
+chat:lezer: docs 183/183 identical (0 of the rest start with frontmatter); constructs 859; missing 0 {}; extra 0 {}
