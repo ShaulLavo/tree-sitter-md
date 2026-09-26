@@ -12,7 +12,9 @@ the notices in `licenses/`.
 | [wasi-libc](https://github.com/WebAssembly/wasi-libc) `2e6fb9d8ee0cdf9e431fbcabe8af3115de000a13` | MIT option; musl MIT; cloudlibc BSD-2-Clause; dlmalloc CC0 | C library and allocator from WASI SDK 34 |
 
 The cmark notices include its Houdini, buffer and utf8proc licenses. The SDK's libc notices are
-in `wasi-libc.txt`, `musl.txt`, `cloudlibc.txt` and `dlmalloc.txt`.
+in `wasi-libc.txt`, `musl.txt`, `cloudlibc.txt` and `dlmalloc.txt`. Tree-sitter's Unicode helpers
+retain the ICU notice in `icu.txt`. The SDK compiler runtime's Apache-2.0 license with LLVM
+exceptions is in `llvm.txt`.
 
 Benchmark inputs, outside the npm package: `bench/spec/gfm-spec.txt` is the cmark-gfm spec,
 CC-BY-SA 4.0, John MacFarlane. `bench/web/lezer.min.js` bundles `@lezer/markdown` and
