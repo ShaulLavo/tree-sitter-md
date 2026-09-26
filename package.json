@@ -1,0 +1,36 @@
+{
+  "name": "tree-sitter-md",
+  "version": "0.1.0",
+  "description": "Markdown for editors: a tree-sitter block grammar and a CommonMark + GFM inline resolver in one wasm module",
+  "type": "module",
+  "main": "./js/index.js",
+  "types": "./js/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./js/index.d.ts",
+      "default": "./js/index.js"
+    },
+    "./tree-sitter-md.wasm": "./tree-sitter-md.wasm",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "js/index.js",
+    "js/index.d.ts",
+    "tree-sitter-md.wasm",
+    "NOTICE.md",
+    "licenses/"
+  ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShaulLavo/tree-sitter-md.git"
+  },
+  "keywords": ["markdown", "commonmark", "gfm", "tree-sitter", "wasm", "editor"],
+  "scripts": {
+    "build": "sh scripts/build.sh",
+    "generate": "cd grammar && tree-sitter generate",
+    "spec": "cd bench && node spec.mjs",
+    "corpus": "cd bench && node corpus.mjs",
+    "bench": "cd bench && node keystroke.mjs"
+  }
+}

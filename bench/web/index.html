@@ -1,0 +1,53 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>tree-sitter-md probe</title>
+<script type="module">
+import { init, MarkdownDocument } from '/js/index.js'
+const nthNewline = (text, from, n) => { let at = from; for (let i = 0; i < n; i++) { at = text.indexOf('\n', at + 1); if (at < 0) return text.length } return at }
+window.run = async (file) => {
+  const text = await (await fetch('/docs/' + file)).text()
+  const t0 = performance.now()
+  await init(fetch('/tree-sitter-md.wasm'))
+  const load = performance.now() - t0
+  const pe = nthNewline(text, 0, 60) + 1
+  const doc = new MarkdownDocument()
+  const t1 = performance.now()
+  doc.setText(text.slice(0, pe))
+  doc.decorations(0, pe)
+  doc.highlights(0, pe)
+  const firstFrame = performance.now() - t1
+  const t2 = performance.now()
+  doc.edit(pe, pe, text.slice(pe))
+  const rest = performance.now() - t2
+  const d2 = new MarkdownDocument()
+  const t3 = performance.now()
+  d2.setText(text)
+  const full = performance.now() - t3
+  const t4 = performance.now()
+  d2.setText(text)
+  const warmFull = performance.now() - t4
+  return { file, load, firstFrame, rest, full, warmFull }
+}
+window.runLezer = async (file) => {
+  const text = await (await fetch('/docs/' + file)).text()
+  const t0 = performance.now()
+  const { md } = await import('/bench/web/lezer.min.js')
+  const load = performance.now() - t0
+  const stop = nthNewline(text, 0, 60)
+  const t1 = performance.now()
+  const p = md.startParse(text)
+  p.stopAt(stop)
+  let tree
+  while (!(tree = p.advance())) {}
+  let n = 0
+  tree.iterate({ enter: () => { n++ } })
+  const firstFrame = performance.now() - t1
+  const t3 = performance.now()
+  md.parse(text)
+  const full = performance.now() - t3
+  const t4 = performance.now()
+  md.parse(text)
+  const warmFull = performance.now() - t4
+  return { file, load, firstFrame, rest: 0, full, warmFull }
+}
+</script>
