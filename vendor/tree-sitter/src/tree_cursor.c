@@ -301,6 +301,22 @@ static inline int64_t ts_tree_cursor_goto_first_child_for_byte_and_point(
     }
   } while (did_descend);
 
+  // A hidden subtree can extend past the goal only because of trailing
+  // invisible content. In that case, exhausting its visible descendants does
+  // not mean that the original node has no later visible child.
+  bool descended_into_hidden = self->stack.size > initial_size;
+  self->stack.size = initial_size;
+  if (descended_into_hidden && ts_tree_cursor_goto_first_child(_self)) {
+    uint32_t child_index = 0;
+    do {
+      TSNode child = ts_tree_cursor_current_node(_self);
+      if (
+        ts_node_end_byte(child) > goal_byte &&
+        point_gt(ts_node_end_point(child), goal_point)
+      ) return child_index;
+      child_index++;
+    } while (ts_tree_cursor_goto_next_sibling(_self));
+  }
   self->stack.size = initial_size;
   return -1;
 }

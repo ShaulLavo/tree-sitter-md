@@ -33,3 +33,15 @@ last closer and make a later valid span disappear. `tests/resolver.mjs` covers t
 The buffer overflow path aborts without printing. This removes a `stderr` data import from the
 side module and does not affect successful parsing. Generated export/config/version headers
 are checked in; `allocator.c` supplies the system C allocator. Notices are in `licenses/`.
+
+## Tree-sitter cursor correction
+
+The runtime also contains a correction for byte/point first-child seeks into a hidden subtree
+whose trailing invisible content covers the query. Exhausting that subtree does not exclude a
+later visible sibling. A failed hidden descent falls back to sequential visible-child traversal;
+a genuine miss restores the original cursor. The fallback is linear in the queried node's visible
+children, so it is a correctness safeguard rather than a claimed optimization.
+
+`tests/cursor-seek.c` compares both seek APIs against an independent sequential oracle, including
+miss-state restoration. `tests/reference-boundaries.mjs` covers reference-definition edits and
+viewport starts in invisible gaps. Run `sh scripts/check-cursor.sh` and `npm test`.
