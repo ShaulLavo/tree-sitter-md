@@ -1,0 +1,84 @@
+--- a/src/document.c
++++ b/src/document.c
+@@ -30,6 +30,7 @@
+   d->cache_count = 0;
+ }
+ static void clear_sources(Document *d) {
++  d->defs_dirty = true;
+   for (uint32_t i = 0; i < d->source_count; i++)
+     cmark_reference_map_free(d->sources[i].map);
+   d->source_count = 0;
+@@ -172,6 +173,7 @@
+          id != i->inline_node;
+ }
+ static void insert_source(Document *d, TSNode n, cmark_reference_map *map) {
++  d->defs_dirty = true;
+   uint32_t at = 0;
+   while (at < d->source_count && d->sources[at].start < start(n))
+     at++;
+@@ -225,8 +227,10 @@
+     DefSource s = d->sources[i];
+     if (s.end < from || s.start > to)
+       d->sources[j++] = s;
+-    else
++    else {
++      d->defs_dirty = true;
+       cmark_reference_map_free(s.map);
++    }
+   }
+   d->source_count = j;
+ }
+@@ -271,14 +275,23 @@
+   return false;
+ }
+ static void rebuild_defs(Document *d) {
+-  cmark_reference_map *next = cmark_reference_map_new(cmark_get_default_mem_allocator());
+-  for (uint32_t i = 0; i < d->source_count; i++)
+-    copy_refs(next, d->sources[i].map);
++  // Only rebuild when a definition source was inserted or removed. Structural
++  // edits still mark affected sources dirty; this does not guess from edit text.
++  cmark_reference_map *next = d->defs;
++  if (d->defs_dirty) {
++    next = cmark_reference_map_new(cmark_get_default_mem_allocator());
++    for (uint32_t i = 0; i < d->source_count; i++)
++      copy_refs(next, d->sources[i].map);
++  }
+   bool sweep = d->cache_count >= 8192;
+-  bool changed = refs_changed(d->defs, next) || refs_changed(next, d->defs);
++  bool changed = d->defs_dirty &&
++                 (refs_changed(d->defs, next) || refs_changed(next, d->defs));
++  d->defs_dirty = false;
+   if (!changed && !sweep) {
+-    cmark_reference_map_free(d->defs);
+-    d->defs = next;
++    if (d->defs != next) {
++      cmark_reference_map_free(d->defs);
++      d->defs = next;
++    }
+     return;
+   }
+   for (uint32_t i = 0; i < CACHE_BUCKETS; i++) {
+@@ -295,8 +308,10 @@
+       d->cache_count--;
+     }
+   }
+-  cmark_reference_map_free(d->defs);
+-  d->defs = next;
++  if (d->defs != next) {
++    cmark_reference_map_free(d->defs);
++    d->defs = next;
++  }
+ }
+ static uint32_t emit_setext_marks(Document *d, TSNode n) {
+   uint32_t level = 2;
+--- a/src/resolver.h
++++ b/src/resolver.h
+@@ -39,7 +39,7 @@
+   TSParser *parser;
+   TSTree *tree;
+   Ids ids;
+-  bool gfm;
++  bool gfm, defs_dirty;
+   Leaf leaf;
+   DefSource *sources;
+   uint32_t source_count, source_cap;

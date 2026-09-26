@@ -1,0 +1,36 @@
+--- a/src/leaf.c
++++ b/src/leaf.c
+@@ -65,6 +65,33 @@
+       continue;
+     }
+     *line_start = false;
++    if (c > 0 && c < 0x80) {
++      // Reserve once for a contiguous ASCII run. Stop after a newline so the
++      // next iteration still applies continuation indentation stripping.
++      uint32_t stop = a;
++      do {
++        uint16_t value = d->text[stop++];
++        if (value == '\n')
++          break;
++      } while (stop < b && d->text[stop] > 0 && d->text[stop] < 0x80);
++      Leaf *l = &d->leaf;
++      uint32_t count = stop - a, at = l->n;
++      reserve((void **)&l->text, &l->cap, at + count + 1, 1);
++      reserve((void **)&l->starts.v, &l->starts.cap, at + count, sizeof(uint32_t));
++      reserve((void **)&l->ends.v, &l->ends.cap, at + count, sizeof(uint32_t));
++      for (uint32_t j = 0; j < count; j++) {
++        l->text[at + j] = (char)d->text[a + j];
++        l->starts.v[at + j] = a + j;
++        l->ends.v[at + j] = a + j + 1;
++      }
++      l->n += count;
++      l->starts.n += count;
++      l->ends.n += count;
++      l->text[l->n] = 0;
++      *line_start = d->text[stop - 1] == '\n';
++      a = stop;
++      continue;
++    }
+     if (c >= 0xd800 && c < 0xdc00 && a + 1 < b && d->text[a + 1] >= 0xdc00 &&
+         d->text[a + 1] < 0xe000) {
+       c = 0x10000 + ((c - 0xd800) << 10) + (d->text[a + 1] - 0xdc00);
