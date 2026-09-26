@@ -39,7 +39,7 @@ typedef struct {
   TSParser *parser;
   TSTree *tree;
   Ids ids;
-  bool gfm;
+  bool gfm, defs_dirty;
   Leaf leaf;
   DefSource *sources;
   uint32_t source_count, source_cap;
