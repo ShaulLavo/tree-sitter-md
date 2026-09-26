@@ -1,0 +1,191 @@
+name: Performance revalidation on merged main
+on:
+  push:
+    branches: [perf/revalidate-main-680433b]
+permissions:
+  contents: read
+jobs:
+  experiment:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        idea: [ascii-runs, reference-dirty]
+    env:
+      BASELINE: 680433b989ded6d633139614fd24514859200cc0
+      HARNESS: 06971c1d152c516082af5f7237b20eda62a9dd42
+      IDEA: ${{ matrix.idea }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 26.7.0
+      - name: Prepare isolated candidate and original corpus revisions
+        run: |
+          set -euo pipefail
+          mkdir -p work/baseline work/candidate validation/baseline validation/candidate
+          git archive "$BASELINE" | tar -x -C work/baseline
+          cp -a work/baseline/. work/candidate/
+          git archive "$HARNESS" experiments/perf | tar -x
+          patch --batch --fuzz=0 -p1 -d work/candidate < "experiments/perf-next/$IDEA.patch"
+          cp "experiments/perf-next/$IDEA.patch" validation/candidate.patch
+          python3 - <<'PY'
+          from pathlib import Path
+          base=Path('work/baseline');candidate=Path('work/candidate')
+          slow=(base/'src/leaf.c').read_text()
+          slow=slow[slow.index('static void push_character'):slow.index('void leaf_single')].replace('push_character','slow_character').replace('push_lines','slow_lines')
+          test='#include "resolver.h"\n#include <assert.h>\n#include <stdio.h>\n// Frozen scalar baseline implementation is the differential oracle.\n'+slow+Path('experiments/perf-next/leaf-map-main.c').read_text()
+          for d in [base,candidate]: (d/'tests/leaf-map.c').write_text(test)
+          PY
+          if [ "$IDEA" = reference-dirty ]; then cp experiments/perf-next/reference-index.c work/candidate/tests/; fi
+          cat > work/candidate/scripts/check-perf-native.sh <<'SH'
+          #!/bin/sh
+          set -eu
+          cd "$(dirname "$0")/.."
+          mkdir -p target/c
+          for test in leaf-map reference-index; do
+            [ -f "tests/$test.c" ] || continue
+            clang -g -O1 -fsanitize=address,undefined -fno-omit-frame-pointer -std=c11 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE \
+              -Isrc -Ivendor/tree-sitter/include -Ivendor/tree-sitter/src -Igrammar/src -Ivendor/cmark \
+              "tests/$test.c" src/*.c vendor/cmark/*.c vendor/tree-sitter/src/lib.c grammar/src/parser.c grammar/src/scanner.c \
+              -o "target/c/check-$test"
+            ASAN_OPTIONS=detect_leaks=1 "target/c/check-$test"
+          done
+          SH
+          cp work/candidate/scripts/check-perf-native.sh work/baseline/scripts/
+          for item in 'platform fregat c130dd35a202dd06ccd160bd5ed0789c889315c2' 'editor singapore 74e76bef2af674ad80b3c13024fa47f692e2bb7c'; do
+            read -r local_name repo sha <<< "$item"
+            git init "$RUNNER_TEMP/$local_name"
+            git -C "$RUNNER_TEMP/$local_name" fetch --depth=1 "https://github.com/ShaulLavo/$repo.git" "$sha"
+            test "$(git -C "$RUNNER_TEMP/$local_name" rev-parse FETCH_HEAD)" = "$sha"
+          done
+          echo "PLATFORM=$RUNNER_TEMP/platform" >> "$GITHUB_ENV"
+          echo "EDITOR_REPO=$RUNNER_TEMP/editor" >> "$GITHUB_ENV"
+          echo '2c5c01ed08af3c921c8c500b6c9f50d9e48d39480bedc91355dc88377e9adbf1  work/baseline/bench/corpus/chat.json' | sha256sum -c -
+          npm --prefix work/baseline/bench install --ignore-scripts --no-audit --no-fund
+          cp -a work/baseline/bench/node_modules work/candidate/bench/
+          cp work/baseline/bench/package-lock.json validation/dependencies-package-lock.json
+      - name: Build both modules using the verified compiler
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-34/wasi-sdk-34.0-x86_64-linux.tar.gz -o "$RUNNER_TEMP/wasi-sdk.tar.gz"
+          echo 'b761e3a0721dbae9c09a0059e5fdb2bf917d1b4a8a7b430fb3b5aafb0984b2c4  '"$RUNNER_TEMP/wasi-sdk.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/wasi-sdk.tar.gz" -C "$RUNNER_TEMP"
+          export WASI_SDK="$RUNNER_TEMP/wasi-sdk-34.0-x86_64-linux"
+          echo "WASI_SDK=$WASI_SDK" >> "$GITHUB_ENV"
+          { uname -a; lscpu; node --version; clang --version; "$WASI_SDK/bin/clang" --version; git rev-parse HEAD; } > validation/environment.txt
+          for build in baseline candidate; do
+            (cd "work/$build" && sh scripts/build.sh) | tee "validation/$build/build.txt"
+            cp "work/$build/tree-sitter-md.wasm" "validation/$build/tree-sitter-md.wasm"
+            sha256sum "work/$build/tree-sitter-md.wasm" > "validation/$build/wasm-sha256.txt"
+          done
+          git show "$BASELINE:tree-sitter-md.wasm" | cmp - work/baseline/tree-sitter-md.wasm
+      - name: Existing tests, added scalar oracle, sanitizers and new cursor cost guard
+        if: always()
+        run: |
+          set -uo pipefail
+          status=0
+          for build in baseline candidate; do
+            for command in 'npm test' 'sh scripts/check-native.sh' 'sh scripts/check-perf-native.sh' 'node bench/cursor-seek.mjs --check'; do
+              name=$(printf '%s' "$command" | tr ' /' '--')
+              (cd "work/$build" && sh -c "$command") > "validation/$build/$name.txt" 2>&1 || status=1
+            done
+          done
+          exit "$status"
+      - name: Full original correctness gate with chat and pinned repository corpora
+        if: always()
+        run: |
+          set -uo pipefail
+          status=0
+          for build in baseline candidate; do
+            (cd "work/$build" && CHAT="$GITHUB_WORKSPACE/work/$build/bench/corpus/chat.json" node scripts/check-gates.mjs) > "validation/$build/full-gates.txt" 2>&1 || status=1
+            cat "validation/$build/full-gates.txt"
+            cp -a "work/$build/bench/out" "validation/$build/out" || status=1
+          done
+          exit "$status"
+      - name: Three-seed fuzz and exact specification and corpus parity
+        if: always()
+        run: |
+          set -uo pipefail
+          status=0
+          for build in baseline candidate; do
+            node experiments/perf/public-checks.mjs "work/$build" "validation/$build" > "validation/$build/public-checks.txt" 2>&1 || status=1
+          done
+          node --input-type=module <<'JS' || status=1
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const read=p=>JSON.parse(readFileSync(p));
+          assert.deepEqual(read('validation/baseline/spec-results.json'),read('validation/candidate/spec-results.json'));
+          assert.deepEqual(read('validation/baseline/out/corpus-stats.json'),read('validation/candidate/out/corpus-stats.json'));
+          console.log('Exact per-example and corpus-summary parity passed');
+          JS
+          exit "$status"
+      - name: Additional mutation and undo probes require zero changed outcomes
+        if: always()
+        run: |
+          set -euo pipefail
+          node experiments/perf-next/stress.mjs work/baseline work/candidate > validation/additional-stress.json
+          node --input-type=module <<'JS'
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync('validation/additional-stress.json'));
+          console.log(JSON.stringify({edits:x.edits,comparisons:x.comparisons,newRegressions:x.newRegressions,baselineFreshDivergences:x.baselineFreshDivergences}));
+          console.log('Any baseline incremental/fresh failures remain explicitly recorded, not counted as successful fresh-parse comparisons.');
+          JS
+      - name: Six paired rounds including short-run and fully warmed typing
+        if: always()
+        run: |
+          set -euo pipefail
+          for round in 1 2 3 4 5 6; do
+            order='baseline candidate'; if [ $((round % 2)) -eq 0 ]; then order='candidate baseline'; fi
+            for build in $order; do
+              BUILD_LABEL="$build" ROUND="$round" node experiments/perf/keystroke-isolated.mjs "work/$build" > "validation/$build/standard-$round.jsonl"
+              BUILD_LABEL="$build" ROUND="$round" node experiments/perf-next/bench-targets.mjs "work/$build" > "validation/$build/targets-$round.jsonl"
+              BUILD_LABEL="$build" ROUND="$round" node experiments/perf-next/warm-keystroke.mjs "work/$build" > "validation/$build/warm-$round.jsonl"
+            done
+          done
+          for build in baseline candidate; do
+            (cd "work/$build" && node bench/memory.mjs) > "validation/$build/memory.jsonl"
+          done
+      - name: Preserve validated patch on a fresh branch based on merged main
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          branch="perf/$IDEA-680433b"
+          test -z "$(git ls-remote origin "refs/heads/$branch")"
+          git worktree add --detach "$RUNNER_TEMP/publish" "$BASELINE"
+          for path in src/document.c src/resolver.h src/leaf.c tree-sitter-md.wasm tests/leaf-map.c scripts/check-perf-native.sh; do
+            cp "work/candidate/$path" "$RUNNER_TEMP/publish/$path"
+          done
+          if [ "$IDEA" = reference-dirty ]; then cp work/candidate/tests/reference-index.c "$RUNNER_TEMP/publish/tests/"; fi
+          mkdir -p "$RUNNER_TEMP/publish/experiments/perf-next"
+          cp experiments/perf-next/stress.mjs experiments/perf-next/bench-targets.mjs experiments/perf-next/warm-keystroke.mjs experiments/perf/keystroke-isolated.mjs experiments/perf/public-checks.mjs "$RUNNER_TEMP/publish/experiments/perf-next/"
+          printf 'Experiment: %s\nBaseline: %s\nValidation: https://github.com/ShaulLavo/tree-sitter-md/actions/runs/%s\n\nOne isolated optimization. Correctness validation is comparative; existing baseline failures remain documented in the artifact. Benchmarks require review before opening a PR. This does not include or restore the deleted one-off cursor workflow.\n\nRun npm test, sh scripts/check-native.sh, sh scripts/check-perf-native.sh, node bench/cursor-seek.mjs --check, and CHAT=bench/corpus/chat.json node scripts/check-gates.mjs with the pinned PLATFORM and EDITOR_REPO checkouts. The stress runner accepts baseline and candidate paths.\n' "$IDEA" "$BASELINE" "$GITHUB_RUN_ID" > "$RUNNER_TEMP/publish/experiments/perf-next/README.md"
+          git -C "$RUNNER_TEMP/publish" add src tree-sitter-md.wasm tests/leaf-map.c scripts/check-perf-native.sh experiments/perf-next
+          if [ "$IDEA" = reference-dirty ]; then git -C "$RUNNER_TEMP/publish" add tests/reference-index.c; fi
+          git -C "$RUNNER_TEMP/publish" -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "perf: validate $IDEA against merged cursor implementation"
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -C "$RUNNER_TEMP/publish" -c http.extraheader="AUTHORIZATION: basic $auth" push origin "HEAD:refs/heads/$branch"
+          git -C "$RUNNER_TEMP/publish" rev-parse HEAD > validation/published-commit.txt
+      - name: Preserve all evidence and replay source
+        if: always()
+        run: |
+          mkdir -p validation/harness
+          cp -a experiments/perf-next/. validation/harness/
+          cp experiments/perf/keystroke-isolated.mjs experiments/perf/public-checks.mjs validation/harness/
+          tar -czf validation/replay-workspace.tar.gz -C work candidate
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: perf-main-${{ matrix.idea }}
+          path: validation/
+          retention-days: 14
+          if-no-files-found: error
