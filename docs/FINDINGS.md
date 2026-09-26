@@ -71,7 +71,7 @@ docs at Platform `c130dd35a` and Editor `74e76be`, as Plan 176 used them:
 
 | | Chat, 183 messages | Repo, 497 docs identical | Repo missing / extra constructs (of 105,952) |
 | --- | --: | --: | --- |
-| tree-sitter-md | 183/183 | 406/497 | 208 / 33, all explained: 171 in the 84 frontmatter docs (micromark reads frontmatter as a rule and a heading), 33 + 33 task-item paragraph shape (lezer has the same 33), 3 autolink literals mdast gives no position (lezer the same). Real: 0 |
+| tree-sitter-md | 183/183 | 406/497 | 208 / 33, all explained: 172 in the 84 frontmatter docs (micromark reads frontmatter as a rule and a heading), 33 + 33 task-item paragraph shape (lezer has the same 33), 3 autolink literals mdast gives no position (lezer the same). Real: 0 |
 | lezer GFM + refcheck | 183/183 | 488/497 | 43 / 46, about 20 real (email false positives in `pkg@1.0.0`, code spans) |
 
 Incremental equals fresh: `bench/fuzz.mjs` makes random edits (markdown characters, newlines,
