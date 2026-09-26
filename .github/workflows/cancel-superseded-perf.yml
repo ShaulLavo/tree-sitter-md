@@ -1,0 +1,22 @@
+name: Cancel superseded benchmark harness
+on:
+  push:
+    branches: [perf/isolate-next-9946e06]
+    paths: [experiments/perf-next/bench-targets.mjs]
+permissions:
+  actions: write
+jobs:
+  cancel-known-run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Stop only the obsolete run whose new fixture exhausted its anchors
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          path="repos/$GITHUB_REPOSITORY/actions/runs/36271500019"
+          test "$(gh api "$path" --jq .head_sha)" = 9f319a6503d1104aebfcf305850dfc917dda266d
+          if [ "$(gh api "$path" --jq .status)" != completed ]; then
+            gh api --method POST "$path/cancel"
+          fi

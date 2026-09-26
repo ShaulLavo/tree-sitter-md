@@ -20,8 +20,10 @@ for(const[name,original,limit]of cases){
  let seed=11;const edit=[],deco=[],total=[];
  for(let i=0;i<100;i++){
   seed=(Math.imul(seed,1664525)+1013904223)>>>0;
-  let at=text.indexOf(' the ',Math.floor((limit??text.length)*(seed/4294967296)))+1;
-  if(at<1)at=text.indexOf(' the ')+1;assert(at>0);
+  let found=text.indexOf(' the ',Math.floor((limit??text.length)*(seed/4294967296)));
+  if(found<0)found=text.indexOf(' the ');assert(found>=0);
+  // Insert after the anchor so repeated typing cannot exhaust the fixture.
+  const at=found+5;
   const next=text.slice(0,at)+'x'+text.slice(at);
   const from=next.lastIndexOf('\n',Math.max(0,at-1000))+1,to=nth(next,from,60);
   const a=performance.now();d.edit(at,at,'x');const b=performance.now();d.decorations(from,to);const c=performance.now();
