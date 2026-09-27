@@ -61,7 +61,7 @@ npm run generate   # only when changing the grammar; tree-sitter CLI 0.26
 npm run build      # -O3 + LTO, tree-sitter-md.wasm
 OPT=-Oz npm run build
 npm test           # focused wasm API regressions
-sh scripts/check-native.sh  # native clang, ASan + UBSan, incremental edits and cursor oracle
+sh scripts/check-native.sh  # native clang, ASan + UBSan, incremental edits, leaf mapping and cursor oracle
 sh scripts/check-cursor.sh  # cursor byte/point seeks against sequential traversal, ASan + UBSan
 node bench/cursor-seek.mjs --check  # blank-line viewport cost across a heading-less 1 MB document
 ```

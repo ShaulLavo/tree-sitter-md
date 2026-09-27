@@ -13,6 +13,8 @@ const cases=[
  ['continuations-1000','> the token **bold**\n'+'> continuation with the token *em*\n'.repeat(1000)+'\n'],
  ['ascii-paragraph-64k','plain text with the token '.repeat(2600)+' **end**\n'],
  ['unicode-paragraph','עברית 😀 café with the token '.repeat(2000)+' **end**\n'],
+ ['hebrew-first-line','שלום עולם with the token\n'+'plain text with the token and words\n'.repeat(1800)+'**end**\n'],
+ ['mixed-lines','שלום עולם with the token\nplain text with the token and words\n'.repeat(900)+'**end**\n'],
 ];
 for(const[name,original,limit]of cases){
  for(let w=0;w<3;w++){const d=new MarkdownDocument();d.setText(original);d.decorations(0,original.length);d.reparse();d.dispose();}
