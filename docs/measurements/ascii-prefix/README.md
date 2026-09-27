@@ -2,13 +2,85 @@
 
 ## Scope and decision
 
-One isolated optimization in `src/leaf.c`: batch contiguous positive ASCII into the UTF-8 and source-position buffers, reserving once per run. At the first non-ASCII code unit or NUL in a source segment, delegate the remainder to the original scalar conversion loop. Parsing, reference invalidation, cache keys, the grammar and the JS API are unchanged.
+One isolated optimization in `src/leaf.c`: batch contiguous positive ASCII into the UTF-8 and source-position buffers, reserving once per run. A line containing a non-ASCII code unit or NUL goes through the original scalar conversion loop from that point to the end of the line, then batching resumes on the next line. Parsing, reference invalidation, cache keys, the grammar and the JS API are unchanged.
+
+The first revision (`5b21d23`, measured in CI below) delegated the whole remainder of the source segment to the scalar loop, so one non-ASCII character early in a paragraph disabled batching for every later line. The current revision returns from the scalar loop at each newline, which it already tested for, so pure Unicode text runs the same instructions per character. See [Per-line revision](#per-line-revision).
 
 Selected for a focused performance review because whole-document decoration and several large-leaf workloads improve consistently. **This is not a universal speedup:** the short 46 KB typing benchmark has a higher aggregate p95, and the mixed-Unicode paragraph is slightly slower. No merge or automatic approval is implied.
 
 This version supersedes an earlier ASCII-run implementation that checked ASCII eligibility inside every Unicode iteration. Independent pure-Unicode benchmarks found a 3-8% slowdown in that implementation; it is not included here. This branch is based on the merged cursor improvement, and does not restore the removed one-off cursor validation workflow.
 
-## Reproducible identities
+## Per-line revision
+
+The first revision stopped batching at the first non-ASCII code unit or NUL in a segment, and a segment can be a whole paragraph. This revision hands control back to the batching loop after each newline the scalar loop converts. The scalar loop already tested every character for `\n`, so text with no ASCII runs executes the same per-character work. The batching loop keeps one index for the UTF-8, start and end arrays. Separate indexes measured about 10% slower on pure ASCII, so an `assert` in native builds guards the invariant instead.
+
+These measurements come from a 4-core cloud container, not the GitHub-hosted runner used above. The CI validation run has not been repeated for this revision.
+
+### Identities
+
+- First revision: `5b21d231860225a1d8bfd4c8bd3e8c1d98bbe793`.
+- Rebuilding baseline `680433b` with WASI SDK 34 in this container reproduced its checked-in WASM byte for byte (`5aa77017…`), so the vendored runtime and toolchain match.
+- Per-line WASM SHA-256: `d7738b2e8e2c2fb5199f5556516fe973a6e1603fb4faa3f3d08ac910f7e15ec1`; Git blob `f6b7c80d04deee6bf438ccb2a711f1bcea94244d`.
+- Per-line `src/leaf.c` Git blob: `4b4188fb2eb88e695e36c396baea18abc1f97dcb`.
+- WASM raw 378,372 bytes and gzip -9 130,070 bytes, against 378,381 and 130,075 for the first revision.
+
+### Leaf conversion alone
+
+Native clang `-O3 -DNDEBUG`, `leaf_single` over an 8,000-line block, best of 200 conversions in each of five alternating rounds. This isolates the changed function from parsing and decoration.
+
+| Input (8,000 lines) | Baseline ms | First revision ms | Per-line revision ms | vs baseline | vs first revision |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| pure ASCII | 1.645 | 0.568 | 0.589 | -64.2% | 3.6% |
+| pure Hebrew | 2.746 | 2.770 | 2.715 | -1.2% | -2.0% |
+| pure Chinese | 3.744 | 3.767 | 3.743 | -0.1% | -0.7% |
+| pure emoji | 2.040 | 2.192 | 2.029 | -0.5% | -7.4% |
+| Hebrew on first line only | 1.611 | 1.669 | 0.556 | -65.5% | -66.7% |
+| Hebrew on every other line | 1.952 | 2.053 | 1.383 | -29.1% | -32.6% |
+| Hebrew at start of every line | 2.203 | 2.386 | 2.161 | -1.9% | -9.4% |
+
+Pure ASCII runs the same batching loop in both revisions; 3.6% is within the round-to-round spread seen for that row.
+
+### End-to-end Node timings
+
+Node 22.22.2, four alternating rounds of the `experiments/perf-next` scripts, first revision against per-line revision. `hebrew-first-line` and `mixed-lines` are new `bench-targets.mjs` cases: a paragraph whose first line has Hebrew, and one alternating Hebrew and ASCII lines.
+
+| Workload | First revision median | Per-line median | Change | First revision p95 | Per-line p95 | Per-line faster rounds |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| refs-500 | 1.4246 | 1.2805 | -10.1% | 2.1494 | 1.8509 | 4/4 |
+| refs-2000 | 6.9049 | 6.9665 | 0.9% | 8.9267 | 8.5463 | 2/4 |
+| table-1000 | 2.2291 | 2.1123 | -5.2% | 3.3966 | 2.4663 | 4/4 |
+| continuations-1000 | 2.4582 | 2.3322 | -5.1% | 2.9637 | 2.7366 | 3/4 |
+| ascii-paragraph-64k | 3.2941 | 3.0651 | -7.0% | 3.9092 | 4.2693 | 3/4 |
+| unicode-paragraph | 3.3040 | 3.3072 | 0.1% | 4.3698 | 3.8331 | 2/4 |
+| hebrew-first-line | 3.4979 | 3.2961 | -5.8% | 4.5130 | 4.5530 | 2/4 |
+| mixed-lines | 3.5082 | 3.3267 | -5.2% | 4.2554 | 3.6775 | 3/4 |
+| decorate-agents.md | 0.7333 | 0.8418 | 14.8% | 0.7853 | 0.9506 | 1/4 |
+| decorate-big.md | 14.0420 | 13.7219 | -2.3% | 18.8361 | 16.2516 | 3/4 |
+| encoding-ascii | 2.6590 | 2.6425 | -0.6% | 3.7077 | 3.3523 | 3/4 |
+| encoding-hebrew | 3.0999 | 3.0863 | -0.4% | 4.3758 | 3.8019 | 2/4 |
+| encoding-chinese | 3.5351 | 3.3933 | -4.0% | 4.0697 | 4.2476 | 2/4 |
+| encoding-emoji | 1.9502 | 2.1653 | 11.0% | 2.2654 | 2.4454 | 0/4 |
+| agents.md | 0.1376 | 0.1333 | -3.1% | 0.2833 | 0.2706 | 2/4 |
+| big.md | 0.6112 | 0.6525 | 6.8% | 1.0673 | 1.1285 | 2/4 |
+| nested-quotes | 0.2728 | 0.2759 | 1.2% | 0.3856 | 0.3201 | 2/4 |
+| warm-agents.md | 0.0971 | 0.1029 | 6.0% | 0.1589 | 0.1666 | 1/4 |
+| warm-big.md | 0.6156 | 0.5873 | -4.6% | 1.1652 | 1.1144 | 3/4 |
+
+This container is too noisy to resolve these differences. Workloads with no non-ASCII text run identical conversion code in both builds, yet their medians moved by -10% to +15%. The mixed-script cases improved by about 5–6% end to end, less than the native result, because conversion is only part of an edit's cost. No end-to-end gain or loss is claimed from this table; repeating the six-round CI validation is the way to settle it.
+
+### Correctness
+
+All run on the per-line build in this container:
+
+- JS/WASM tests: **108/108 passed**.
+- `scripts/check-native.sh` under ASan/UBSan: 2,000 incremental edits; the leaf mapping oracle, now **30,000 slices plus 30,000 segmented blocks** that carry `line_start` across continuation gaps, with pure-ASCII, rare-Unicode and dense-Unicode inputs; cursor oracles **41,504 + 7,296 comparisons**. Three deliberately broken fast paths each failed the leaf oracle.
+- CommonMark/GFM: **672/676**, every per-example outcome identical to baseline; failures remain 96, 98, 216, 260.
+- `scripts/check-gates.mjs` with the pinned corpora: chat **183/183 identical**; repository gate **497 documents, no unexpected differences**, still 406/497 exact with 208 missing and 33 extra constructs.
+- Three-seed differential fuzz: zero failures; negative control failed 10/10.
+- `stress.mjs` against baseline: **7,680 edits / 261,936 comparisons**, zero changed outcomes; the same **120** pre-existing incremental/fresh discrepancies.
+- `node bench/cursor-seek.mjs --check`: passed.
+
+## Reproducible identities (first revision)
 
 - Baseline: `680433b989ded6d633139614fd24514859200cc0`.
 - Tested implementation commit: `5b21d231860225a1d8bfd4c8bd3e8c1d98bbe793`.
@@ -21,7 +93,7 @@ This version supersedes an earlier ASCII-run implementation that checked ASCII e
 
 The artifact digest and the committed source/WASM blob hashes were independently checked after downloading the evidence. The baseline also rebuilt byte-for-byte identically to its checked-in WASM. Node 26.7.0, hash-verified WASI SDK 34, `-O3` plus LTO; dependency lock and machine details are in the artifact.
 
-## All paired timing results
+## All paired timing results (first revision, CI)
 
 Milliseconds; lower is better. Six alternating baseline/candidate rounds on the same GitHub-hosted runner. Each displayed value is the median of the six per-run medians or p95s, not a pooled percentile. Negative percentages mean lower elapsed time. `Faster rounds` counts lower per-run median values.
 
@@ -49,7 +121,7 @@ The standard runner uses 200 seeded edits and a 60-row request, with JS string r
 
 The 46 KB short-run p95 improved in three rounds and worsened in three. Its aggregate is nevertheless 16% higher and is retained above, not dismissed as noise. The warmed 1 MB median is only 1.6% lower and wins three rounds; it is not evidence of a large universal steady-state gain. No statistical significance is asserted for small differences.
 
-## Independent runtime checks
+## Independent runtime checks (first revision)
 
 The downloaded candidate was tested against the same baseline in local Node 22.16.0 and Chromium 144.0.7559.96, rather than trusting branch labels alone.
 
@@ -57,7 +129,7 @@ A six-round Node 22 encoding check found ASCII elapsed time 13.3% lower, Hebrew 
 
 Six alternating Chromium rounds reproduced the direction of larger gains: approximately 17% less elapsed time on its 1 MB typing case, 7% on a 1,000-row table, and 19% on a large ASCII paragraph. The small-document and Unicode-heavy medians were tied at the available timer resolution. Browser loading was in-memory, with unchanged JS write/read/document-method bodies. This was not a cold-load measurement; its 100-edit workload is not identical to the Node standard runner, and the browser clock resolution was approximately 0.1 ms. Small browser differences are inconclusive.
 
-## Correctness results and explicit limitations
+## Correctness results and explicit limitations (first revision)
 
 Both builds ran the original gates and additional checks before the implementation branch was published:
 
@@ -78,7 +150,7 @@ Independent local reruns of the downloaded candidate passed all 108 JS tests and
 
 Original corpus sources are `ShaulLavo/fregat` at `c130dd35a202dd06ccd160bd5ed0789c889315c2` and `ShaulLavo/singapore` at `74e76bef2af674ad80b3c13024fa47f692e2bb7c`. Bundled chat SHA-256: `2c5c01ed08af3c921c8c500b6c9f50d9e48d39480bedc91355dc88377e9adbf1`.
 
-## Size and memory
+## Size and memory (first revision)
 
 | Artifact | Baseline | Candidate |
 | --- | ---: | ---: |
@@ -92,6 +164,6 @@ Memory is the existing harness's rounded linear-memory high-water growth, not li
 
 ## Reproduction
 
-Build with the pinned WASI SDK and run `npm test`, `sh scripts/check-native.sh`, `sh scripts/check-perf-native.sh`, and `node bench/cursor-seek.mjs --check`. With the pinned repository checkouts, set `PLATFORM` and `EDITOR_REPO`, then run `CHAT=bench/corpus/chat.json node scripts/check-gates.mjs`.
+Build with the pinned WASI SDK and run `npm test`, `sh scripts/check-native.sh` (which includes the leaf mapping oracle), and `node bench/cursor-seek.mjs --check`. With the pinned repository checkouts, set `PLATFORM` and `EDITOR_REPO`, then run `CHAT=bench/corpus/chat.json node scripts/check-gates.mjs`.
 
 The scripts in `experiments/perf-next/` contain the standard, targeted, warmed, encoding, and comparative stress probes. The stress script takes baseline and candidate repository paths. Timing scripts take one build's root path; alternate build order across repeated runs. Compare one candidate at a time. This PR does not include the reference-map or cursor-walk performance experiments.

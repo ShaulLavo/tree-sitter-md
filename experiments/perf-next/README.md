@@ -1,4 +1,4 @@
-ASCII prefix batching with original scalar conversion for the remainder of mixed/non-ASCII segments.
+ASCII run batching; a line with non-ASCII or NUL uses the original scalar conversion to its end, then batching resumes.
 Baseline: 680433b989ded6d633139614fd24514859200cc0
 Validation: https://github.com/ShaulLavo/tree-sitter-md/actions/runs/36274087199
 
