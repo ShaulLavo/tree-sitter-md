@@ -1,6 +1,8 @@
 #include "tree_sitter/parser.h"
 #include <assert.h>
 #include <string.h>
+#include "inlines.h"
+#include "utf8.h"
 
 // ASCII classes: tag names and ordered-list digits are ASCII, and this keeps the scanner free of
 // libc so it builds for wasm32-unknown-unknown.
@@ -58,6 +60,10 @@ typedef enum {
     PLUS_METADATA,
     PIPE_TABLE_START,
     PIPE_TABLE_LINE_ENDING,
+    REFERENCE_START,
+    REFERENCE_LINE,
+    REFERENCE_LAST_LINE,
+    STANDALONE_REFERENCE_START,
 } TokenType;
 
 // Description of a block on the block stack.
@@ -173,6 +179,10 @@ static const bool paragraph_interrupt_symbols[] = {
     false, // PLUS_METADATA,
     true,  // PIPE_TABLE_START,
     false, // PIPE_TABLE_LINE_ENDING,
+    false, // REFERENCE_START,
+    false, // REFERENCE_LINE,
+    false, // REFERENCE_LAST_LINE,
+    false, // STANDALONE_REFERENCE_START,
 };
 
 // State bitflags used with `Scanner.state`
@@ -182,6 +192,7 @@ static const uint8_t STATE_MATCHING = 0x1 << 0;
 // Last line break was inside a paragraph
 static const uint8_t STATE_WAS_SOFT_LINE_BREAK = 0x1 << 1;
 // Block should be closed after next line break
+static const uint8_t STATE_AFTER_DEFINITION = 0x1 << 2;
 static const uint8_t STATE_CLOSE_BLOCK = 0x1 << 4;
 
 static size_t roundup_32(size_t x) {
@@ -219,6 +230,7 @@ typedef struct {
     // The delimiter length of the currently open fenced code block
     uint8_t fenced_code_block_delimiter_length;
 
+    uint32_t reference_lines;
     bool simulate;
 } Scanner;
 
@@ -247,6 +259,8 @@ static inline Block pop_block(Scanner *s) {
 // Write the whole state of a Scanner to a byte buffer
 static unsigned serialize(Scanner *s, char *buffer) {
     unsigned size = 0;
+    memcpy(buffer, &s->reference_lines, sizeof(s->reference_lines));
+    size += sizeof(s->reference_lines);
     buffer[size++] = (char)s->state;
     buffer[size++] = (char)s->matched;
     buffer[size++] = (char)s->indentation;
@@ -264,6 +278,7 @@ static unsigned serialize(Scanner *s, char *buffer) {
 // Read the whole state of a Scanner from a byte buffer
 // `serizalize` and `deserialize` should be fully symmetric.
 static void deserialize(Scanner *s, const char *buffer, unsigned length) {
+    s->reference_lines = 0;
     s->open_blocks.size = 0;
     s->open_blocks.capacity = 0;
     s->state = 0;
@@ -272,7 +287,8 @@ static void deserialize(Scanner *s, const char *buffer, unsigned length) {
     s->column = 0;
     s->fenced_code_block_delimiter_length = 0;
     if (length > 0) {
-        size_t size = 0;
+        size_t size = sizeof(s->reference_lines);
+        memcpy(&s->reference_lines, buffer, size);
         s->state = (uint8_t)buffer[size++];
         s->matched = (uint8_t)buffer[size++];
         s->indentation = (uint8_t)buffer[size++];
@@ -408,6 +424,165 @@ static bool match(Scanner *s, TSLexer *lexer, Block block) {
     return false;
 }
 
+static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols);
+
+typedef struct {
+    TSLexer lexer;
+    const unsigned char *text;
+    uint32_t at, length;
+} ReferenceLexer;
+
+static void reference_advance(TSLexer *lexer, bool skip) {
+    (void)skip;
+    ReferenceLexer *r = (ReferenceLexer *)lexer;
+    if (r->at < r->length)
+        r->at++;
+    lexer->lookahead = r->at < r->length ? r->text[r->at] : 0;
+}
+static void reference_mark(TSLexer *lexer) { (void)lexer; }
+static bool reference_eof(const TSLexer *lexer) {
+    const ReferenceLexer *r = (const ReferenceLexer *)lexer;
+    return r->at == r->length;
+}
+static bool reference_interrupted(Scanner *s, cmark_strbuf *text, uint32_t begin) {
+    ReferenceLexer r = {.text = text->ptr + begin, .length = text->size - begin};
+    r.lexer = (TSLexer){.lookahead = r.text[0], .advance = reference_advance,
+                       .mark_end = reference_mark, .eof = reference_eof};
+    Scanner probe = *s;
+    probe.state = 0;
+    probe.simulate = true;
+    probe.matched = probe.open_blocks.size;
+    return scan(&probe, &r.lexer, paragraph_interrupt_symbols);
+}
+
+static bool reference_next_line(Scanner *s, TSLexer *lexer) {
+    if (lexer->eof(lexer))
+        return false;
+    if (lexer->lookahead == '\r')
+        advance(s, lexer);
+    if (lexer->lookahead == '\n')
+        advance(s, lexer);
+    s->indentation = 0;
+    s->column = 0;
+    for (uint32_t i = 0; i < s->open_blocks.size; i++)
+        if (!match(s, lexer, s->open_blocks.items[i]))
+            return false;
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t')
+        s->indentation += advance(s, lexer);
+    return !lexer->eof(lexer) && lexer->lookahead != '\n' && lexer->lookahead != '\r';
+}
+
+static uint32_t reference_length(cmark_strbuf *text, bufsize_t *title_start) {
+    cmark_chunk input = {text->ptr, text->size};
+    return cmark_reference_definition_length(&input, title_start);
+}
+
+static bool title_closed(cmark_strbuf *text, uint32_t *at, int32_t close) {
+    while (*at < (uint32_t)text->size) {
+        int32_t c = text->ptr[(*at)++];
+        if (c == close)
+            return true;
+        if (c == '\\' && *at < (uint32_t)text->size)
+            (*at)++;
+    }
+    return false;
+}
+
+static void reference_character(TSLexer *lexer, cmark_strbuf *text) {
+    int32_t c = lexer->lookahead;
+    if (!c || (c >= 0xd800 && c <= 0xdfff))
+        c = 0xfffd;
+    cmark_utf8proc_encode_char(c, text);
+}
+
+static uint32_t reference_lines(Scanner *s, TSLexer *lexer, cmark_strbuf *text) {
+    uint32_t lines = 1, label = 0, valid = 0, line_start = 0;
+    bool escaped = false, closed = false;
+    uint32_t title_at = 0;
+    int32_t close = 0;
+    // Reject ordinary links before scanning the rest of their paragraph.
+    while (!lexer->eof(lexer) && label++ <= 1000) {
+        int32_t c = lexer->lookahead;
+        if (c == '\n' || c == '\r') {
+            cmark_strbuf_putc(text, '\n');
+            if (lines > 1 && reference_interrupted(s, text, line_start))
+                return 0;
+            if (!reference_next_line(s, lexer))
+                return 0;
+            line_start = text->size;
+            lines++;
+            continue;
+        }
+        reference_character(lexer, text);
+        advance(s, lexer);
+        if (c == ']' && !escaped) {
+            closed = true;
+            break;
+        }
+        if (c == '[' && label > 1 && !escaped)
+            return 0;
+        escaped = c == '\\' && !escaped;
+    }
+    if (!closed || lexer->lookahead != ':')
+        return 0;
+    for (;;) {
+        while (!lexer->eof(lexer) && lexer->lookahead != '\n' && lexer->lookahead != '\r') {
+            reference_character(lexer, text);
+            advance(s, lexer);
+        }
+        cmark_strbuf_putc(text, '\n');
+        if (lines > 1 && reference_interrupted(s, text, line_start))
+            return valid;
+        bool pending = close && !title_closed(text, &title_at, close);
+        bufsize_t title_start = -1;
+        uint32_t length = pending ? 0 : reference_length(text, &title_start);
+        if (!close && title_start >= 0) {
+            close = text->ptr[title_start] == '(' ? ')' : text->ptr[title_start];
+            title_at = title_start + 1;
+            pending = !title_closed(text, &title_at, close);
+        }
+        if (length == (uint32_t)text->size)
+            valid = lines;
+        if (!pending && length && length < (uint32_t)text->size)
+            return valid;
+        if (close && !pending)
+            return valid;
+        if (!reference_next_line(s, lexer))
+            return valid;
+        if (!pending && valid && lexer->lookahead != '\'' && lexer->lookahead != '"' && lexer->lookahead != '(')
+            return valid;
+        // A destination can start on the next line; other invalid prefixes cannot recover.
+        if (!pending && !valid && lines > 1)
+            return 0;
+        lines++;
+        line_start = text->size;
+    }
+}
+
+static bool reference_underline(Scanner *s, TSLexer *lexer) {
+    int32_t marker = lexer->lookahead;
+    if (marker != '=' && marker != '-')
+        return false;
+    while (lexer->lookahead == marker)
+        advance(s, lexer);
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t')
+        advance(s, lexer);
+    return lexer->eof(lexer) || lexer->lookahead == '\n' || lexer->lookahead == '\r';
+}
+
+static bool parse_reference(Scanner *s, TSLexer *lexer) {
+    mark_end(s, lexer);
+    Scanner saved = *s;
+    cmark_strbuf text = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
+    uint32_t lines = reference_lines(s, lexer, &text);
+    cmark_strbuf_free(&text);
+    bool standalone = lines && reference_underline(s, lexer);
+    *s = saved;
+    s->reference_lines = lines;
+    lexer->result_symbol = standalone ? STANDALONE_REFERENCE_START : REFERENCE_START;
+    return lines > 0;
+}
+
 static bool parse_fenced_code_block(Scanner *s, const char delimiter,
                                     TSLexer *lexer, const bool *valid_symbols) {
     // count the number of backticks
@@ -427,7 +602,7 @@ static bool parse_fenced_code_block(Scanner *s, const char delimiter,
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
             advance(s, lexer);
         }
-        if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+        if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->eof(lexer)) {
             s->fenced_code_block_delimiter_length = 0;
             lexer->result_symbol = delimiter == '`'
                                        ? FENCED_CODE_BLOCK_END_BACKTICK
@@ -748,7 +923,7 @@ static bool parse_ordered_list_marker(Scanner *s, TSLexer *lexer,
          valid_symbols[LIST_MARKER_PARENTHESIS_DONT_INTERRUPT] ||
          valid_symbols[LIST_MARKER_DOT_DONT_INTERRUPT])) {
         size_t digits = 1;
-        bool dont_interrupt = !md_isdigit(lexer->lookahead);
+        bool dont_interrupt = lexer->lookahead != '1';
         advance(s, lexer);
         while (md_isdigit(lexer->lookahead)) {
             dont_interrupt = true;
@@ -1333,6 +1508,16 @@ static bool parse_pipe_table(Scanner *s, TSLexer *lexer,
 }
 
 static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
+    bool after_definition[sizeof(paragraph_interrupt_symbols) / sizeof(bool)];
+    if (s->reference_lines && !(s->state & STATE_MATCHING) &&
+        (valid_symbols[REFERENCE_LINE] || valid_symbols[REFERENCE_LAST_LINE])) {
+        while (!lexer->eof(lexer) && lexer->lookahead != '\n' && lexer->lookahead != '\r')
+            advance(s, lexer);
+        lexer->result_symbol = --s->reference_lines ? REFERENCE_LINE : REFERENCE_LAST_LINE;
+        if (!s->reference_lines)
+            s->state |= STATE_AFTER_DEFINITION;
+        return true;
+    }
     // A normal tree-sitter rule decided that the current branch is invalid and
     // now "requests" an error to stop the branch
     if (valid_symbols[TRIGGER_ERROR]) {
@@ -1376,6 +1561,19 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
         // We are not matching. This is where the parsing logic for most
         // "normal" token is. Most importantly parsing logic for the start of
         // new blocks.
+        if (s->state & STATE_AFTER_DEFINITION) {
+            memcpy(after_definition, valid_symbols, sizeof(after_definition));
+            after_definition[INDENTED_CHUNK_START] = false;
+            after_definition[LIST_MARKER_MINUS_DONT_INTERRUPT] = false;
+            after_definition[LIST_MARKER_PLUS_DONT_INTERRUPT] = false;
+            after_definition[LIST_MARKER_STAR_DONT_INTERRUPT] = false;
+            after_definition[LIST_MARKER_DOT_DONT_INTERRUPT] = false;
+            after_definition[LIST_MARKER_PARENTHESIS_DONT_INTERRUPT] = false;
+            after_definition[HTML_BLOCK_7_START] = false;
+            valid_symbols = after_definition;
+            if (lexer->lookahead != '\n' && lexer->lookahead != '\r')
+                s->state &= ~STATE_AFTER_DEFINITION;
+        }
         if (valid_symbols[INDENTED_CHUNK_START] &&
             !valid_symbols[NO_INDENTED_CHUNK]) {
             if (s->indentation >= 4 && lexer->lookahead != '\n' &&
@@ -1390,12 +1588,15 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
         }
         // Decide which tokens to consider based on the first non-whitespace
         // character
+        if (lexer->lookahead == '[' && (valid_symbols[REFERENCE_START] || valid_symbols[STANDALONE_REFERENCE_START]))
+            return parse_reference(s, lexer);
         switch (lexer->lookahead) {
             case '\r':
             case '\n':
                 if (valid_symbols[BLANK_LINE_START]) {
                     // A blank line token is actually just 0 width, so do not
                     // consume the characters
+                    s->state &= ~STATE_AFTER_DEFINITION;
                     lexer->result_symbol = BLANK_LINE_START;
                     return true;
                 }
@@ -1502,6 +1703,8 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
         }
         s->indentation = 0;
         s->column = 0;
+        if (valid_symbols[SOFT_LINE_ENDING])
+            s->state &= ~STATE_AFTER_DEFINITION;
         if (!(s->state & STATE_CLOSE_BLOCK) &&
             (valid_symbols[SOFT_LINE_ENDING] ||
              valid_symbols[PIPE_TABLE_LINE_ENDING])) {

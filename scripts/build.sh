@@ -17,7 +17,7 @@ for name in $exports; do flags="$flags -Wl,--export=$name"; done
 printf 'wasm: %s raw, %s gzip -9\n' "$(wc -c < tree-sitter-md.wasm)" "$(gzip -9nc tree-sitter-md.wasm | wc -c)"
 # Build the grammar with the same WASI toolchain as the resolver.
 "$WASI_SDK/bin/clang" --target=wasm32-wasip1 -fPIC -shared -nostdlib $OPT \
-  -DNDEBUG -std=c11 -Igrammar/src grammar/src/parser.c grammar/src/scanner.c \
+  -DNDEBUG -std=c11 -D_POSIX_C_SOURCE=200809L -Igrammar/src -Ivendor/cmark grammar/src/parser.c grammar/src/scanner.c vendor/cmark/*.c \
   -Wl,--allow-undefined -Wl,--no-entry -Wl,--strip-all \
   -Wl,--export=tree_sitter_markdown -o tree-sitter-markdown.wasm
 printf 'grammar wasm: %s raw, %s gzip -9\n' "$(wc -c < tree-sitter-markdown.wasm)" "$(gzip -9nc tree-sitter-markdown.wasm | wc -c)"

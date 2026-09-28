@@ -5,8 +5,8 @@
 //
 // - Text is one token per line (`_text`), not one per word. Upstream's per-word `repeat1` made
 //   every paragraph a chain of fragile nodes that incremental reparses could not reuse.
-// - Link reference definitions are paragraph content. CommonMark defines them that way, and the
-//   Rust resolver strips them from the start of each paragraph.
+// - The scanner validates leading reference definitions with cmark before setext recognition.
+//   Definition lines retain the grammar's container continuations for source mapping.
 // - The info string, table rows and cells are single tokens; the resolver reads them.
 // - HTML blocks of kinds 1-5 keep word tokens, because their end condition is a substring.
 // - Optional frontmatter is excluded by the document owner before block parsing.
@@ -37,6 +37,8 @@ module.exports = grammar({
             alias($._setext_heading1, $.setext_heading),
             alias($._setext_heading2, $.setext_heading),
             $.paragraph,
+            $.reference_definition,
+            alias($.standalone_reference_definition, $.reference_definition),
             $.indented_code_block,
             $.block_quote,
             $.thematic_break,
@@ -100,11 +102,13 @@ module.exports = grammar({
         _atx_heading_content: $ => field('heading_content', alias($._line, $.inline)),
 
         _setext_heading1: $ => seq(
+            repeat($.reference_definition),
             field('heading_content', $.paragraph),
             $.setext_h1_underline,
             choice($._newline, $._eof),
         ),
         _setext_heading2: $ => seq(
+            repeat($.reference_definition),
             field('heading_content', $.paragraph),
             $.setext_h2_underline,
             choice($._newline, $._eof),
@@ -119,7 +123,7 @@ module.exports = grammar({
                 optional($.info_string),
                 $._newline,
                 optional($.code_fence_content),
-                optional(seq(alias($._fenced_code_block_end_backtick, $.fenced_code_block_delimiter), $._close_block, $._newline)),
+                optional(seq(alias($._fenced_code_block_end_backtick, $.fenced_code_block_delimiter), $._close_block, choice($._newline, $._eof))),
                 $._block_close,
             ),
             seq(
@@ -127,7 +131,7 @@ module.exports = grammar({
                 optional($.info_string),
                 $._newline,
                 optional($.code_fence_content),
-                optional(seq(alias($._fenced_code_block_end_tilde, $.fenced_code_block_delimiter), $._close_block, $._newline)),
+                optional(seq(alias($._fenced_code_block_end_tilde, $.fenced_code_block_delimiter), $._close_block, choice($._newline, $._eof))),
                 $._block_close,
             ),
         )),
@@ -151,6 +155,19 @@ module.exports = grammar({
         _html_block_5: $ => build_html_block($, $._html_block_5_start, ']]>', $._word_line),
         _html_block_6: $ => build_html_block($, $._html_block_6_start, seq($._newline, $._blank_line), $._line),
         _html_block_7: $ => build_html_block($, $._html_block_7_start, seq($._newline, $._blank_line), $._line),
+
+        reference_definition: $ => seq(
+            $._reference_start,
+            alias($._reference_lines, $.inline),
+            choice($._newline, $._eof),
+        ),
+
+        standalone_reference_definition: $ => seq(
+            $._standalone_reference_start,
+            alias($._reference_lines, $.inline),
+            choice($._newline, $._eof),
+        ),
+        _reference_lines: $ => seq(repeat(seq($._reference_line, $._newline)), $._reference_last_line),
 
         // The scanner decides where a paragraph ends (see upstream's notes on `$._split_token`).
         paragraph: $ => seq(alias($._paragraph_lines, $.inline), choice($._newline, $._eof)),
@@ -295,7 +312,12 @@ module.exports = grammar({
         $.plus_metadata,
         $._pipe_table_start,
         $._pipe_table_line_ending,
+        $._reference_start,
+        $._reference_line,
+        $._reference_last_line,
+        $._standalone_reference_start,
     ],
+    conflicts: $ => [[$._block_not_section, $._setext_heading1, $._setext_heading2]],
     precedences: $ => [
         [$._setext_heading1, $._block],
         [$._setext_heading2, $._block],

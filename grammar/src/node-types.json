@@ -94,6 +94,10 @@
           "named": true
         },
         {
+          "type": "reference_definition",
+          "named": true
+        },
+        {
           "type": "section",
           "named": true
         },
@@ -292,6 +296,10 @@
           "named": true
         },
         {
+          "type": "reference_definition",
+          "named": true
+        },
+        {
           "type": "section",
           "named": true
         },
@@ -401,6 +409,25 @@
     "fields": {}
   },
   {
+    "type": "reference_definition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "block_continuation",
+          "named": true
+        },
+        {
+          "type": "inline",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "section",
     "named": true,
     "fields": {},
@@ -445,6 +472,10 @@
           "named": true
         },
         {
+          "type": "reference_definition",
+          "named": true
+        },
+        {
           "type": "section",
           "named": true
         },
@@ -480,6 +511,10 @@
       "types": [
         {
           "type": "block_continuation",
+          "named": true
+        },
+        {
+          "type": "reference_definition",
           "named": true
         },
         {

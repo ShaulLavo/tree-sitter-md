@@ -1,5 +1,6 @@
 typedef struct {
   uint16_t paragraph;
+  uint16_t reference_definition;
   uint16_t inline_node;
   uint16_t block_continuation;
   uint16_t atx_heading;
@@ -33,6 +34,7 @@ static inline uint16_t symbol(const TSLanguage *lang, const char *s) {
 static inline Ids make_ids(const TSLanguage *lang) {
   Ids ids = {0};
   ids.paragraph = symbol(lang, "paragraph");
+  ids.reference_definition = symbol(lang, "reference_definition");
   ids.inline_node = symbol(lang, "inline");
   ids.block_continuation = symbol(lang, "block_continuation");
   ids.atx_heading = symbol(lang, "atx_heading");

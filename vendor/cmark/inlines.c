@@ -1479,21 +1479,18 @@ static void spnl(subject *subj) {
 // Modify refmap if a reference is encountered.
 // Return 0 if no reference found, otherwise position of subject
 // after reference is parsed.
-bufsize_t cmark_parse_reference_inline(cmark_mem *mem, cmark_chunk *input,
-                                       cmark_reference_map *refmap) {
+static bufsize_t parse_reference(cmark_chunk *input, cmark_chunk *lab,
+                                cmark_chunk *url, cmark_chunk *title, bufsize_t *title_start) {
   subject subj;
 
-  cmark_chunk lab;
-  cmark_chunk url;
-  cmark_chunk title;
 
   bufsize_t matchlen = 0;
   bufsize_t beforetitle;
 
-  subject_from_buf(mem, -1, 0, &subj, input, NULL);
+  subject_from_buf(NULL, -1, 0, &subj, input, NULL);
 
   // parse label:
-  if (!link_label(&subj, &lab) || lab.len == 0)
+  if (!link_label(&subj, lab) || lab->len == 0)
     return 0;
 
   // colon:
@@ -1505,7 +1502,7 @@ bufsize_t cmark_parse_reference_inline(cmark_mem *mem, cmark_chunk *input,
 
   // parse link url:
   spnl(&subj);
-  if ((matchlen = manual_scan_link_url(&subj.input, subj.pos, &url)) > 0) {
+  if ((matchlen = manual_scan_link_url(&subj.input, subj.pos, url)) > 0) {
     subj.pos += matchlen;
   } else {
     return 0;
@@ -1514,13 +1511,16 @@ bufsize_t cmark_parse_reference_inline(cmark_mem *mem, cmark_chunk *input,
   // parse optional link_title
   beforetitle = subj.pos;
   spnl(&subj);
+  if (title_start && subj.pos > beforetitle &&
+      (peek_char(&subj) == '\'' || peek_char(&subj) == '"' || peek_char(&subj) == '('))
+    *title_start = subj.pos;
   matchlen = subj.pos == beforetitle ? 0 : scan_link_title(&subj.input, subj.pos);
   if (matchlen) {
-    title = cmark_chunk_dup(&subj.input, subj.pos, matchlen);
+    *title = cmark_chunk_dup(&subj.input, subj.pos, matchlen);
     subj.pos += matchlen;
   } else {
     subj.pos = beforetitle;
-    title = cmark_chunk_literal("");
+    *title = cmark_chunk_literal("");
   }
 
   // parse final spaces and newline:
@@ -1536,7 +1536,21 @@ bufsize_t cmark_parse_reference_inline(cmark_mem *mem, cmark_chunk *input,
       return 0;
     }
   }
-  // insert reference into refmap
-  cmark_reference_create(refmap, &lab, &url, &title);
   return subj.pos;
+}
+
+bufsize_t cmark_reference_definition_length(cmark_chunk *input, bufsize_t *title_start) {
+  cmark_chunk label, url, title;
+  *title_start = -1;
+  return parse_reference(input, &label, &url, &title, title_start);
+}
+
+bufsize_t cmark_parse_reference_inline(cmark_mem *mem, cmark_chunk *input,
+                                     cmark_reference_map *refmap) {
+  (void)mem;
+  cmark_chunk label, url, title;
+  bufsize_t length = parse_reference(input, &label, &url, &title, NULL);
+  if (length)
+    cmark_reference_create(refmap, &label, &url, &title);
+  return length;
 }

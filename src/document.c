@@ -186,7 +186,7 @@ static void insert_source(Document *d, TSNode n, cmark_reference_map *map) {
 }
 static void scan_definitions(Document *d, TSTreeCursor *cursor, uint32_t from, uint32_t to) {
   TSNode n = ts_tree_cursor_current_node(cursor);
-  if (is(n, d->ids.paragraph)) {
+  if (is(n, d->ids.paragraph) || is(n, d->ids.reference_definition)) {
     TSNode in = child(n, d->ids.inline_node);
     uint32_t a = start(in);
     if (ts_node_is_null(in))
@@ -218,16 +218,20 @@ static void scan_range(Document *d, uint32_t from, uint32_t to) {
   scan_definitions(d, &cursor, from, to);
   ts_tree_cursor_delete(&cursor);
 }
-static void remove_sources(Document *d, uint32_t from, uint32_t to) {
-  uint32_t j = 0;
+static uint32_t remove_sources(Document *d, uint32_t from, uint32_t to) {
+  uint32_t j = 0, earliest = from;
   for (uint32_t i = 0; i < d->source_count; i++) {
     DefSource s = d->sources[i];
     if (s.end <= from || s.start > to)
       d->sources[j++] = s;
-    else
+    else {
+      if (s.start < earliest)
+        earliest = s.start;
       cmark_reference_map_free(s.map);
+    }
   }
   d->source_count = j;
+  return earliest;
 }
 static void copy_refs(cmark_reference_map *to, cmark_reference_map *from) {
   // Prepend in reverse so duplicate labels retain their original order.
@@ -303,7 +307,8 @@ static uint32_t emit_setext_marks(Document *d, TSNode n) {
     TSNode c = ts_node_named_child(n, j);
     if (is(c, d->ids.setext_h1))
       level = 1;
-    if (!is(c, d->ids.paragraph) && !is(c, d->ids.block_continuation))
+    if (!is(c, d->ids.paragraph) && !is(c, d->ids.reference_definition) &&
+        !is(c, d->ids.block_continuation))
       record(&d->out, start(c), end(c), HEADING_MARK, level);
   }
   return level;
@@ -317,11 +322,30 @@ static void emit_fence_marks(Document *d, TSNode n) {
       record(&d->out, start(c), end(c), FENCE_MARK, 0);
   }
 }
+static uint32_t item_end(Document *d, TSNode n) {
+  uint32_t e = end(n);
+  if (!is(n, d->ids.list_item) && !is(n, d->ids.list) && !is(n, d->ids.paragraph))
+    return e;
+  for (uint32_t j = ts_node_named_child_count(n); j > 0; j--) {
+    TSNode c = ts_node_named_child(n, j - 1);
+    if (is(c, d->ids.block_continuation)) {
+      e = start(c);
+      continue;
+    }
+    uint32_t tail = end(c);
+    while (e > tail && ws(d->text[e - 1]))
+      e--;
+    return e == tail ? item_end(d, c) : e;
+  }
+  while (e > start(n) && ws(d->text[e - 1]))
+    e--;
+  return e;
+}
 static bool emit(Document *d, TSNode n) {
   Ids *i = &d->ids;
   uint16_t id = ts_node_symbol(n);
   uint32_t s = start(n), e = end(n);
-  if (id == i->paragraph) {
+  if (id == i->paragraph || id == i->reference_definition) {
     resolve_leaf(d, n, is(ts_node_parent(n), i->setext_heading) ? SETEXT : PARAGRAPH);
     return false;
   }
@@ -384,7 +408,7 @@ static bool emit(Document *d, TSNode n) {
     return true;
   }
   if (id == i->list_item) {
-    record(&d->out, s, e, LI, 0);
+    record(&d->out, s, item_end(d, n), LI, 0);
     return true;
   }
   for (uint32_t j = 0; j < 5; j++)
@@ -400,7 +424,7 @@ static bool emit(Document *d, TSNode n) {
 }
 static bool fold(Document *d, TSNode n) {
   const char *kind = ts_node_type(n);
-  uint32_t a = start(n), b = end(n);
+  uint32_t a = start(n), b = is(n, d->ids.list_item) ? item_end(d, n) : end(n);
   trim(d, &a, &b);
   bool foldable = !strcmp(kind, "section") || is(n, d->ids.fenced_code_block) ||
                   is(n, d->ids.block_quote) || is(n, d->ids.list_item) ||
@@ -606,17 +630,22 @@ void tsmd_edit(Document *d, uint32_t a, uint32_t b) {
   TSRange *ranges = ts_tree_get_changed_ranges(old, d->tree, &count);
   ts_tree_delete(old);
   d->epoch++;
-  remove_sources(d, a, b);
+  uint32_t scan_from = remove_sources(d, a, b);
   for (uint32_t i = 0; i < d->source_count; i++) {
     if (d->sources[i].start > b) {
       d->sources[i].start += delta;
       d->sources[i].end += delta;
     }
   }
-  remove_sources(d, a, e);
-  for (uint32_t i = 0; i < count; i++)
-    remove_sources(d, ranges[i].start_byte / 2, ranges[i].end_byte / 2);
-  scan_range(d, a, e);
+  uint32_t next_from = remove_sources(d, a, e);
+  if (next_from < scan_from)
+    scan_from = next_from;
+  for (uint32_t i = 0; i < count; i++) {
+    next_from = remove_sources(d, ranges[i].start_byte / 2, ranges[i].end_byte / 2);
+    if (next_from < scan_from)
+      scan_from = next_from;
+  }
+  scan_range(d, scan_from, e);
   for (uint32_t i = 0; i < count; i++)
     scan_range(d, ranges[i].start_byte / 2, ranges[i].end_byte / 2);
   free(ranges);
