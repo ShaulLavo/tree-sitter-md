@@ -10,10 +10,6 @@
       "types": "./js/index.d.ts",
       "default": "./js/index.js"
     },
-    "./constants": {
-      "types": "./js/constants.d.ts",
-      "default": "./js/constants.js"
-    },
     "./tree-sitter-md.wasm": "./tree-sitter-md.wasm",
     "./tree-sitter-markdown.wasm": "./tree-sitter-markdown.wasm",
     "./package.json": "./package.json"

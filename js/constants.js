@@ -1,4 +1,4 @@
-// Record kinds and capture names: plain data, importable without loading web-tree-sitter.
+// Record kinds and capture names: plain data, so importing them never loads web-tree-sitter.
 
 /** Record kinds. Records are `[start, end, kind, extra]`. */
 export const Kind = Object.freeze({
