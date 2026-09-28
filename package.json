@@ -49,6 +49,6 @@
     "web-tree-sitter": "*"
   },
   "devDependencies": {
-    "web-tree-sitter": "file:../tree-sitter-x/lib/binding_web"
+    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#c5049e2"
   }
 }

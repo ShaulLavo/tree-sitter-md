@@ -58,9 +58,9 @@ The resolver builds with WASI SDK 34 as a side module (`-fPIC -shared`, no libc)
 and libc come from the tree-sitter-x runtime it is loaded into. The SDK defaults to
 `/work/cache/wasi-sdk-34.0-x86_64-linux`; set `WASI_SDK` for another installation. The grammar
 builds with the tree-sitter CLI (`TREE_SITTER`, e.g. tree-sitter-x's `target/release/tree-sitter`).
-Development expects a tree-sitter-x checkout beside this one: `web-tree-sitter` is
-`file:../tree-sitter-x/lib/binding_web`, and the native tests compile its `lib/`
-(`TREE_SITTER_LIB`).
+`web-tree-sitter` is tree-sitter-x's built package (`github:ShaulLavo/tree-sitter-x#<commit>`,
+its `web-tree-sitter` branch). The native tests compile tree-sitter-x's C runtime from a checkout:
+`TREE_SITTER_LIB` is its `lib/`, `../tree-sitter-x/lib` by default.
 
 ```sh
 npm run generate   # only when changing the grammar; tree-sitter CLI 0.26
