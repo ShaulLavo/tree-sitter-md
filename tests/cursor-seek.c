@@ -3,7 +3,8 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-extern Document *tsmd_new(uint32_t);
+extern Document *tsmd_new(uint32_t, const TSLanguage *);
+extern const TSLanguage *tree_sitter_markdown(void);
 extern void tsmd_free(Document *);
 extern uint16_t *tsmd_input(Document *, uint32_t);
 extern void tsmd_set_text(Document *);
@@ -118,7 +119,7 @@ static void check_large_document(uint32_t gfm) {
   char *text = malloc(block_len * repeats + sizeof("end\n"));
   for (uint32_t i = 0; i < repeats; i++) memcpy(text + i * block_len, block, block_len);
   memcpy(text + block_len * repeats, "end\n", sizeof("end\n"));
-  Document *d = tsmd_new(gfm);
+  Document *d = tsmd_new(gfm, tree_sitter_markdown());
   set_ascii(d, text);
   check_sampled_tree(d);
   TSNode section = ts_node_named_child(ts_tree_root_node(d->tree), 0);
@@ -146,7 +147,7 @@ int main(void) {
     "[ref]\n>[ref]:o"
   };
   for (uint32_t gfm = 0; gfm < 2; gfm++) {
-    Document *d = tsmd_new(gfm);
+    Document *d = tsmd_new(gfm, tree_sitter_markdown());
     for (uint32_t i = 0; i < sizeof(fixtures) / sizeof(fixtures[0]); i++) {
       set_ascii(d, fixtures[i]); check_tree(d);
       tsmd_reparse(d); check_tree(d);

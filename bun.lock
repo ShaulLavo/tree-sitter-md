@@ -1,0 +1,15 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "tree-sitter-md",
+      "dependencies": {
+        "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#e2985e082d9f3f137ca20af6d7cee9d1a1c8ddda",
+      },
+    },
+  },
+  "packages": {
+    "web-tree-sitter": ["web-tree-sitter@github:ShaulLavo/tree-sitter-x#e2985e0", {}, "ShaulLavo-tree-sitter-x-e2985e0", "sha512-lq4zLvvfasW+Iiy4Mv2yfoOOkRSsPDD73NuUihEhnlCePmEaaZdHP8vLywtwiCW/521twM6otnzfSYggiIvQBg=="],
+  }
+}

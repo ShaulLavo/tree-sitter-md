@@ -3,7 +3,7 @@ import test from 'node:test'
 import { readFileSync } from 'node:fs'
 import { init, MarkdownDocument, Kind } from '../js/index.js'
 
-await init(process.env.WASM ? readFileSync(process.env.WASM) : undefined)
+await init({ resolver: process.env.WASM ? readFileSync(process.env.WASM) : undefined })
 
 for (const gfm of [false, true]) {
   for (const warm of [false, true]) {
