@@ -1,5 +1,4 @@
 #include "resolver.h"
-extern const TSLanguage *tree_sitter_markdown(void);
 #define CACHE_BUCKETS 16384
 
 static TSNode child(TSNode node, uint16_t id) {
@@ -482,11 +481,12 @@ static TSTree *parse(Document *d, TSTree *old) {
   return ts_parser_parse_string_encoding(d->parser, old, (char *)d->text, d->len * 2,
                                          TSInputEncodingUTF16LE);
 }
-Document *tsmd_new(uint32_t gfm) {
+// `language` is the markdown grammar the host loaded (web-tree-sitter's Language[0]).
+Document *tsmd_new(uint32_t gfm, const TSLanguage *language) {
   Document *d = calloc(1, sizeof(*d));
   d->parser = ts_parser_new();
-  ts_parser_set_language(d->parser, tree_sitter_markdown());
-  d->ids = make_ids(tree_sitter_markdown());
+  ts_parser_set_language(d->parser, language);
+  d->ids = make_ids(language);
   d->gfm = gfm;
   d->cache = calloc(CACHE_BUCKETS, sizeof(Cache *));
   d->defs = cmark_reference_map_new(cmark_get_default_mem_allocator());

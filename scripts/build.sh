@@ -1,16 +1,21 @@
 #!/bin/sh
+# Builds tree-sitter-md.wasm as an extension for tree-sitter-x: a side module, like a
+# grammar, that calls tree-sitter's C API and libc from the host runtime it is loaded into.
 set -eu
 cd "$(dirname "$0")/.."
 : "${WASI_SDK:=/work/cache/wasi-sdk-34.0-x86_64-linux}"
 : "${OPT:=-O3}"
-mkdir -p target/c
 exports='tsmd_new tsmd_free tsmd_input tsmd_set_text tsmd_edit tsmd_reparse tsmd_decorations tsmd_folds tsmd_injections tsmd_out tsmd_row_start tsmd_line_count tsmd_highlights'
 flags=''
-for name in args_get args_sizes_get fd_close fd_seek fd_write proc_exit random_get; do flags="$flags -Wl,--wrap=__wasi_$name"; done
 for name in $exports; do flags="$flags -Wl,--export=$name"; done
-"$WASI_SDK/bin/clang" $OPT -flto -nostartfiles -fno-stack-protector -DNDEBUG -std=c11 -D_POSIX_C_SOURCE=200809L \
-  -Ivendor/tree-sitter/include -Ivendor/tree-sitter/src -Igrammar/src -Ivendor/cmark \
-  src/*.c vendor/cmark/*.c vendor/tree-sitter/src/lib.c grammar/src/parser.c grammar/src/scanner.c \
-  -Wl,--strip-all -Wl,--no-entry -Wl,--export-memory -Wl,-z,stack-size=1048576 $flags \
+"$WASI_SDK/bin/clang" --target=wasm32-wasip1 -fPIC -shared -nostdlib $OPT -fno-exceptions -fvisibility=hidden \
+  -DNDEBUG -std=c11 -D_POSIX_C_SOURCE=200809L \
+  -Ivendor/tree-sitter/include -Ivendor/cmark -Isrc \
+  src/*.c vendor/cmark/*.c \
+  -Wl,--allow-undefined -Wl,--no-entry -Wl,--strip-all $flags \
   -o tree-sitter-md.wasm
 printf 'wasm: %s raw, %s gzip -9\n' "$(wc -c < tree-sitter-md.wasm)" "$(gzip -9nc tree-sitter-md.wasm | wc -c)"
+# The block grammar, a standard tree-sitter language. TREE_SITTER is the CLI; tree-sitter-x's
+# (target/release/tree-sitter) matches the runtime and the WASI SDK the CLI caches.
+"${TREE_SITTER:-tree-sitter}" build --wasm -o tree-sitter-markdown.wasm grammar
+printf 'grammar wasm: %s raw, %s gzip -9\n' "$(wc -c < tree-sitter-markdown.wasm)" "$(gzip -9nc tree-sitter-markdown.wasm | wc -c)"

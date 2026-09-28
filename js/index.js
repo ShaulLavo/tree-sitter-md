@@ -1,4 +1,6 @@
-// JS binding for tree-sitter-md: one wasm module, one document per MarkdownDocument.
+// JS binding for tree-sitter-md: a tree-sitter-x extension, one document per MarkdownDocument.
+// The resolver runs inside tree-sitter-x's runtime and walks trees in C.
+import { Language, Parser, heap, loadExtension } from 'web-tree-sitter'
 // Offsets are UTF-16 code units, the same units as JS strings.
 
 /** Record kinds. Records are `[start, end, kind, extra]`. */
@@ -48,49 +50,51 @@ export const CAPTURES = Object.freeze([
 ])
 
 let wasm = null
+let language = null
 
-async function readSource(pending) {
+async function bytes(pending, fallback) {
   const source = await pending
   if (source instanceof WebAssembly.Module) return source
-  if (source instanceof ArrayBuffer || ArrayBuffer.isView(source)) return source
-  if (typeof Response !== 'undefined' && source instanceof Response) return source
-  const url = source ?? new URL('../tree-sitter-md.wasm', import.meta.url)
+  if (source instanceof ArrayBuffer) return new Uint8Array(source)
+  if (ArrayBuffer.isView(source)) return new Uint8Array(source.buffer, source.byteOffset, source.byteLength)
+  if (typeof Response !== 'undefined' && source instanceof Response) return new Uint8Array(await source.arrayBuffer())
+  const url = source ?? new URL(fallback, import.meta.url)
   if (String(url).startsWith('file:')) {
     const { readFile } = await import('node:fs/promises')
     return readFile(url)
   }
-  return fetch(url)
+  return new Uint8Array(await (await fetch(url)).arrayBuffer())
 }
 
-/** Load the module once. `source` is a URL, a Response (or a promise of one), bytes or a compiled module. */
-export async function init(source) {
+/**
+ * Load the grammar and the resolver once. `grammar` is tree-sitter-markdown.wasm or a
+ * `Language` already loaded; `resolver` is tree-sitter-md.wasm, loaded as a tree-sitter-x
+ * extension. Each is a URL, a Response (or a promise of one), bytes or a compiled module.
+ */
+export async function init({ grammar, resolver } = {}) {
   if (wasm) return
-  const input = await readSource(source)
-  let instance
-  if (input instanceof WebAssembly.Module) instance = await WebAssembly.instantiate(input, {})
-  else if (typeof Response !== 'undefined' && input instanceof Response)
-    instance = (await WebAssembly.instantiateStreaming(input, {})).instance
-  else instance = (await WebAssembly.instantiate(input, {})).instance
-  wasm = instance.exports
+  await Parser.init()
+  language = grammar instanceof Language ? grammar : await Language.load(await bytes(grammar, '../tree-sitter-markdown.wasm'))
+  wasm = await loadExtension(await bytes(resolver, '../tree-sitter-md.wasm'))
 }
 
 function write(handle, text) {
   const ptr = wasm.tsmd_input(handle, text.length)
-  const view = new Uint16Array(wasm.memory.buffer, ptr, text.length)
+  const view = new Uint16Array(heap().buffer, ptr, text.length)
   for (let i = 0; i < text.length; i++) view[i] = text.charCodeAt(i)
 }
 
 function read(handle, count) {
   if (count === 0) return new Uint32Array(0)
   const ptr = wasm.tsmd_out(handle)
-  return new Uint32Array(wasm.memory.buffer, ptr, count).slice()
+  return new Uint32Array(heap().buffer, ptr, count).slice()
 }
 
 export class MarkdownDocument {
   #handle
   constructor({ gfm = true } = {}) {
     if (!wasm) throw new Error('tree-sitter-md: call init() first')
-    this.#handle = wasm.tsmd_new(gfm ? 1 : 0)
+    this.#handle = wasm.tsmd_new(gfm ? 1 : 0, language[0])
   }
   /** Replace the whole text and parse it. */
   setText(text) {
@@ -140,7 +144,7 @@ export class MarkdownDocument {
   }
 }
 
-/** Bytes of wasm linear memory, for memory accounting. */
+/** Bytes of the shared tree-sitter memory, for memory accounting. */
 export function memoryBytes() {
-  return wasm ? wasm.memory.buffer.byteLength : 0
+  return wasm ? heap().byteLength : 0
 }

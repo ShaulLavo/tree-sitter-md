@@ -1,6 +1,7 @@
 #include "resolver.h"
 #include <assert.h>
-Document *tsmd_new(uint32_t);
+Document *tsmd_new(uint32_t, const TSLanguage *);
+const TSLanguage *tree_sitter_markdown(void);
 void tsmd_free(Document *);
 uint16_t *tsmd_input(Document *, uint32_t);
 void tsmd_set_text(Document *);
@@ -12,7 +13,7 @@ static void set(Document *d, const uint16_t *text, uint32_t length) {
   tsmd_set_text(d);
 }
 int main(void) {
-  Document *incremental = tsmd_new(1), *fresh = tsmd_new(1);
+  Document *incremental = tsmd_new(1, tree_sitter_markdown()), *fresh = tsmd_new(1, tree_sitter_markdown());
   uint16_t text[8192];
   uint32_t length = 0, seed = 7;
   const char *source =

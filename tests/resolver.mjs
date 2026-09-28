@@ -60,11 +60,18 @@ test('GFM email protocols include the prefix and XMPP resource',()=>{
   doc.dispose();
 });
 
-test('the standalone wasm needs no host imports',async()=>{
+test('the resolver imports only what the tree-sitter-x runtime exports',async()=>{
   const {readFile}=await import('node:fs/promises');
-  const bytes=await readFile(new URL('../tree-sitter-md.wasm',import.meta.url));
-  const module=await WebAssembly.compile(bytes);
-  assert.deepEqual(WebAssembly.Module.imports(module),[]);
+  const {createRequire}=await import('node:module');
+  const runtimePath=createRequire(import.meta.url).resolve('web-tree-sitter/web-tree-sitter.wasm');
+  const runtime=new Set(WebAssembly.Module.exports(await WebAssembly.compile(await readFile(runtimePath))).map(e=>e.name));
+  const module=await WebAssembly.compile(await readFile(new URL('../tree-sitter-md.wasm',import.meta.url)));
+  const linker=new Set(['memory','__indirect_function_table','__stack_pointer','__memory_base','__table_base']);
+  for(const {module:from,name} of WebAssembly.Module.imports(module)) {
+    if(from==='env'&&linker.has(name)) continue;
+    assert.ok(from==='env'||from==='GOT.func'||from==='GOT.mem',`${from}.${name}`);
+    assert.ok(runtime.has(name),`${name} is not exported by the runtime`);
+  }
 });
 
 
@@ -92,4 +99,14 @@ test('email scanning cannot reuse an already emitted link',()=>{
   const doc=new MarkdownDocument();doc.setText(text);
   assert.deepEqual(records(doc,text,Kind.Link),['a@b.com','one@example.org','two@example.org']);
   doc.dispose();
+});
+
+test('128 levels of nested quotes and lists decorate within the runtime stack',()=>{
+  // The resolver runs on tree-sitter-x's stack; its default 64 KB overflowed here.
+  const text=Array.from({length:40},(_,i)=>'> '.repeat(128)+(i%2?'- item **bold**\n':'text *em*\n')).join('');
+  const doc=new MarkdownDocument();doc.setText(text);
+  assert.ok(doc.decorations(0,text.length).length>0);
+  const fresh=new MarkdownDocument();fresh.setText(text);
+  assert.deepEqual(doc.highlights(0,text.length),fresh.highlights(0,text.length));
+  fresh.dispose();doc.dispose();
 });
