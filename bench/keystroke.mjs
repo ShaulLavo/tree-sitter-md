@@ -15,7 +15,7 @@ const time = (fn) => { const t = performance.now(); const r = fn(); return [perf
 const nthNewline = (text, from, n) => { let at = from; for (let i = 0; i < n; i++) { at = text.indexOf('\n', at + 1); if (at < 0) return text.length } return at }
 
 const t0 = performance.now()
-await init(process.env.WASM ? readFileSync(process.env.WASM) : undefined)
+await init(process.env.WASM ? { inline: readFileSync(process.env.WASM) } : undefined)
 const out = { file: file.split('/').pop(), chars: original.length, initMs: +(performance.now() - t0).toFixed(1) }
 const lz = lezerBase.configure(GFM)
 

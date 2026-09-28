@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { init, MarkdownDocument, Kind } from '../js/index.js'
 
-await init(process.env.WASM ? readFileSync(process.env.WASM) : undefined)
+await init(process.env.WASM ? { inline: readFileSync(process.env.WASM) } : undefined)
 
 const paragraph = 'A paragraph with **bold**, *emphasis*, and [a link](https://example.com).\n\n'
 const count = Math.ceil(1_000_000 / paragraph.length)

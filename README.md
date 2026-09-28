@@ -1,22 +1,27 @@
 # tree-sitter-md
 
-Markdown for editors in one wasm module: a tree-sitter block grammar (a fork of
+Markdown for editors: a tree-sitter block grammar (a fork of
 [tree-sitter-markdown](https://github.com/tree-sitter-grammars/tree-sitter-markdown) with one
-token per line) and a C inline resolver (cmark 0.31.2's delimiter and bracket stacks,
-document-wide reference definitions, GFM autolink literals). JavaScript gets compact records for
-the rows it asks about: decoration ranges and kinds, highlight captures, fold ranges and fence
-injections. The tree never crosses into JS.
+token per line), loaded by the host's web-tree-sitter like any other language, and a C inline
+resolver (cmark 0.31.2's delimiter and bracket stacks, document-wide reference definitions, GFM
+autolink literals) in its own small wasm module with no tree-sitter runtime. `js/index.js` walks
+the web-tree-sitter tree for the rows asked about and hands each paragraph, heading and table to
+the resolver as ranges. JavaScript gets compact records: decoration ranges and kinds, highlight
+captures, fold ranges and fence injections.
 
 Status: a measured spike (2026-09-26), not a release. Results are in
 [docs/FINDINGS.md](docs/FINDINGS.md): 672/676 CommonMark + GFM examples, 0.401 ms median
-keystroke at 1 MB, and a measured C migration against the Rust baseline. The JS API is unchanged.
+keystroke at 1 MB, and a measured C migration against the Rust baseline. This branch parses with
+the host's web-tree-sitter; its costs against the single-module build are in
+[docs/measurements/web-tree-sitter](docs/measurements/web-tree-sitter/README.md). `init` now takes
+`{ inline, grammar }`; the rest of the JS API is unchanged.
 
 ## Use
 
 ```js
 import { init, MarkdownDocument, Kind, CAPTURES } from 'tree-sitter-md'
 
-await init() // or init(fetch(url)), init(bytes), init(compiledModule)
+await init() // or init({ inline: fetch(url), grammar: fetch(url) }), bytes, or a loaded Language
 const doc = new MarkdownDocument({ gfm: true })
 doc.setText(text)
 doc.reparse() // once, in idle time after setText: keeps the first keystroke cheap
@@ -32,44 +37,44 @@ Kinds are in `Kind` (`js/index.js`). Records come in tree order; inline records 
 the block. `LinkText` gives the text range of a link or image, so live preview can keep it and
 hide the brackets and destination.
 
-The module loads `../tree-sitter-md.wasm` relative to `js/index.js`. Bundlers that pre-bundle
-dependencies (Vite's `optimizeDeps`) should exclude the package, or pass the wasm URL to `init`.
+`init` loads `../tree-sitter-md.wasm` (the resolver) and `../tree-sitter-markdown.wasm` (the
+grammar) relative to `js/index.js`, and initializes `web-tree-sitter`, a peer dependency. A host
+that already loads languages can pass its own `Language` as `grammar`. Bundlers that pre-bundle
+dependencies (Vite's `optimizeDeps`) should exclude the package, or pass the wasm URLs to `init`.
 
 ## Layout
 
 | Path | What |
 | --- | --- |
 | `grammar/` | The block grammar (`grammar.js`), generated `src/parser.c`, the external scanner |
-| `src/document.c` | UTF-16 document, incremental tree, definitions, per-leaf cache, record walks and wasm exports |
+| `js/index.js` | Parsing through web-tree-sitter, the tree walks (records, folds, injections, definition scans), the binding |
+| `src/document.c` | UTF-16 text, definitions, per-leaf cache, output records and wasm exports |
 | `src/leaf.c` | Leaf content and continuation mapping; cmark inline pass with no block parse |
 | `src/autolink.c` | GFM autolink literals ported from cmark-gfm |
 | `src/highlight.c` | Highlight captures derived from decoration records |
-| `vendor/` | cmark 0.31.2 inline dependencies and tree-sitter 0.27.0 C runtime |
-| `js/` | The unchanged JS binding and types |
+| `vendor/` | cmark 0.31.2 inline dependencies |
 | `bench/` | Spec runner, corpus runner, keystroke benchmark, fuzz test, Chromium cold load, memory |
 
 ## Build
 
-Uses one C toolchain for the grammar, scanner, tree-sitter runtime and resolver: WASI SDK 34
-with clang 23, wasi-libc and dlmalloc. The SDK defaults to
+The resolver builds with WASI SDK 34 (clang 23, wasi-libc and dlmalloc). The SDK defaults to
 `/work/cache/wasi-sdk-34.0-x86_64-linux`; set `WASI_SDK` for another installation.
 [SDK releases](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-34) provide other
-host platforms. No Rust or Emscripten installation is needed.
+host platforms. The grammar builds with the tree-sitter CLI (a dev dependency), which fetches its
+own WASI SDK. No Rust or Emscripten installation is needed. Run `bun install` first.
 
 ```sh
 npm run generate   # only when changing the grammar; tree-sitter CLI 0.26
-npm run build      # -O3 + LTO, tree-sitter-md.wasm
+npm run build      # -O3 + LTO tree-sitter-md.wasm, then tree-sitter-markdown.wasm
 OPT=-Oz npm run build
 npm test           # focused wasm API regressions
-sh scripts/check-native.sh  # native clang, ASan + UBSan, incremental edits, leaf mapping and cursor oracle
-sh scripts/check-cursor.sh  # cursor byte/point seeks against sequential traversal, ASan + UBSan
+sh scripts/check-native.sh  # native clang, ASan + UBSan, incremental edits and leaf mapping
 node bench/cursor-seek.mjs --check  # blank-line viewport cost across a heading-less 1 MB document
 ```
 
-The wasm module has no imports. Its allocator grows and reuses linear memory; the host supplies
-no filesystem, process or clock services. The normal output remains the standalone wasm module.
-The [side-module experiment](experiments/side-module/README.md) documents sharing the Editor's
-web-tree-sitter runtime and the required host changes.
+The resolver module has no imports. Its allocator grows and reuses linear memory; the host
+supplies no filesystem, process or clock services. The grammar module is a standard tree-sitter
+language: it imports its allocator from web-tree-sitter and shares its runtime and heap.
 
 ## Benchmarks and the spec suite
 

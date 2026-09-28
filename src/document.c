@@ -1,15 +1,8 @@
 #include "resolver.h"
-extern const TSLanguage *tree_sitter_markdown(void);
+// Document state for the inline pass. The block tree lives in web-tree-sitter;
+// js/index.js walks it and describes each leaf block here as ranges.
 #define CACHE_BUCKETS 16384
 
-static TSNode child(TSNode node, uint16_t id) {
-  for (uint32_t i = 0; i < ts_node_named_child_count(node); i++) {
-    TSNode c = ts_node_named_child(node, i);
-    if (is(c, id))
-      return c;
-  }
-  return (TSNode){0};
-}
 static void clear_entry(Cache *e) {
   for (uint32_t i = 0; i < e->deps.n; i++)
     free(e->deps.v[i]);
@@ -37,19 +30,10 @@ static void clear_sources(Document *d) {
 static uint64_t mix(uint64_t h, uint64_t x) {
   return ((h << 5 | h >> 59) ^ x) * UINT64_C(0x517cc1b727220a95);
 }
-static uint64_t layout_key(Document *d, TSNode node, uint32_t base, uint64_t h) {
-  for (uint32_t i = 0; i < ts_node_named_child_count(node); i++) {
-    TSNode c = ts_node_named_child(node, i);
-    if (is(c, d->ids.block_continuation))
-      h = mix(h, (start(c) - base) | (uint64_t)(end(c) - base) << 32);
-    else if (ts_node_named_child_count(c))
-      h = layout_key(d, c, base, h);
-  }
-  return h;
-}
-static uint64_t leaf_key(Document *d, TSNode node, int kind) {
-  uint32_t a = start(node), b = end(node), i = a;
+static uint64_t leaf_key(Document *d, uint32_t a, uint32_t b, const uint32_t *gaps,
+                         uint32_t count, int kind) {
   uint64_t h = UINT64_C(0xcbf29ce484222325) ^ kind;
+  uint32_t i = a;
   for (; i + 4 <= b; i += 4) {
     uint64_t x = (uint64_t)d->text[i] | (uint64_t)d->text[i + 1] << 16 |
                  (uint64_t)d->text[i + 2] << 32 | (uint64_t)d->text[i + 3] << 48;
@@ -57,7 +41,10 @@ static uint64_t leaf_key(Document *d, TSNode node, int kind) {
   }
   for (; i < b; i++)
     h = mix(h, d->text[i]);
-  return layout_key(d, node, a, mix(h, b - a));
+  h = mix(h, b - a);
+  for (uint32_t j = 0; j < count; j++)
+    h = mix(h, (gaps[2 * j] - a) | (uint64_t)(gaps[2 * j + 1] - a) << 32);
+  return h;
 }
 static void trim(Document *d, uint32_t *a, uint32_t *b) {
   while (*a < *b && ws(d->text[*a]))
@@ -114,110 +101,50 @@ static uint32_t table_cells(Document *d, Words *cells, bool delimiter, Words *ou
   }
   return aligns;
 }
-static void table(Document *d, TSNode node, Words *out, Labels *deps) {
-  uint32_t last = start(node), columns = 0, aligns = 0;
+// Rows of a pipe table, as the JS walk passes them: start, end, delimiter flag.
+static void table(Document *d, const uint32_t *rows, uint32_t count, Words *out, Labels *deps,
+                  uint32_t node_start) {
+  uint32_t last = node_start, columns = 0, aligns = 0;
   Words cells = {0};
   uint32_t at = out->n;
-  record(out, start(node), 0, TABLE, 0);
-  for (uint32_t i = 0; i < ts_node_named_child_count(node); i++) {
-    TSNode row = ts_node_named_child(node, i);
-    if (is(row, d->ids.block_continuation))
-      continue;
-    last = end(row);
-    split_cells(d, start(row), last, &cells);
-    bool delimiter = is(row, d->ids.pipe_table_delimiter_row);
-    if (delimiter)
+  record(out, node_start, 0, TABLE, 0);
+  for (uint32_t i = 0; i < count; i++) {
+    const uint32_t *row = rows + 3 * i;
+    last = row[1];
+    split_cells(d, row[0], last, &cells);
+    if (row[2])
       columns = cells.n / 2;
-    aligns |= table_cells(d, &cells, delimiter, out, deps);
+    aligns |= table_cells(d, &cells, row[2], out, deps);
   }
-  while (last > start(node) && (d->text[last - 1] == '\n' || d->text[last - 1] == '\r'))
+  while (last > node_start && (d->text[last - 1] == '\n' || d->text[last - 1] == '\r'))
     last--;
   out->v[at + 1] = last;
   out->v[at + 3] = (columns < 255 ? columns : 255) | aligns;
   free(cells.v);
 }
-static void resolve_leaf(Document *d, TSNode node, int kind) {
-  uint64_t key = leaf_key(d, node, kind);
-  uint32_t bucket = key & (CACHE_BUCKETS - 1), base = start(node);
-  Cache *e = d->cache[bucket];
-  while (e && e->key != key)
-    e = e->next;
-  if (!e) {
-    e = calloc(1, sizeof(*e));
-    e->key = key;
-    if (kind == TABLE_LEAF)
-      table(d, node, &e->items, &e->deps);
-    else {
-      leaf_build(d, node, kind);
-      inline_resolve(&d->leaf, kind, d->gfm, d->defs, &e->items, &e->deps);
-    }
-    for (uint32_t i = 0; i < e->items.n; i += 4) {
-      e->items.v[i] -= base;
-      e->items.v[i + 1] -= base;
-    }
-    e->next = d->cache[bucket];
-    d->cache[bucket] = e;
-    d->cache_count++;
-  }
-  e->used = d->epoch;
-  for (uint32_t i = 0; i < e->items.n; i += 4)
-    record(&d->out, e->items.v[i] + base, e->items.v[i + 1] + base, e->items.v[i + 2],
-           e->items.v[i + 3]);
+// Reads a LeafShape from the argument words; returns the words it used.
+static uint32_t read_shape(const uint32_t *args, LeafShape *shape) {
+  shape->start = args[0];
+  shape->end = args[1];
+  shape->inline_start = args[2];
+  shape->inline_end = args[3];
+  shape->gap_count = args[4];
+  shape->gaps = args + 5;
+  return 5 + 2 * shape->gap_count;
 }
-static bool has_leaves(Document *d, TSNode n) {
-  Ids *i = &d->ids;
-  uint16_t id = ts_node_symbol(n);
-  return id != i->fenced_code_block && id != i->indented_code_block && id != i->html_block &&
-         id != i->pipe_table && id != i->atx_heading && id != i->thematic_break &&
-         id != i->inline_node;
-}
-static void insert_source(Document *d, TSNode n, cmark_reference_map *map) {
+static void insert_source(Document *d, uint32_t start, uint32_t end, cmark_reference_map *map) {
   uint32_t at = 0;
-  while (at < d->source_count && d->sources[at].start < start(n))
+  while (at < d->source_count && d->sources[at].start < start)
     at++;
-  if (at < d->source_count && d->sources[at].start == start(n)) {
+  if (at < d->source_count && d->sources[at].start == start) {
     cmark_reference_map_free(d->sources[at].map);
-    d->sources[at] = (DefSource){start(n), end(n), map};
+    d->sources[at] = (DefSource){start, end, map};
     return;
   }
   reserve((void **)&d->sources, &d->source_cap, d->source_count + 1, sizeof(DefSource));
   memmove(d->sources + at + 1, d->sources + at, (d->source_count - at) * sizeof(DefSource));
-  d->sources[at] = (DefSource){start(n), end(n), map};
+  d->sources[at] = (DefSource){start, end, map};
   d->source_count++;
-}
-static void scan_definitions(Document *d, TSTreeCursor *cursor, uint32_t from, uint32_t to) {
-  TSNode n = ts_tree_cursor_current_node(cursor);
-  if (is(n, d->ids.paragraph)) {
-    TSNode in = child(n, d->ids.inline_node);
-    uint32_t a = start(in);
-    if (ts_node_is_null(in))
-      return;
-    while (a < d->len && (d->text[a] == ' ' || d->text[a] == '\t'))
-      a++;
-    if (a >= d->len || d->text[a] != '[')
-      return;
-    leaf_build(d, n, PARAGRAPH);
-    cmark_reference_map *map = cmark_reference_map_new(cmark_get_default_mem_allocator());
-    strip_definitions(&d->leaf, map, NULL);
-    if (map->size)
-      insert_source(d, n, map);
-    else
-      cmark_reference_map_free(map);
-    return;
-  }
-  if (!has_leaves(d, n) || ts_tree_cursor_goto_first_child_for_byte(cursor, from * 2) < 0)
-    return;
-  do {
-    if (start(ts_tree_cursor_current_node(cursor)) > to)
-      break;
-    scan_definitions(d, cursor, from, to);
-  } while (ts_tree_cursor_goto_next_sibling(cursor));
-  ts_tree_cursor_goto_parent(cursor);
-}
-static void scan_range(Document *d, uint32_t from, uint32_t to) {
-  TSTreeCursor cursor = ts_tree_cursor_new(ts_tree_root_node(d->tree));
-  scan_definitions(d, &cursor, from, to);
-  ts_tree_cursor_delete(&cursor);
 }
 static void remove_sources(Document *d, uint32_t from, uint32_t to) {
   uint32_t j = 0;
@@ -298,171 +225,6 @@ static void rebuild_defs(Document *d) {
   cmark_reference_map_free(d->defs);
   d->defs = next;
 }
-static uint32_t emit_setext_marks(Document *d, TSNode n) {
-  uint32_t level = 2;
-  for (uint32_t j = 0; j < ts_node_named_child_count(n); j++) {
-    TSNode c = ts_node_named_child(n, j);
-    if (is(c, d->ids.setext_h1))
-      level = 1;
-    if (!is(c, d->ids.paragraph) && !is(c, d->ids.block_continuation))
-      record(&d->out, start(c), end(c), HEADING_MARK, level);
-  }
-  return level;
-}
-static void emit_fence_marks(Document *d, TSNode n) {
-  for (uint32_t j = 0; j < ts_node_named_child_count(n); j++) {
-    TSNode c = ts_node_named_child(n, j);
-    if (is(c, d->ids.info_string))
-      record(&d->out, start(c), end(c), INFO, 0);
-    if (is(c, d->ids.fence_delimiter))
-      record(&d->out, start(c), end(c), FENCE_MARK, 0);
-  }
-}
-static bool emit(Document *d, TSNode n) {
-  Ids *i = &d->ids;
-  uint16_t id = ts_node_symbol(n);
-  uint32_t s = start(n), e = end(n);
-  if (id == i->paragraph) {
-    resolve_leaf(d, n, is(ts_node_parent(n), i->setext_heading) ? SETEXT : PARAGRAPH);
-    return false;
-  }
-  if (id == i->atx_heading) {
-    TSNode marker = ts_node_named_child(n, 0);
-    uint32_t level = 1;
-    for (uint32_t j = 0; j < 6; j++)
-      if (is(marker, i->atx_markers[j]))
-        level = j + 1;
-    record(&d->out, s, e, H, level);
-    if (!ts_node_is_null(marker))
-      record(&d->out, start(marker), end(marker), HEADING_MARK, level);
-    resolve_leaf(d, n, ATX);
-    return false;
-  }
-  if (id == i->setext_heading) {
-    uint32_t level = emit_setext_marks(d, n);
-    record(&d->out, s, e, H, level);
-    return true;
-  }
-  if (id == i->pipe_table) {
-    TSNode delim = child(n, i->pipe_table_delimiter_row);
-    if (!ts_node_is_null(delim))
-      record(&d->out, start(delim), end(delim), TABLE_DELIMITER_ROW, 0);
-    resolve_leaf(d, n, TABLE_LEAF);
-    return false;
-  }
-  if (id == i->fenced_code_block) {
-    record(&d->out, s, e, CODE, 1);
-    emit_fence_marks(d, n);
-    return false;
-  }
-  if (id == i->indented_code_block) {
-    record(&d->out, s, e, CODE, 0);
-    return false;
-  }
-  if (id == i->html_block) {
-    record(&d->out, s, e, HBLOCK, 0);
-    return false;
-  }
-  if (id == i->thematic_break) {
-    record(&d->out, s, e, HR, 0);
-    return false;
-  }
-  if (id == i->minus_metadata || id == i->plus_metadata) {
-    record(&d->out, s, e, FRONTMATTER, 0);
-    return false;
-  }
-  if (id == i->block_quote) {
-    record(&d->out, s, e, BQ, 0);
-    return true;
-  }
-  if (id == i->block_quote_marker) {
-    record(&d->out, s, e, QUOTE_MARK, 0);
-    return false;
-  }
-  if (id == i->list) {
-    TSNode marker = ts_node_named_child(ts_node_named_child(n, 0), 0);
-    record(&d->out, s, e, LIST, is(marker, i->marker_dot) || is(marker, i->marker_paren));
-    return true;
-  }
-  if (id == i->list_item) {
-    record(&d->out, s, e, LI, 0);
-    return true;
-  }
-  for (uint32_t j = 0; j < 5; j++)
-    if (id == i->list_markers[j]) {
-      record(&d->out, s, e, LIST_MARK, 0);
-      return false;
-    }
-  if (id == i->task_checked || id == i->task_unchecked) {
-    record(&d->out, s, e, TASK, id == i->task_checked);
-    return false;
-  }
-  return true;
-}
-static bool fold(Document *d, TSNode n) {
-  const char *kind = ts_node_type(n);
-  uint32_t a = start(n), b = end(n);
-  trim(d, &a, &b);
-  bool foldable = !strcmp(kind, "section") || is(n, d->ids.fenced_code_block) ||
-                  is(n, d->ids.block_quote) || is(n, d->ids.list_item) ||
-                  is(n, d->ids.pipe_table) || is(n, d->ids.html_block);
-  for (uint32_t j = a; foldable && j < b; j++) {
-    if (d->text[j] == '\n') {
-      word(&d->out, a);
-      word(&d->out, b);
-      break;
-    }
-  }
-  return !is(n, d->ids.paragraph) && !is(n, d->ids.fenced_code_block) &&
-         !is(n, d->ids.html_block) && !is(n, d->ids.pipe_table) &&
-         !is(n, d->ids.indented_code_block);
-}
-static bool injection(Document *d, TSNode n) {
-  if (!is(n, d->ids.fenced_code_block))
-    return has_leaves(d, n);
-  TSNode info = child(n, d->ids.info_string), content = child(n, d->ids.code_fence_content);
-  uint32_t a = 0, b = 0;
-  if (!ts_node_is_null(info)) {
-    a = start(info);
-    uint32_t e = end(info);
-    while (a < e && (d->text[a] == ' ' || d->text[a] == '\t'))
-      a++;
-    b = a;
-    while (b < e && !ws(d->text[b]))
-      b++;
-  }
-  if (!ts_node_is_null(content))
-    record(&d->out, start(content), end(content), a, b);
-  return false;
-}
-static void visit(Document *d, TSTreeCursor *c, uint32_t from, uint32_t to, int mode) {
-  TSNode n = ts_tree_cursor_current_node(c);
-  bool descend;
-  if (mode == 1)
-    descend = fold(d, n);
-  else if (mode == 2)
-    descend = injection(d, n);
-  else
-    descend = emit(d, n);
-  if (!descend || ts_tree_cursor_goto_first_child_for_byte(c, from * 2) < 0)
-    return;
-  do {
-    TSNode ch = ts_tree_cursor_current_node(c);
-    if (start(ch) >= to && (mode || end(ch) > start(ch)))
-      break;
-    visit(d, c, from, to, mode);
-  } while (ts_tree_cursor_goto_next_sibling(c));
-  ts_tree_cursor_goto_parent(c);
-}
-static uint32_t output(Document *d, uint32_t from, uint32_t to, int mode) {
-  d->out.n = 0;
-  if (!d->tree)
-    return 0;
-  TSTreeCursor c = ts_tree_cursor_new(ts_tree_root_node(d->tree));
-  visit(d, &c, from, to, mode);
-  ts_tree_cursor_delete(&c);
-  return d->out.n;
-}
 static uint32_t upper(Words *v, uint32_t value) {
   uint32_t a = 0, b = v->n;
   while (a < b) {
@@ -474,19 +236,8 @@ static uint32_t upper(Words *v, uint32_t value) {
   }
   return a;
 }
-static TSPoint point(Document *d, uint32_t pos) {
-  uint32_t row = upper(&d->lines, pos) - 1;
-  return (TSPoint){row, (pos - d->lines.v[row]) * 2};
-}
-static TSTree *parse(Document *d, TSTree *old) {
-  return ts_parser_parse_string_encoding(d->parser, old, (char *)d->text, d->len * 2,
-                                         TSInputEncodingUTF16LE);
-}
 Document *tsmd_new(uint32_t gfm) {
   Document *d = calloc(1, sizeof(*d));
-  d->parser = ts_parser_new();
-  ts_parser_set_language(d->parser, tree_sitter_markdown());
-  d->ids = make_ids(tree_sitter_markdown());
   d->gfm = gfm;
   d->cache = calloc(CACHE_BUCKETS, sizeof(Cache *));
   d->defs = cmark_reference_map_new(cmark_get_default_mem_allocator());
@@ -499,8 +250,6 @@ void tsmd_free(Document *d) {
   clear_cache(d);
   clear_sources(d);
   cmark_reference_map_free(d->defs);
-  ts_tree_delete(d->tree);
-  ts_parser_delete(d->parser);
   free(d->cache);
   free(d->sources);
   free(d->text);
@@ -508,6 +257,7 @@ void tsmd_free(Document *d) {
   free(d->lines.v);
   free(d->out.v);
   free(d->spare.v);
+  free(d->args.v);
   free(d->leaf.text);
   free(d->leaf.starts.v);
   free(d->leaf.ends.v);
@@ -518,6 +268,12 @@ uint16_t *tsmd_input(Document *d, uint32_t n) {
   d->input_len = n;
   return d->input;
 }
+uint32_t *tsmd_args(Document *d, uint32_t n) {
+  reserve((void **)&d->args.v, &d->args.cap, n, sizeof(uint32_t));
+  return d->args.v;
+}
+// Takes the input as the whole text. The caller then defines every paragraph
+// that starts with a bracket and commits.
 void tsmd_set_text(Document *d) {
   free(d->text);
   d->text = d->input;
@@ -533,26 +289,12 @@ void tsmd_set_text(Document *d) {
       word(&d->lines, i + 1);
   clear_sources(d);
   clear_cache(d);
-  ts_tree_delete(d->tree);
-  d->tree = parse(d, NULL);
-  scan_range(d, 0, d->len);
-  rebuild_defs(d);
 }
-void tsmd_reparse(Document *d) {
-  if (!d->tree)
-    return;
-  TSTree *old = d->tree;
-  d->tree = parse(d, old);
-  ts_tree_delete(old);
-}
+// Replaces [a, b) with the input. The caller then forgets the tree's changed
+// ranges, defines the paragraphs in [a, a + input) and those ranges, and commits.
 void tsmd_edit(Document *d, uint32_t a, uint32_t b) {
   uint32_t e = a + d->input_len;
   int64_t delta = (int64_t)e - b;
-  TSInputEdit edit = {.start_byte = a * 2,
-                      .old_end_byte = b * 2,
-                      .new_end_byte = e * 2,
-                      .start_point = point(d, a),
-                      .old_end_point = point(d, b)};
   reserve((void **)&d->text, &d->cap, d->len + delta + 1, sizeof(uint16_t));
   memmove(d->text + e, d->text + b, (d->len - b) * sizeof(uint16_t));
   memcpy(d->text + a, d->input, d->input_len * sizeof(uint16_t));
@@ -569,13 +311,6 @@ void tsmd_edit(Document *d, uint32_t a, uint32_t b) {
   for (uint32_t i = 0; i < d->input_len; i++)
     if (d->input[i] == '\n')
       d->lines.v[la++] = a + i + 1;
-  edit.new_end_point = point(d, e);
-  TSTree *old = d->tree;
-  ts_tree_edit(old, &edit);
-  d->tree = parse(d, old);
-  uint32_t count = 0;
-  TSRange *ranges = ts_tree_get_changed_ranges(old, d->tree, &count);
-  ts_tree_delete(old);
   d->epoch++;
   remove_sources(d, a, b);
   for (uint32_t i = 0; i < d->source_count; i++) {
@@ -585,24 +320,70 @@ void tsmd_edit(Document *d, uint32_t a, uint32_t b) {
     }
   }
   remove_sources(d, a, e);
-  for (uint32_t i = 0; i < count; i++)
-    remove_sources(d, ranges[i].start_byte / 2, ranges[i].end_byte / 2);
-  scan_range(d, a, e);
-  for (uint32_t i = 0; i < count; i++)
-    scan_range(d, ranges[i].start_byte / 2, ranges[i].end_byte / 2);
-  free(ranges);
-  rebuild_defs(d);
 }
-uint32_t tsmd_decorations(Document *d, uint32_t a, uint32_t b) { return output(d, a, b, 0); }
-uint32_t tsmd_folds(Document *d, uint32_t a, uint32_t b) { return output(d, a, b, 1); }
-uint32_t tsmd_injections(Document *d, uint32_t a, uint32_t b) { return output(d, a, b, 2); }
-uint32_t tsmd_highlights(Document *d, uint32_t a, uint32_t b) {
-  output(d, a, b, 0);
+void tsmd_forget(Document *d, uint32_t a, uint32_t b) { remove_sources(d, a, b); }
+// Args: a LeafShape for a paragraph whose inline text starts with '['.
+void tsmd_define(Document *d) {
+  LeafShape shape;
+  read_shape(d->args.v, &shape);
+  leaf_build(d, &shape, PARAGRAPH);
+  cmark_reference_map *map = cmark_reference_map_new(cmark_get_default_mem_allocator());
+  strip_definitions(&d->leaf, map, NULL);
+  if (map->size)
+    insert_source(d, shape.start, shape.end, map);
+  else
+    cmark_reference_map_free(map);
+}
+void tsmd_commit(Document *d) { rebuild_defs(d); }
+void tsmd_reset(Document *d) { d->out.n = 0; }
+void tsmd_record(Document *d, uint32_t a, uint32_t b, uint32_t kind, uint32_t extra) {
+  record(&d->out, a, b, kind, extra);
+}
+// Args: block start, end, the block's continuation ranges for the cache key
+// (count, then pairs), then a LeafShape, or for TABLE_LEAF a row count and rows.
+void tsmd_leaf(Document *d, uint32_t kind) {
+  const uint32_t *args = d->args.v;
+  uint32_t base = args[0], stop = args[1], key_count = args[2];
+  const uint32_t *rest = args + 3 + 2 * key_count;
+  uint64_t key = leaf_key(d, base, stop, args + 3, key_count, kind);
+  uint32_t bucket = key & (CACHE_BUCKETS - 1);
+  Cache *e = d->cache[bucket];
+  while (e && e->key != key)
+    e = e->next;
+  if (!e) {
+    e = calloc(1, sizeof(*e));
+    e->key = key;
+    if (kind == TABLE_LEAF)
+      table(d, rest + 1, rest[0], &e->items, &e->deps, base);
+    else {
+      LeafShape shape;
+      read_shape(rest, &shape);
+      leaf_build(d, &shape, kind);
+      inline_resolve(&d->leaf, kind, d->gfm, d->defs, &e->items, &e->deps);
+    }
+    for (uint32_t i = 0; i < e->items.n; i += 4) {
+      e->items.v[i] -= base;
+      e->items.v[i + 1] -= base;
+    }
+    e->next = d->cache[bucket];
+    d->cache[bucket] = e;
+    d->cache_count++;
+  }
+  e->used = d->epoch;
+  for (uint32_t i = 0; i < e->items.n; i += 4)
+    record(&d->out, e->items.v[i] + base, e->items.v[i + 1] + base, e->items.v[i + 2],
+           e->items.v[i + 3]);
+}
+uint32_t tsmd_highlights(Document *d) {
   highlights(d);
   return d->out.n;
 }
+uint32_t tsmd_count(Document *d) { return d->out.n; }
+uint16_t *tsmd_text(Document *d) { return d->text; }
+uint32_t tsmd_length(Document *d) { return d->len; }
 uint32_t *tsmd_out(Document *d) { return d->out.v; }
 uint32_t tsmd_row_start(Document *d, uint32_t row) {
   return row < d->lines.n ? d->lines.v[row] : d->len;
 }
 uint32_t tsmd_line_count(Document *d) { return d->lines.n; }
+uint32_t tsmd_row_of(Document *d, uint32_t pos) { return upper(&d->lines, pos) - 1; }

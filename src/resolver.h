@@ -2,7 +2,6 @@
 #define TSMD_RESOLVER_H
 #include "inlines.h"
 #include "node.h"
-#include "tree_sitter/api.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -31,14 +30,11 @@ typedef struct Cache {
   Labels deps;
   struct Cache *next;
 } Cache;
-#include "ids.h"
 typedef struct {
   uint16_t *text, *input;
   uint32_t len, cap, input_len, input_cap;
   Words lines, out, spare;
-  TSParser *parser;
-  TSTree *tree;
-  Ids ids;
+  Words args;
   bool gfm;
   Leaf leaf;
   DefSource *sources;
@@ -78,20 +74,22 @@ enum {
   LINK_TEXT
 };
 enum { PARAGRAPH, SETEXT, ATX, TABLE_LEAF };
+#define NO_INLINE UINT32_MAX
+// A leaf block as the JS tree walk describes it: the block's range, its inline
+// child's range (NO_INLINE when absent) and that child's continuation gaps.
+typedef struct {
+  uint32_t start, end, inline_start, inline_end, gap_count;
+  const uint32_t *gaps;
+} LeafShape;
 void reserve(void **p, uint32_t *cap, uint32_t n, size_t size);
 void word(Words *v, uint32_t x);
 void record(Words *v, uint32_t a, uint32_t b, uint32_t kind, uint32_t extra);
-void leaf_build(Document *d, TSNode node, int kind);
+void leaf_build(Document *d, const LeafShape *shape, int kind);
 void leaf_single(Document *d, uint32_t a, uint32_t b);
 uint32_t strip_definitions(Leaf *leaf, cmark_reference_map *map, Words *records);
 void inline_resolve(Leaf *leaf, int kind, bool gfm, cmark_reference_map *defs, Words *out,
                     Labels *deps);
 void autolinks(Leaf *leaf, uint32_t a, uint32_t b, Words *out);
 void highlights(Document *d);
-static inline uint32_t start(TSNode n) { return ts_node_start_byte(n) / 2; }
-static inline uint32_t end(TSNode n) { return ts_node_end_byte(n) / 2; }
 static inline bool ws(uint16_t c) { return c == ' ' || c == '\t' || c == '\r' || c == '\n'; }
-static inline bool is(TSNode n, uint16_t id) {
-  return !ts_node_is_null(n) && ts_node_symbol(n) == id;
-}
 #endif

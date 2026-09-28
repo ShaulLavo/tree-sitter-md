@@ -8,9 +8,16 @@ export declare const Kind: Readonly<{
 
 export declare const CAPTURES: readonly (string | null)[]
 
+import type { Language } from 'web-tree-sitter'
+
 export type WasmSource = URL | string | Response | Promise<Response> | ArrayBuffer | ArrayBufferView | WebAssembly.Module
 
-export declare function init(source?: WasmSource): Promise<void>
+export declare function init(options?: {
+  /** The inline resolver, tree-sitter-md.wasm. */
+  inline?: WasmSource
+  /** The block grammar, tree-sitter-markdown.wasm, or a Language already loaded by web-tree-sitter. */
+  grammar?: Exclude<WasmSource, WebAssembly.Module> | Language
+}): Promise<void>
 export declare function memoryBytes(): number
 
 export declare class MarkdownDocument {

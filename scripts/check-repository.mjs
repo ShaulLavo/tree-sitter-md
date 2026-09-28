@@ -24,7 +24,7 @@ export async function repositoryDifferences(wasm) {
     import('../bench/node_modules/mdast-util-gfm/index.js'),
     import('../bench/constructs.mjs'),
   ]);
-  await init(wasm);
+  await init(wasm && {inline: wasm});
   const doc=new MarkdownDocument(), results=[];
   const git=(root,...args)=>execFileSync('git',['-C',root,...args],{encoding:'utf8',maxBuffer:1<<26});
   for(const [repo,root,rev] of repos) {

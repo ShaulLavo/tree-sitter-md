@@ -6,15 +6,15 @@ the notices in `licenses/`.
 | Project | License | Used as |
 | --- | --- | --- |
 | [tree-sitter-markdown](https://github.com/tree-sitter-grammars/tree-sitter-markdown) v0.5.3 | MIT, 2021 Matthias Deiml | Block grammar and external scanner in `grammar/` |
-| [tree-sitter](https://github.com/tree-sitter/tree-sitter) 0.27.0 | MIT, 2018 Max Brunsfeld | C runtime in `vendor/tree-sitter/` |
+| [tree-sitter](https://github.com/tree-sitter/tree-sitter) 0.26 CLI | MIT, 2018 Max Brunsfeld | Parser headers in `grammar/src/tree_sitter/`, compiled into `tree-sitter-markdown.wasm` |
 | [cmark](https://github.com/commonmark/cmark) 0.31.2 | BSD-2-Clause, 2014 John MacFarlane; bundled MIT components | Inline parser and dependencies in `vendor/cmark/` |
 | [cmark-gfm](https://github.com/github/cmark-gfm) `499789b49373bfa045d0e7547e5ee63444c77bca` | BSD-2-Clause; bundled MIT components | Strikethrough in the inline delimiter pass; autolink literals in `src/autolink.c` |
-| [wasi-libc](https://github.com/WebAssembly/wasi-libc) `2e6fb9d8ee0cdf9e431fbcabe8af3115de000a13` | MIT option; musl MIT; cloudlibc BSD-2-Clause; dlmalloc CC0 | C library and allocator from WASI SDK 34 |
+| [wasi-libc](https://github.com/WebAssembly/wasi-libc) `2e6fb9d8ee0cdf9e431fbcabe8af3115de000a13` | MIT option; musl MIT; cloudlibc BSD-2-Clause; dlmalloc CC0 | C library and allocator in `tree-sitter-md.wasm`, from WASI SDK 34 |
 
 The cmark notices include its Houdini, buffer and utf8proc licenses. The SDK's libc notices are
-in `wasi-libc.txt`, `musl.txt`, `cloudlibc.txt` and `dlmalloc.txt`. Tree-sitter's Unicode helpers
-retain the ICU notice in `icu.txt`. The SDK compiler runtime's Apache-2.0 license with LLVM
-exceptions is in `llvm.txt`.
+in `wasi-libc.txt`, `musl.txt`, `cloudlibc.txt` and `dlmalloc.txt`. The SDK compiler runtime's
+Apache-2.0 license with LLVM exceptions is in `llvm.txt`. `tree-sitter-markdown.wasm` imports its
+allocator from web-tree-sitter, which carries its own notices.
 
 Benchmark inputs, outside the npm package: `bench/spec/gfm-spec.txt` is the cmark-gfm spec,
 CC-BY-SA 4.0, John MacFarlane. `bench/web/lezer.min.js` bundles `@lezer/markdown` and

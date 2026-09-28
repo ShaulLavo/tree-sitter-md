@@ -132,22 +132,13 @@ void leaf_single(Document *d, uint32_t a, uint32_t b) {
   push_lines(d, a, b, &line_start);
   word(&d->leaf.starts, b);
 }
-void leaf_build(Document *d, TSNode node, int kind) {
+void leaf_build(Document *d, const LeafShape *shape, int kind) {
   leaf_clear(&d->leaf);
-  TSNode in = {0};
-  uint32_t count = ts_node_named_child_count(node);
-  for (uint32_t i = 0; i < count; i++) {
-    TSNode c = ts_node_named_child(node, i);
-    if (is(c, d->ids.inline_node)) {
-      in = c;
-      break;
-    }
-  }
-  if (ts_node_is_null(in)) {
-    word(&d->leaf.starts, end(node));
+  if (shape->inline_start == NO_INLINE) {
+    word(&d->leaf.starts, shape->end);
     return;
   }
-  uint32_t a = start(in), b = end(in);
+  uint32_t a = shape->inline_start, b = shape->inline_end;
   if (kind == ATX) {
     while (a < b && ws(d->text[a]))
       a++;
@@ -164,13 +155,9 @@ void leaf_build(Document *d, TSNode node, int kind) {
     return;
   }
   bool line_start = true;
-  count = ts_node_named_child_count(in);
-  for (uint32_t i = 0; i < count; i++) {
-    TSNode c = ts_node_named_child(in, i);
-    if (!is(c, d->ids.block_continuation))
-      continue;
-    push_lines(d, a, start(c), &line_start);
-    a = end(c);
+  for (uint32_t i = 0; i < shape->gap_count; i++) {
+    push_lines(d, a, shape->gaps[2 * i], &line_start);
+    a = shape->gaps[2 * i + 1];
   }
   push_lines(d, a, b, &line_start);
   word(&d->leaf.starts, b);

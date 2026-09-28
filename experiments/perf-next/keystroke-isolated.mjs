@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 const root=resolve(process.argv[2] ?? '.');
 const {init,MarkdownDocument}=await import(pathToFileURL(root+'/js/index.js'));
-await init(readFileSync(process.argv[3] ?? root+'/tree-sitter-md.wasm'));
+await init({inline: readFileSync(process.argv[3] ?? root+'/tree-sitter-md.wasm')});
 const quantile=(xs,q)=>xs.slice().sort((a,b)=>a-b)[Math.min(xs.length-1,Math.floor(xs.length*q))];
 const nthNewline=(text,from,n)=>{let at=from;for(let i=0;i<n;i++){at=text.indexOf('\n',at+1);if(at<0)return text.length;}return at;};
 const cases=[['agents.md',readFileSync(root+'/bench/docs/agents.md','utf8')],['big.md',readFileSync(root+'/bench/docs/big.md','utf8')],['nested-quotes',Array.from({length:160},(_,i)=>'> '.repeat([1,4,8,16,32][i%5])+'Some prose with the token and **bold** text.\n\n').join('')]];

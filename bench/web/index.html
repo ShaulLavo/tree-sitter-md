@@ -1,13 +1,14 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>tree-sitter-md probe</title>
+<script type="importmap">{ "imports": { "web-tree-sitter": "/node_modules/web-tree-sitter/web-tree-sitter.js" } }</script>
 <script type="module">
 import { init, MarkdownDocument } from '/js/index.js'
 const nthNewline = (text, from, n) => { let at = from; for (let i = 0; i < n; i++) { at = text.indexOf('\n', at + 1); if (at < 0) return text.length } return at }
 window.run = async (file) => {
   const text = await (await fetch('/docs/' + file)).text()
   const t0 = performance.now()
-  await init(fetch('/tree-sitter-md.wasm'))
+  await init({ inline: fetch('/tree-sitter-md.wasm'), grammar: fetch('/tree-sitter-markdown.wasm') })
   const load = performance.now() - t0
   const pe = nthNewline(text, 0, 60) + 1
   const doc = new MarkdownDocument()
