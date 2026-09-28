@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict';
-import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 import {init,MarkdownDocument} from '../js/index.js';
 
-const repos=[['platform',process.env.PLATFORM??'/work/projects/platform','c130dd35a'],['editor',process.env.EDITOR_REPO??'/work/projects/Editor','74e76be']];
+import {repositoryDocuments} from '../bench/repositories.mjs';
 export function checkDifferences(actual,allowed) {
   assert.equal(actual.sha256,allowed.sha256,`${actual.name}: corpus input changed`);
   for(const key of ['missing','extra']) {
@@ -26,17 +25,12 @@ export async function repositoryDifferences(wasm) {
   ]);
   await init(wasm);
   const doc=new MarkdownDocument(), results=[];
-  const git=(root,...args)=>execFileSync('git',['-C',root,...args],{encoding:'utf8',maxBuffer:1<<26});
-  for(const [repo,root,rev] of repos) {
-    const files=git(root,'ls-tree','-r','--name-only',rev).trim().split('\n').filter(f=>f.endsWith('.md'));
-    for(const file of files) {
-      const text=git(root,'show',`${rev}:${file}`);
-      const expected=fromMdast(text,fromMarkdown(text,{extensions:[gfm()],mdastExtensions:[gfmFromMarkdown()]}));
-      doc.setText(text);
-      const actual=fromTsmd(text,doc.decorations(0,text.length));
-      const {missing,extra}=compare(expected,actual,{ignore:new Set(['tight','math','imath'])});
-      results.push({name:`${repo}/${file}`,sha256:createHash('sha256').update(text).digest('hex'),missing,extra});
-    }
+  for(const {name,text} of repositoryDocuments()) {
+    const expected=fromMdast(text,fromMarkdown(text,{extensions:[gfm()],mdastExtensions:[gfmFromMarkdown()]}));
+    doc.setText(text);
+    const actual=fromTsmd(text,doc.decorations(0,text.length));
+    const {missing,extra}=compare(expected,actual,{ignore:new Set(['tight','math','imath'])});
+    results.push({name,sha256:createHash('sha256').update(text).digest('hex'),missing,extra});
   }
   doc.dispose();
   return results;

@@ -102,9 +102,19 @@ bun chromium.mjs                       # cold load and first frame in Chromium, 
 sh run-all.sh                          # the three-run keystroke set used in FINDINGS.md
 ```
 
-For the full correctness gate, run `CHAT=/path/to/chat.json node scripts/check-gates.mjs`
-from the repository root. This checks the per-section spec floor, corpus, both edit counts and
-the negative control. Paired timing checks use `scripts/compare-builds.sh` and
+For the full correctness gate, run `bun run check` from the repository root after
+installing the bench dependencies. This requires 676/676 spec cases, the bundled
+183-message chat corpus, exact differences for the bundled 497-document repository
+corpus, both edit counts and the negative control.
+
+`bun run test:package` packs the publishable files, installs that tarball in an isolated
+consumer and checks Node, Bun and a Vite production build in Chromium. Install the browser
+with `bunx playwright install chromium` first. Each runtime tests host-first, Markdown-first
+and concurrent initialization, repeated initialization, sibling document isolation and
+continued host parsing. The browser must fetch all three wasm assets.
+
+The release workflow runs these checks plus both wasm builds and native sanitizers.
+The native source revision is pinned separately from the built JavaScript host package. Paired timing checks use `scripts/compare-builds.sh` and
 `scripts/summarize.mjs` as described in FINDINGS.
 
 The normalizer (`bench/constructs.mjs`) and method are Plan 176's in the Platform repository, so

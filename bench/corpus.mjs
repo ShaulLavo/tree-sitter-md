@@ -2,7 +2,7 @@
 // Editor 74e76be) and the assistant messages in corpus/chat.json (override with CHAT=path).
 // Same normalizer and ignore set as Plan 176.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
-import { execSync } from 'node:child_process'
+import { repositoryDocuments } from './repositories.mjs'
 import { fromMarkdown } from 'mdast-util-from-markdown'
 import { gfm } from 'micromark-extension-gfm'
 import { gfmFromMarkdown } from 'mdast-util-gfm'
@@ -12,15 +12,7 @@ import { fromMdast, fromLezer, fromTsmd, compare } from './constructs.mjs'
 
 await init()
 const lezerGfm = lezerBase.configure(GFM)
-const REPOS = [
-  ['platform', process.env.PLATFORM ?? '/work/projects/platform', 'c130dd35a'],
-  ['editor', process.env.EDITOR_REPO ?? '/work/projects/Editor', '74e76be'],
-]
-const docs = []
-for (const [repo, root, rev] of REPOS) {
-  const files = execSync(`git -C ${root} ls-tree -r --name-only ${rev}`, { encoding: 'utf8' }).split('\n').filter((f) => f.endsWith('.md'))
-  for (const f of files) docs.push({ name: `${repo}/${f}`, kind: 'repo', text: execSync(`git -C ${root} show ${rev}:${JSON.stringify(f).slice(1, -1)}`, { encoding: 'utf8', maxBuffer: 1 << 26 }) })
-}
+const docs = repositoryDocuments().map(document => ({ ...document, kind: 'repo' }))
 const chatPath = process.env.CHAT ?? new URL('./corpus/chat.json', import.meta.url)
 JSON.parse(readFileSync(chatPath, 'utf8')).forEach((text, i) => docs.push({ name: `chat/${i}`, kind: 'chat', text }))
 

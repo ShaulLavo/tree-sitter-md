@@ -22,5 +22,20 @@ Verification: 183 strings, 64,199 Unicode characters, 65,429 JSON bytes.
 SHA-256: `2c5c01ed08af3c921c8c500b6c9f50d9e48d39480bedc91355dc88377e9adbf1`.
 
 From `bench/`, run `node corpus.mjs`. Set `CHAT=/path/to/other.json` to use
-another JSON array of strings. The runner also reads repository documentation
-from the pinned Platform and Editor revisions described in its source.
+another JSON array of strings. The runner also reads the committed repository snapshot described below.
+
+## Repository corpus
+
+`repositories.json.gz` contains 497 `{name, text}` records from all tracked `.md`
+files in Platform `c130dd35a202dd06ccd160bd5ed0789c889315c2` and Editor
+`74e76bef2af674ad80b3c13024fa47f692e2bb7c`. The exact per-document SHA-256 hashes
+and permitted differences live in `tests/repository-differences.json`.
+The runners read this committed snapshot; no repository checkout is needed in CI.
+
+Regenerate it from checkouts containing those commits:
+
+```sh
+node scripts/snapshot-repositories.mjs /path/to/platform /path/to/Editor
+```
+
+The generator verifies names, order and every content hash before writing.

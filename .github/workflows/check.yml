@@ -1,0 +1,37 @@
+name: Parser release gates
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: cd bench && bun install --frozen-lockfile
+      - name: Install pinned WASI SDK
+        run: |
+          curl --fail --location --retry 3 https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-34/wasi-sdk-34.0-x86_64-linux.tar.gz | tar -xz -C "$RUNNER_TEMP"
+          echo "WASI_SDK=$RUNNER_TEMP/wasi-sdk-34.0-x86_64-linux" >> "$GITHUB_ENV"
+      - name: Build both wasm modules
+        run: bun run build
+      - name: Check JavaScript and incremental regressions
+        run: npm test
+      - name: Check spec, pinned repository and chat corpora, and fuzz controls
+        run: bun run check
+      - uses: actions/checkout@v4
+        with:
+          repository: ShaulLavo/tree-sitter-x
+          ref: 5c7a2916cdfa93f107833ddaa67688ec16d88a7d
+          path: target/tree-sitter-x
+      - name: Check native ASan and UBSan
+        run: TREE_SITTER_LIB="$PWD/target/tree-sitter-x/lib" bun run test:native
+      - run: bunx playwright install --with-deps chromium
+      - name: Check packed Node, Bun, and Vite browser consumers
+        run: bun run test:package
