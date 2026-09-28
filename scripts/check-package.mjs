@@ -15,8 +15,10 @@ let browser
 try {
   const packed = JSON.parse(run('npm', ['pack', '--json', '--pack-destination', directory], root))[0]
   const paths = packed.files.map(file => file.path)
-  for (const path of ['js/index.js', 'js/index.d.ts', 'tree-sitter-md.wasm', 'tree-sitter-markdown.wasm', 'LICENSE', 'NOTICE.md']) assert(paths.includes(path), `Missing packed ${path}`)
+  for (const path of ['js/index.js', 'js/index.d.ts', 'js/constants.js', 'js/constants.d.ts', 'tree-sitter-md.wasm', 'tree-sitter-markdown.wasm', 'LICENSE', 'NOTICE.md']) assert(paths.includes(path), `Missing packed ${path}`)
   assert(paths.some(path => path.startsWith('licenses/')), 'Third-party licenses are missing')
+  // Bundlers keep web-tree-sitter for anyone importing Kind unless constants stay import-free.
+  assert(!/^import /m.test(readFileSync(join(root, 'js/constants.js'), 'utf8')), 'js/constants.js must not import anything')
   const host = JSON.parse(readFileSync(join(root, 'package.json'))).dependencies['web-tree-sitter']
   writeFileSync(join(directory, 'package.json'), JSON.stringify({ private: true, type: 'module', dependencies: { 'tree-sitter-md': `file:./${packed.filename}`, 'web-tree-sitter': host } }))
   run('bun', ['install'])
