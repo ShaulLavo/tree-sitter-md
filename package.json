@@ -45,10 +45,7 @@
     "bench": "cd bench && node keystroke.mjs",
     "test": "node --test tests/*.mjs"
   },
-  "peerDependencies": {
-    "web-tree-sitter": "*"
-  },
-  "devDependencies": {
-    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#b969388"
+  "dependencies": {
+    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#e2985e082d9f3f137ca20af6d7cee9d1a1c8ddda"
   }
 }

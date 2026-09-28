@@ -4,15 +4,12 @@
   "workspaces": {
     "": {
       "name": "tree-sitter-md",
-      "devDependencies": {
-        "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#b969388",
-      },
-      "peerDependencies": {
-        "web-tree-sitter": "*",
+      "dependencies": {
+        "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#e2985e082d9f3f137ca20af6d7cee9d1a1c8ddda",
       },
     },
   },
   "packages": {
-    "web-tree-sitter": ["web-tree-sitter@github:ShaulLavo/tree-sitter-x#b969388", {}, "ShaulLavo-tree-sitter-x-b969388", "sha512-cXmPCtgcT5K7GCsFUzcyatTE7sxZcesxP5UwSO/fN5eu5LAjFrb7GhFdsAHJItJQiOTQe4PKYbLu2pztbY1wUQ=="],
+    "web-tree-sitter": ["web-tree-sitter@github:ShaulLavo/tree-sitter-x#e2985e0", {}, "ShaulLavo-tree-sitter-x-e2985e0", "sha512-lq4zLvvfasW+Iiy4Mv2yfoOOkRSsPDD73NuUihEhnlCePmEaaZdHP8vLywtwiCW/521twM6otnzfSYggiIvQBg=="],
   }
 }

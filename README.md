@@ -35,9 +35,10 @@ the block. `LinkText` gives the text range of a link or image, so live preview c
 hide the brackets and destination.
 
 `init` loads `../tree-sitter-markdown.wasm` (the grammar) and `../tree-sitter-md.wasm` (the
-resolver) relative to `js/index.js`, into the `web-tree-sitter` it imports, which must be
-tree-sitter-x's build. Bundlers that pre-bundle dependencies (Vite's `optimizeDeps`) should exclude
-the package, or pass the wasm URLs to `init`.
+resolver) relative to `js/index.js`, into the pinned tree-sitter-x build installed as its
+`web-tree-sitter` dependency. Hosts sharing this runtime should use the same dependency pin.
+Bundlers that pre-bundle dependencies (Vite's `optimizeDeps`) should exclude the package, or pass
+the wasm URLs to `init`.
 
 ## Layout
 

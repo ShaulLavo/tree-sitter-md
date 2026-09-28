@@ -51,6 +51,7 @@ export const CAPTURES = Object.freeze([
 
 let wasm = null
 let language = null
+let initialization = null
 
 async function bytes(pending, fallback) {
   const source = await pending
@@ -69,10 +70,22 @@ async function bytes(pending, fallback) {
 /**
  * Load the grammar and the resolver once. `grammar` is tree-sitter-markdown.wasm or a
  * `Language` already loaded; `resolver` is tree-sitter-md.wasm, loaded as a tree-sitter-x
- * extension. Each is a URL, a Response (or a promise of one), bytes or a compiled module.
+ * extension. Each accepts a URL, a Response (or a promise of one), or bytes.
+ * The resolver also accepts a compiled module.
  */
-export async function init({ grammar, resolver } = {}) {
-  if (wasm) return
+export async function init(options = {}) {
+  if (options === null || typeof options !== 'object' ||
+      ![Object.prototype, null].includes(Object.getPrototypeOf(options))) {
+    throw new TypeError('tree-sitter-md: init expects { grammar, resolver }')
+  }
+  initialization ??= load(options).catch(error => {
+    initialization = null
+    throw error
+  })
+  return initialization
+}
+
+async function load({ grammar, resolver }) {
   await Parser.init()
   language = grammar instanceof Language ? grammar : await Language.load(await bytes(grammar, '../tree-sitter-markdown.wasm'))
   wasm = await loadExtension(await bytes(resolver, '../tree-sitter-md.wasm'))
