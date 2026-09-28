@@ -17,5 +17,8 @@ for name in $exports; do flags="$flags -Wl,--export=$name"; done
 printf 'wasm: %s raw, %s gzip -9\n' "$(wc -c < tree-sitter-md.wasm)" "$(gzip -9nc tree-sitter-md.wasm | wc -c)"
 # The block grammar, a standard tree-sitter language. TREE_SITTER is the CLI; tree-sitter-x's
 # (target/release/tree-sitter) matches the runtime and the WASI SDK the CLI caches.
-"${TREE_SITTER:-tree-sitter}" build --wasm -o tree-sitter-markdown.wasm grammar
+"$WASI_SDK/bin/clang" --target=wasm32-wasip1 -fPIC -shared -nostdlib $OPT \
+  -DNDEBUG -std=c11 -Igrammar/src grammar/src/parser.c grammar/src/scanner.c \
+  -Wl,--allow-undefined -Wl,--no-entry -Wl,--strip-all \
+  -Wl,--export=tree_sitter_markdown -o tree-sitter-markdown.wasm
 printf 'grammar wasm: %s raw, %s gzip -9\n' "$(wc -c < tree-sitter-markdown.wasm)" "$(gzip -9nc tree-sitter-markdown.wasm | wc -c)"

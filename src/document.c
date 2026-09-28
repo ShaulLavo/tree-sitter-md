@@ -222,7 +222,7 @@ static void remove_sources(Document *d, uint32_t from, uint32_t to) {
   uint32_t j = 0;
   for (uint32_t i = 0; i < d->source_count; i++) {
     DefSource s = d->sources[i];
-    if (s.end < from || s.start > to)
+    if (s.end <= from || s.start > to)
       d->sources[j++] = s;
     else
       cmark_reference_map_free(s.map);
