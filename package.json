@@ -49,6 +49,6 @@
     "web-tree-sitter": "*"
   },
   "devDependencies": {
-    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#c5049e2"
+    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#b969388"
   }
 }
