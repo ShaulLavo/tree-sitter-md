@@ -9,10 +9,9 @@ extension: it runs inside the same runtime and memory as every other language an
 C. JavaScript gets compact records for the rows it asks about: decoration ranges and kinds,
 highlight captures, fold ranges and fence injections.
 
-Status: a measured spike (2026-09-26), not a release. Results are in
-[docs/FINDINGS.md](docs/FINDINGS.md): 672/676 CommonMark + GFM examples, 0.401 ms median
-keystroke at 1 MB, and a measured C migration against the Rust baseline. Current release work and remaining gates are recorded below.
-
+Release 0.1 passes all 676 CommonMark/GFM examples, 183 chat fixtures and the pinned
+497-document repository corpus. Current correctness gates and Chromium measurements are in
+[docs/RELEASE-0.1.md](docs/RELEASE-0.1.md).
 ## Use
 
 ```js
@@ -48,10 +47,6 @@ Container parsing is bounded to 200 open containers. Additional quote or list ma
 source text at that depth. This keeps scanner serialization within tree-sitter's fixed buffer
 and avoids a trap that could damage other documents sharing the runtime.
 
-Current release checks, 2026-09-28: 674/676 normalized spec examples, 183/183 chat messages,
-497 pinned repository documents with no unexpected differences, and 7,680 stress edits/undos
-matching fresh parses across decorations, highlights, folds and injections. Spec examples
-216 and 260 and the rest of the release gates remain open.
 
 ## Layout
 

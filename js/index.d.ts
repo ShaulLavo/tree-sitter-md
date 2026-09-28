@@ -14,7 +14,7 @@ export type WasmSource = URL | string | Response | Promise<Response> | ArrayBuff
 
 export declare function init(options?: {
   /** The block grammar, tree-sitter-markdown.wasm, or a Language already loaded by tree-sitter-x. */
-  grammar?: Exclude<WasmSource, WebAssembly.Module> | Language
+  grammar?: URL | string | Response | Promise<Response> | ArrayBuffer | ArrayBufferView | Language
   /** The resolver, tree-sitter-md.wasm, loaded as a tree-sitter-x extension. */
   resolver?: WasmSource
 }): Promise<void>

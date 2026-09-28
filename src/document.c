@@ -322,6 +322,24 @@ static void emit_fence_marks(Document *d, TSNode n) {
       record(&d->out, start(c), end(c), FENCE_MARK, 0);
   }
 }
+static void emit_continuation_marks(Document *d, TSNode n) {
+  if (is(n, d->ids.block_continuation)) {
+    for (uint32_t at = start(n); at < end(n); at++)
+      if (d->text[at] == '>')
+        record(&d->out, at, at + 1, QUOTE_MARK, 0);
+    return;
+  }
+  for (uint32_t j = 0; j < ts_node_named_child_count(n); j++)
+    emit_continuation_marks(d, ts_node_named_child(n, j));
+}
+static void emit_nested_quote_marks(Document *d, TSNode n) {
+  for (TSNode parent = ts_node_parent(n); !ts_node_is_null(parent); parent = ts_node_parent(parent)) {
+    if (!is(parent, d->ids.block_quote))
+      continue;
+    emit_continuation_marks(d, n);
+    return;
+  }
+}
 static uint32_t item_end(Document *d, TSNode n) {
   uint32_t e = end(n);
   if (!is(n, d->ids.list_item) && !is(n, d->ids.list) && !is(n, d->ids.paragraph))
@@ -346,6 +364,7 @@ static bool emit(Document *d, TSNode n) {
   uint16_t id = ts_node_symbol(n);
   uint32_t s = start(n), e = end(n);
   if (id == i->paragraph || id == i->reference_definition) {
+    emit_nested_quote_marks(d, n);
     resolve_leaf(d, n, is(ts_node_parent(n), i->setext_heading) ? SETEXT : PARAGRAPH);
     return false;
   }
@@ -370,11 +389,13 @@ static bool emit(Document *d, TSNode n) {
     TSNode delim = child(n, i->pipe_table_delimiter_row);
     if (!ts_node_is_null(delim))
       record(&d->out, start(delim), end(delim), TABLE_DELIMITER_ROW, 0);
+    emit_nested_quote_marks(d, n);
     resolve_leaf(d, n, TABLE_LEAF);
     return false;
   }
   if (id == i->fenced_code_block) {
     record(&d->out, s, e, CODE, 1);
+    emit_nested_quote_marks(d, n);
     emit_fence_marks(d, n);
     return false;
   }
@@ -397,6 +418,10 @@ static bool emit(Document *d, TSNode n) {
   if (id == i->block_quote) {
     record(&d->out, s, e, BQ, 0);
     return true;
+  }
+  if (id == i->block_continuation) {
+    emit_continuation_marks(d, n);
+    return false;
   }
   if (id == i->block_quote_marker) {
     record(&d->out, s, e, QUOTE_MARK, 0);
