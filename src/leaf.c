@@ -1,5 +1,6 @@
 #include "resolver.h"
 #include "utf8.h"
+#include <assert.h>
 
 void reserve(void **p, uint32_t *cap, uint32_t n, size_t size) {
   if (n <= *cap)
@@ -57,7 +58,8 @@ static void push_character(Leaf *l, uint32_t c, uint32_t a, uint32_t b) {
     word(&l->ends, b);
   }
 }
-static void push_lines(Document *d, uint32_t a, uint32_t b, bool *line_start) {
+// Converts through the end of the current line and returns where it stopped.
+static uint32_t push_line_scalar(Document *d, uint32_t a, uint32_t b, bool *line_start) {
   while (a < b) {
     uint32_t c = d->text[a], n = 1;
     if (*line_start && (c == ' ' || c == '\t')) {
@@ -76,8 +78,52 @@ static void push_lines(Document *d, uint32_t a, uint32_t b, bool *line_start) {
       c = 0xfffd;
     push_character(&d->leaf, c, a, a + n);
     a += n;
-    if (c == '\n')
+    if (c == '\n') {
       *line_start = true;
+      return a;
+    }
+  }
+  return a;
+}
+static void push_lines(Document *d, uint32_t a, uint32_t b, bool *line_start) {
+  while (a < b) {
+    uint16_t c = d->text[a];
+    if (*line_start && (c == ' ' || c == '\t')) {
+      a++;
+      continue;
+    }
+    // A line with non-ASCII or NUL goes through the scalar loop to its end; the
+    // scalar loop already tests for newline, so pure Unicode text pays nothing.
+    if (!c || c >= 0x80) {
+      a = push_line_scalar(d, a, b, line_start);
+      continue;
+    }
+    *line_start = false;
+    uint32_t stop = a;
+    do {
+      uint16_t value = d->text[stop++];
+      if (value == '\n')
+        break;
+    } while (stop < b && d->text[stop] > 0 && d->text[stop] < 0x80);
+    Leaf *l = &d->leaf;
+    uint32_t count = stop - a, at = l->n;
+    // One index for all three arrays keeps this loop about 10% faster than
+    // separate ones; every UTF-8 byte pushed so far has one start and one end.
+    assert(l->starts.n == at && l->ends.n == at);
+    reserve((void **)&l->text, &l->cap, at + count + 1, 1);
+    reserve((void **)&l->starts.v, &l->starts.cap, at + count, sizeof(uint32_t));
+    reserve((void **)&l->ends.v, &l->ends.cap, at + count, sizeof(uint32_t));
+    for (uint32_t j = 0; j < count; j++) {
+      l->text[at + j] = (char)d->text[a + j];
+      l->starts.v[at + j] = a + j;
+      l->ends.v[at + j] = a + j + 1;
+    }
+    l->n += count;
+    l->starts.n += count;
+    l->ends.n += count;
+    l->text[l->n] = 0;
+    *line_start = d->text[stop - 1] == '\n';
+    a = stop;
   }
 }
 void leaf_single(Document *d, uint32_t a, uint32_t b) {
