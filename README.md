@@ -11,7 +11,7 @@ highlight captures, fold ranges and fence injections.
 
 Status: a measured spike (2026-09-26), not a release. Results are in
 [docs/FINDINGS.md](docs/FINDINGS.md): 672/676 CommonMark + GFM examples, 0.401 ms median
-keystroke at 1 MB, and a measured C migration against the Rust baseline. The JS API is unchanged.
+keystroke at 1 MB, and a measured C migration against the Rust baseline. Current release work and remaining gates are recorded below.
 
 ## Use
 
@@ -19,7 +19,7 @@ keystroke at 1 MB, and a measured C migration against the Rust baseline. The JS 
 import { init, MarkdownDocument, Kind, CAPTURES } from 'tree-sitter-md'
 
 await init() // or init({ grammar, resolver }): URLs, bytes, Responses, or a loaded Language as grammar
-const doc = new MarkdownDocument({ gfm: true })
+const doc = new MarkdownDocument({ gfm: true, frontmatter: true })
 doc.setText(text)
 doc.reparse() // once, in idle time after setText: keeps the first keystroke cheap
 doc.edit(start, oldEnd, 'inserted') // UTF-16 offsets, like JS strings
@@ -40,6 +40,19 @@ resolver) relative to `js/index.js`, into the pinned tree-sitter-x build install
 Bundlers that pre-bundle dependencies (Vite's `optimizeDeps`) should exclude the package, or pass
 the wasm URLs to `init`.
 
+`frontmatter` defaults to `false` for CommonMark parsing. Enable it for files with an opening
+`---` or `+++` metadata block. Closing delimiters must match the opening delimiter; the body
+keeps its original UTF-16 offsets. Definitions inside metadata do not resolve body links.
+
+Container parsing is bounded to 200 open containers. Additional quote or list markers remain
+source text at that depth. This keeps scanner serialization within tree-sitter's fixed buffer
+and avoids a trap that could damage other documents sharing the runtime.
+
+Current release checks, 2026-09-28: 674/676 normalized spec examples, 183/183 chat messages,
+497 pinned repository documents with no unexpected differences, and 7,680 stress edits/undos
+matching fresh parses across decorations, highlights, folds and injections. Spec examples
+216 and 260 and the rest of the release gates remain open.
+
 ## Layout
 
 | Path | What |
@@ -58,7 +71,7 @@ the wasm URLs to `init`.
 The resolver builds with WASI SDK 34 as a side module (`-fPIC -shared`, no libc): tree-sitter
 and libc come from the tree-sitter-x runtime it is loaded into. The SDK defaults to
 `/work/cache/wasi-sdk-34.0-x86_64-linux`; set `WASI_SDK` for another installation. The grammar
-builds with the tree-sitter CLI (`TREE_SITTER`, e.g. tree-sitter-x's `target/release/tree-sitter`).
+builds with the same WASI SDK. The tree-sitter CLI is needed only to regenerate parse tables.
 `web-tree-sitter` is tree-sitter-x's built package (`github:ShaulLavo/tree-sitter-x#<commit>`,
 its `web-tree-sitter` branch). The native tests compile tree-sitter-x's C runtime from a checkout:
 `TREE_SITTER_LIB` is its `lib/`, `../tree-sitter-x/lib` by default.

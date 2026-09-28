@@ -457,6 +457,8 @@ static uint32_t output(Document *d, uint32_t from, uint32_t to, int mode) {
   d->out.n = 0;
   if (!d->tree)
     return 0;
+  if (d->metadata_end > from && to > 0 && mode == 0)
+    record(&d->out, 0, d->metadata_end, FRONTMATTER, 0);
   TSTreeCursor c = ts_tree_cursor_new(ts_tree_root_node(d->tree));
   visit(d, &c, from, to, mode);
   ts_tree_cursor_delete(&c);
@@ -477,7 +479,33 @@ static TSPoint point(Document *d, uint32_t pos) {
   uint32_t row = upper(&d->lines, pos) - 1;
   return (TSPoint){row, (pos - d->lines.v[row]) * 2};
 }
+static bool metadata_delimiter(Document *d, uint32_t row, uint16_t marker) {
+  uint32_t a = d->lines.v[row];
+  uint32_t b = row + 1 < d->lines.n ? d->lines.v[row + 1] : d->len;
+  if (b - a < 3 || d->text[a] != marker || d->text[a + 1] != marker ||
+      d->text[a + 2] != marker)
+    return false;
+  for (uint32_t i = a + 3; i < b; i++)
+    if (!ws(d->text[i]))
+      return false;
+  return true;
+}
+static uint32_t metadata_end(Document *d) {
+  if (!d->frontmatter || !d->len || (d->text[0] != '-' && d->text[0] != '+'))
+    return 0;
+  uint16_t marker = d->text[0];
+  if (!metadata_delimiter(d, 0, marker))
+    return 0;
+  for (uint32_t row = 1; row < d->lines.n; row++)
+    if (metadata_delimiter(d, row, marker))
+      return row + 1 < d->lines.n ? d->lines.v[row + 1] : d->len;
+  return 0;
+}
 static TSTree *parse(Document *d, TSTree *old) {
+  d->metadata_end = metadata_end(d);
+  TSRange range = {.start_byte = d->metadata_end * 2, .end_byte = d->len * 2,
+                   .start_point = point(d, d->metadata_end), .end_point = point(d, d->len)};
+  ts_parser_set_included_ranges(d->parser, &range, 1);
   return ts_parser_parse_string_encoding(d->parser, old, (char *)d->text, d->len * 2,
                                          TSInputEncodingUTF16LE);
 }
@@ -487,7 +515,8 @@ Document *tsmd_new(uint32_t gfm, const TSLanguage *language) {
   d->parser = ts_parser_new();
   ts_parser_set_language(d->parser, language);
   d->ids = make_ids(language);
-  d->gfm = gfm;
+  d->gfm = (gfm & 1) != 0;
+  d->frontmatter = (gfm & 2) != 0;
   d->cache = calloc(CACHE_BUCKETS, sizeof(Cache *));
   d->defs = cmark_reference_map_new(cmark_get_default_mem_allocator());
   word(&d->lines, 0);

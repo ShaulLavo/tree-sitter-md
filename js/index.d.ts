@@ -21,7 +21,7 @@ export declare function init(options?: {
 export declare function memoryBytes(): number
 
 export declare class MarkdownDocument {
-  constructor(options?: { gfm?: boolean })
+  constructor(options?: { gfm?: boolean; frontmatter?: boolean })
   setText(text: string): void
   edit(start: number, oldEnd: number, inserted: string): void
   reparse(): void

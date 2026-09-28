@@ -9,7 +9,7 @@
 //   Rust resolver strips them from the start of each paragraph.
 // - The info string, table rows and cells are single tokens; the resolver reads them.
 // - HTML blocks of kinds 1-5 keep word tokens, because their end condition is a substring.
-// - Frontmatter (`---`, `+++`) is always on.
+// - Optional frontmatter is excluded by the document owner before block parsing.
 // - The external scanner (src/scanner.c) is upstream's with two changes: ASCII character classes
 //   in place of libc's (it builds for wasm32-unknown-unknown), and `textarea` in HTML block 1
 //   (CommonMark 0.31).
@@ -25,7 +25,6 @@ module.exports = grammar({
 
     rules: {
         document: $ => seq(
-            optional(choice($.minus_metadata, $.plus_metadata)),
             alias(prec.right(repeat($._block_not_section)), $.section),
             repeat($.section),
         ),

@@ -105,9 +105,9 @@ function read(handle, count) {
 
 export class MarkdownDocument {
   #handle
-  constructor({ gfm = true } = {}) {
+  constructor({ gfm = true, frontmatter = false } = {}) {
     if (!wasm) throw new Error('tree-sitter-md: call init() first')
-    this.#handle = wasm.tsmd_new(gfm ? 1 : 0, language[0])
+    this.#handle = wasm.tsmd_new((gfm ? 1 : 0) | (frontmatter ? 2 : 0), language[0])
   }
   /** Replace the whole text and parse it. */
   setText(text) {

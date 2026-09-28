@@ -133,14 +133,6 @@
       "required": false,
       "types": [
         {
-          "type": "minus_metadata",
-          "named": true
-        },
-        {
-          "type": "plus_metadata",
-          "named": true
-        },
-        {
           "type": "section",
           "named": true
         }
@@ -684,14 +676,6 @@
   },
   {
     "type": "fenced_code_block_delimiter",
-    "named": true
-  },
-  {
-    "type": "minus_metadata",
-    "named": true
-  },
-  {
-    "type": "plus_metadata",
     "named": true
   },
   {
