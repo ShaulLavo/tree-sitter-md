@@ -15,7 +15,7 @@ All companion plans use the `docs/bubli-plans-2026-09-28` branch while under rev
 - [Cross-repository coordination and research](https://github.com/ShaulLavo/bubli/blob/docs/bubli-plans-2026-09-28/docs/bubli/README.md).
 - [bubli renderer, React components and experience](https://github.com/ShaulLavo/bubli/blob/docs/bubli-plans-2026-09-28/plans/bubli-experience.md).
 - [Singapore consumer integration](https://github.com/ShaulLavo/singapore/blob/docs/bubli-plans-2026-09-28/plans/bubli-markdown-consumer.md).
-- [Fregat adoption and cross-project ordering](https://github.com/ShaulLavo/fregat/blob/docs/bubli-plans-2026-09-28/plans/201-bubli-tui.md).
+- [Fregat adoption and cross-project ordering](https://github.com/ShaulLavo/fregat/blob/docs/bubli-plans-2026-09-28/plans/202-bubli-tui.md).
 - Existing Fregat [176](https://github.com/ShaulLavo/fregat/blob/4f587e90091cb0a74b314276a038b45685da572b/plans/176-markdown-parser.md) owns the original parser/editor integration; [189](https://github.com/ShaulLavo/fregat/blob/4f587e90091cb0a74b314276a038b45685da572b/plans/189-tree-sitter-md-improvement.md) owns subsequent correctness, required extensions and measured optimization. This is the renderer-facing work package, not a competing owner for those plans.
 
 ## Current evidence and drift
