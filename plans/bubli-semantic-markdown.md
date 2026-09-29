@@ -1,22 +1,26 @@
-# Shared semantic Markdown for bubli and editor consumers
+# Shared semantic Markdown for Fregat and editor consumers
 
 Status: proposed implementation plan, requested by the owner on 2026-09-28. This PR contains documentation only. No parser, runtime, dependency, release or consumer changes are implemented by merging it.
 
+Owner revision, 2026-09-29: the terminal consumer is now Fregat's `apps/tui/src/ui/` on upstream OpenTUI. The separate bubli toolkit and permanent renderer-fork assumption are dropped. M0-M4, semantic fidelity, streaming, packaging and the Singapore work remain unchanged in scope. This existing filename is retained for link stability, not as an active toolkit dependency.
+
 ## Outcome and ownership
 
-Use `tree-sitter-md` on the owned `tree-sitter-x` runtime as the Markdown engine for bubli. Replace Marked in bubli after the semantic, rendering, packaging and consumer gates pass. Supply one renderer-neutral contract to terminal and browser consumers while retaining the compact editor-oriented APIs.
+Use `tree-sitter-md` on the owned `tree-sitter-x` runtime as the Markdown engine for Fregat's app-local terminal renderer. Replace the app's selected Markdown parsing path after the semantic, rendering, packaging and consumer gates pass. Supply one renderer-neutral contract to terminal and browser consumers while retaining the compact editor-oriented APIs. The app path must not use Marked or expose its token types; removing Marked from upstream OpenTUI's own package is not required.
 
 This repository owns Markdown grammar/resolution, semantic results, source mapping, incremental invalidation, differential fixtures and the packaged grammar/resolver artifacts. It does not own React, terminal cells, DOM layout, themes, backend state or Fregat's document service.
 
 ## Connected work
 
-All companion plans use the `docs/bubli-plans-2026-09-28` branch while under review. The coordination page records the actual PRs; use its main-branch version after the planning set merges.
+[Fregat PR 198](https://github.com/ShaulLavo/fregat/pull/198) records the revised consumer architecture and root roadmap. There is no separate toolkit release between this package and Fregat.
 
-- [Cross-repository coordination and research](https://github.com/ShaulLavo/bubli/blob/docs/bubli-plans-2026-09-28/docs/bubli/README.md).
-- [bubli renderer, React components and experience](https://github.com/ShaulLavo/bubli/blob/docs/bubli-plans-2026-09-28/plans/bubli-experience.md).
-- [Singapore consumer integration](https://github.com/ShaulLavo/singapore/blob/docs/bubli-plans-2026-09-28/plans/bubli-markdown-consumer.md).
-- [Fregat adoption and cross-project ordering](https://github.com/ShaulLavo/fregat/blob/docs/bubli-plans-2026-09-28/plans/202-bubli-tui.md).
+- [Cross-repository coordination and retained research](https://github.com/ShaulLavo/fregat/blob/docs/tui-ui-upstream-2026-09-29/docs/tui-research/ui-plan-links.md).
+- [Fregat app-local UI and React Markdown plan](https://github.com/ShaulLavo/fregat/blob/docs/tui-ui-upstream-2026-09-29/plans/202-tui-ui.md).
+- [Singapore consumer integration](https://github.com/ShaulLavo/singapore/blob/main/plans/bubli-markdown-consumer.md).
+- [Fregat cross-project roadmap](https://github.com/ShaulLavo/fregat/blob/docs/tui-ui-upstream-2026-09-29/PLAN.md#tui-ui-workstream).
 - Existing Fregat [176](https://github.com/ShaulLavo/fregat/blob/4f587e90091cb0a74b314276a038b45685da572b/plans/176-markdown-parser.md) owns the original parser/editor integration; [189](https://github.com/ShaulLavo/fregat/blob/4f587e90091cb0a74b314276a038b45685da572b/plans/189-tree-sitter-md-improvement.md) owns subsequent correctness, required extensions and measured optimization. This is the renderer-facing work package, not a competing owner for those plans.
+
+The Fregat review links name the architecture revision branch; after merge, use the same paths on main. If Plan 207 has moved Singapore into Fregat, update its canonical source there and allow its mirror to follow. That repository move is not a parser prerequisite.
 
 ## Current evidence and drift
 
@@ -68,7 +72,7 @@ Exit: current baseline and ownership map recorded; completed release work is not
 - [ ] Add result revision/coverage and nonlocal invalidation tests; reject stale or disposed results.
 - [ ] Measure full-snapshot and bounded-range cost before selecting a representation. Avoid whole-document materialization per appended token.
 
-Exit: bubli and Singapore can consume one semantic fixture without reconstructing Markdown using regex or Marked-compatible tokens.
+Exit: Fregat's terminal renderer and Singapore can consume one semantic fixture without reconstructing Markdown using regex or Marked-compatible tokens.
 
 ### M2. Prove semantic compatibility
 
@@ -91,11 +95,11 @@ Exit: deterministic semantic/invalidation traces and bounded lifetime, with no s
 ### M4. Package and paired consumer rollout
 
 - [ ] Ship the semantic API, types, grammar/resolver artifacts, notices and versioned fixture contract together.
-- [ ] Extend existing package-consumer checks rather than creating another runtime bootstrap. Use the same compatible runtime artifact pin in bubli and Singapore; independently verify deduplication in each realm.
+- [ ] Extend existing package-consumer checks rather than creating another runtime bootstrap. Use a compatible owned-runtime artifact pin in Fregat and Singapore; independently verify deduplication in each realm and Fregat's packaged OpenTUI worker integration.
 - [ ] Retest host-first, Markdown-first, concurrent initialization, worker/main-thread loads and continued non-Markdown parsing in Node, Bun and browser builds.
-- [ ] Publish the exact revision/artifact handoff in the coordination page and consume it in Singapore and bubli before Fregat changes its CI/lockfile pins.
+- [ ] Publish the exact revision/artifact handoff in Fregat's coordination page. Pair Singapore and Fregat consumer updates with their actual lockfile/CI changes; no intermediate toolkit release is required.
 
-Exit: fresh-install consumer evidence for the released artifacts, followed by paired consumer updates. Marked removal happens in bubli, not here.
+Exit: fresh-install consumer evidence for the released artifacts, followed by paired consumer updates. Replacing the app's Markdown path happens in Fregat; upstream OpenTUI's built-in parser is outside this package's scope.
 
 ## Checks and evidence
 
@@ -105,6 +109,6 @@ Record parse, semantic conversion, transfer, memory, cold load and incremental u
 
 ## Dependencies and completion
 
-M0 precedes M1; M1 enables bubli and Singapore prototypes in parallel with M2/M3. All M1-M4 gates are required for production parser cutover. The existing `tree-sitter-x` extension ABI is reused. Open a runtime change only for a demonstrated missing export or lifetime defect, with a minimal reproduction and a link from this plan; a speculative runtime rewrite is not a dependency.
+M0 precedes M1; M1 enables Fregat and Singapore prototypes in parallel with M2/M3. All M1-M4 gates are required for production parser cutover. The existing `tree-sitter-x` extension ABI is reused. Open a runtime change only for a demonstrated missing export or lifetime defect, with a minimal reproduction and a link from this plan; a speculative runtime rewrite is not a dependency.
 
-Completion requires passing semantic/profile tests, release/consumer evidence and updated companion pins. Merging this planning PR alone satisfies none of those implementation gates.
+Completion requires passing semantic/profile tests, release/consumer evidence and updated companion pins. Merging this planning revision alone satisfies none of those implementation gates.
