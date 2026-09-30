@@ -15,7 +15,10 @@ function snapshot(document, length) {
 }
 
 export async function check(order, options = {}, hostOptions = {}) {
-  if (order === 'host-first') await Parser.init(hostOptions)
+  if (order === 'host-first') {
+    await Parser.init(hostOptions)
+    await init({ ...options, grammar: await loadHostGrammar(options) })
+  }
   if (order === 'concurrent') await Promise.all([Parser.init(hostOptions), init(options), init(options)])
   await init(options)
   await init(options)
@@ -34,8 +37,7 @@ export async function check(order, options = {}, hostOptions = {}) {
   equal(snapshot(sibling, source.length), before, 'Sibling document changed after edit')
   first.dispose()
   equal(snapshot(sibling, source.length), before, 'Sibling document changed after disposal')
-  const grammar = options.grammar ?? new URL('./node_modules/tree-sitter-md/tree-sitter-markdown.wasm', import.meta.url)
-  const language = await Language.load(grammar instanceof URL ? grammar.pathname : grammar)
+  const language = await loadHostGrammar(options)
   const parser = new Parser()
   parser.setLanguage(language)
   const tree = parser.parse(source)
@@ -44,4 +46,9 @@ export async function check(order, options = {}, hostOptions = {}) {
   parser.delete()
   sibling.dispose()
   return { order, records: before.decorations.length / 4 }
+}
+
+function loadHostGrammar(options) {
+  const grammar = options.grammar ?? new URL('./node_modules/tree-sitter-md/tree-sitter-markdown.wasm', import.meta.url)
+  return Language.load(grammar instanceof URL ? grammar.pathname : grammar)
 }
