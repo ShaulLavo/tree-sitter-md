@@ -19,7 +19,10 @@ try {
   assert(paths.some(path => path.startsWith('licenses/')), 'Third-party licenses are missing')
   // With sideEffects false, importing only Kind skips index.js and web-tree-sitter; that needs import-free constants.
   assert(!/^import /m.test(readFileSync(join(root, 'js/constants.js'), 'utf8')), 'js/constants.js must not import anything')
-  const host = JSON.parse(readFileSync(join(root, 'package.json'))).dependencies['web-tree-sitter']
+  const manifest = JSON.parse(readFileSync(join(root, 'package.json')))
+  assert.equal(manifest.dependencies?.['web-tree-sitter'], undefined)
+  const host = manifest.peerDependencies['web-tree-sitter']
+  assert.equal(host, manifest.devDependencies['web-tree-sitter'])
   writeFileSync(join(directory, 'package.json'), JSON.stringify({ private: true, type: 'module', dependencies: { 'tree-sitter-md': `file:./${packed.filename}`, 'web-tree-sitter': host } }))
   run('bun', ['install'])
   cpSync(join(root, 'tests/package'), directory, { recursive: true })
