@@ -53,9 +53,9 @@
   "devDependencies": {
     "playwright": "1.63.0",
     "vite": "8.3.1",
-    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#f73fbfd866b94a33791afff08a7278546b1771a2"
+    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#059451d3c167443643630d471c2c2d61c13b10ff"
   },
   "peerDependencies": {
-    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#f73fbfd866b94a33791afff08a7278546b1771a2"
+    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#059451d3c167443643630d471c2c2d61c13b10ff"
   }
 }
