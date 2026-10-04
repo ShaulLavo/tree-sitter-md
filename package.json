@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-md",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Markdown for editors: a tree-sitter block grammar and a CommonMark + GFM inline resolver that runs inside tree-sitter-x",
   "type": "module",
   "main": "./js/index.js",
@@ -53,9 +53,9 @@
   "devDependencies": {
     "playwright": "1.63.0",
     "vite": "8.3.1",
-    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#059451d3c167443643630d471c2c2d61c13b10ff"
+    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#3805c8921570361c317cb766cc8e96ae700de8cb"
   },
   "peerDependencies": {
-    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#059451d3c167443643630d471c2c2d61c13b10ff"
+    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#3805c8921570361c317cb766cc8e96ae700de8cb"
   }
 }
