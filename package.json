@@ -56,6 +56,9 @@
     "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#a052adf5c2c34ef78f97d1631c41ca83db9816d3"
   },
   "peerDependencies": {
+    "web-tree-sitter": "^0.28.1"
+  },
+  "overrides": {
     "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#a052adf5c2c34ef78f97d1631c41ca83db9816d3"
   }
 }
