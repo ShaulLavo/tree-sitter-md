@@ -21,9 +21,10 @@ try {
   assert(!/^import /m.test(readFileSync(join(root, 'js/constants.js'), 'utf8')), 'js/constants.js must not import anything')
   const manifest = JSON.parse(readFileSync(join(root, 'package.json')))
   assert.equal(manifest.dependencies?.['web-tree-sitter'], undefined)
-  const host = manifest.peerDependencies['web-tree-sitter']
-  assert.equal(host, manifest.devDependencies['web-tree-sitter'])
-  writeFileSync(join(directory, 'package.json'), JSON.stringify({ private: true, type: 'module', dependencies: { 'tree-sitter-md': `file:./${packed.filename}`, 'web-tree-sitter': host } }))
+  const host = manifest.devDependencies['web-tree-sitter']
+  assert.match(host, /^github:ShaulLavo\/tree-sitter-x#[0-9a-f]{40}$/)
+  assert.equal(manifest.peerDependencies['web-tree-sitter'], '^0.28.1')
+  writeFileSync(join(directory, 'package.json'), JSON.stringify({ private: true, type: 'module', dependencies: { 'tree-sitter-md': `file:./${packed.filename}`, 'web-tree-sitter': host }, overrides: { 'web-tree-sitter': host } }))
   run('bun', ['install'])
   cpSync(join(root, 'tests/package'), directory, { recursive: true })
   for (const runtime of ['node', 'bun']) {

@@ -10,9 +10,12 @@
         "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#a052adf5c2c34ef78f97d1631c41ca83db9816d3",
       },
       "peerDependencies": {
-        "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#a052adf5c2c34ef78f97d1631c41ca83db9816d3",
+        "web-tree-sitter": "^0.28.1",
       },
     },
+  },
+  "overrides": {
+    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#a052adf5c2c34ef78f97d1631c41ca83db9816d3",
   },
   "packages": {
     "@oxc-project/types": ["@oxc-project/types@0.151.0", "", {}, "sha512-J1yXrIlNDZVzE3ada310xeAw7nH8yCAyLPuUIsjKatFPmfn5bS1oW+cM+QsGOtVWd5nhSpbwZWx/rue+r5Z+PA=="],
