@@ -114,6 +114,21 @@ test('nested definitions keep mapped source positions and resolve outside their 
   assert.equal(descendants(result, 'footnoteReference')[0].identifier, 'b')
 })
 
+test('ordinary definitions inside nested footnotes resolve globally in original source order', () => {
+  const cases = [
+    ['[x]\n\n[^a]: note\n\n    [x]: /inside', '/inside'],
+    ['[x]\n\n[^a]: note\n\n    [x]: /inside\n\n[x]: /later', '/inside'],
+    ['[x]\n\n[x]: /earlier\n\n[^a]: note\n\n    [x]: /inside', '/earlier'],
+    ['[x]\n\n[^a]: note\n\n    [^b]: nested\n\n        [x]: /deep\n\n[x]: /later', '/deep'],
+  ]
+  for (const [source, expectedUrl] of cases) {
+    const root = snapshot(source).root
+    const links = descendants(root.children[0], 'link')
+    assert.equal(links.length, 1)
+    assert.equal(links[0].url, expectedUrl)
+  }
+})
+
 test('late definitions and removals refresh earlier references without mutating retained snapshots', () => {
   const document = new MarkdownDocument()
   try {

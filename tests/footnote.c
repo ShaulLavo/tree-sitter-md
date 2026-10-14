@@ -20,6 +20,15 @@ static const char *lookup(void *context, const unsigned char *label, uint32_t le
   return note ? note->identifier : NULL;
 }
 
+static void check_reference(Document *document, Footnotes *notes, const char *source, const char *url) {
+  set_text(document, source); footnotes_scan(notes);
+  cmark_reference_map *map = footnotes_definitions(notes);
+  cmark_chunk label = {(unsigned char *)"x", 1};
+  cmark_reference *reference = cmark_reference_lookup(map, &label);
+  assert(reference && !strcmp((char *)reference->url, url));
+  cmark_reference_map_free(map);
+}
+
 static void inline_references(Document *document, Footnotes *notes) {
   char source[] = "known [^A], unknown [^missing], escaped \\[^a], code `[^a]`.";
   cmark_node *root = cmark_node_new(CMARK_NODE_PARAGRAPH);
@@ -116,6 +125,20 @@ int main(void) {
   cmark_chunk ordinary_again = {(unsigned char *)"a", 1};
   assert(cmark_reference_lookup(filtered, &ordinary_again));
   cmark_reference_map_free(filtered);
+  check_reference(document, footnotes, "[x]\n\n[^a]: note\n\n    [x]: /inside", "/inside");
+  check_reference(document, footnotes, "[x]\n\n[^a]: note\n\n    [x]: /inside\n\n[x]: /later", "/inside");
+  check_reference(document, footnotes, "[x]\n\n[x]: /earlier\n\n[^a]: note\n\n    [x]: /inside", "/earlier");
+  check_reference(document, footnotes, "[x]\n\n[^a]: note\n\n    [^b]: nested\n\n        [x]: /deep\n\n[x]: /later", "/deep");
+  check_reference(document, footnotes, "[x]: /?a=&amp;amp;\n\n[^a]: note", "/?a=&amp;");
+  first = footnotes_at(footnotes, 0);
+  uint32_t mapped_start, mapped_end;
+  assert(footnotes_map_range(first->nested, first->body->len, first->body->len, &mapped_start, &mapped_end));
+  assert(mapped_start == mapped_end);
+  set_text(document, "[^a]:"); footnotes_scan(footnotes);
+  first = footnotes_at(footnotes, 0);
+  assert(first && first->body->len == 0);
+  assert(footnotes_map_range(first->nested, 0, 0, &mapped_start, &mapped_end));
+  assert(mapped_start == mapped_end);
   const uint16_t wide[] = {'[', '^', 0xc4, ']', ':', ' ', 0xd83d, 0xde00, '\n'};
   memcpy(tsmd_input(document, 9), wide, sizeof(wide)); tsmd_set_text(document);
   footnotes_scan(footnotes);
