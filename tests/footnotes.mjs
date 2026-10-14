@@ -85,6 +85,18 @@ test('footnote bodies resolve ordinary document links and Unicode label identiti
   assert.equal(source.slice(link.range.start, link.range.end), '[guide][doc]')
 })
 
+test('footnote labels occupy their own reference namespace and image prefixes remain literal', () => {
+  for (const prefix of ['[ordinary]', '![image]', '!']) {
+    const result = snapshot(`${prefix}[^a]\n\n[^a]: /url`).root
+    const paragraph = result.children[0]
+    assert.equal(paragraph.children[0].type, 'text')
+    assert.equal(paragraph.children[0].value, prefix)
+    assert.equal(descendants(paragraph, 'link').length, 0)
+    assert.equal(descendants(paragraph, 'image').length, 0)
+    assert.equal(descendants(paragraph, 'footnoteReference').length, 1)
+  }
+})
+
 test('late definitions and removals refresh earlier references without mutating retained snapshots', () => {
   const document = new MarkdownDocument()
   try {
