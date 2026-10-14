@@ -9,7 +9,7 @@ flags="-g -O1 -fsanitize=address,undefined -fno-omit-frame-pointer -std=c11 -D_P
 runtime="$TREE_SITTER_LIB/src/lib.c grammar/src/parser.c grammar/src/scanner.c"
 clang $flags tests/native.c src/*.c vendor/cmark/*.c $runtime -o target/c/check-native
 ASAN_OPTIONS=detect_leaks=1 target/c/check-native
-printf 'ASan + UBSan: 2,000 incremental edits passed\n'
+printf 'ASan + UBSan: streaming semantic prefixes, ownership and 2,000 incremental decoration/semantic edits passed\n'
 clang $flags tests/footnote.c src/*.c vendor/cmark/*.c $runtime -o target/c/check-footnote
 ASAN_OPTIONS=detect_leaks=1 target/c/check-footnote
 printf 'ASan + UBSan: footnote definitions, references and mapped bodies passed\n'

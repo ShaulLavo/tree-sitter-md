@@ -32,8 +32,9 @@ doc.dispose()
 For renderers, `doc.semantics()` returns a complete owned tree with decoded text,
 resolved links and titles, nested blocks and inlines, ordered list starts and
 spacing metadata, task states, table rows/cells and every column's alignment.
-Each node has a `range: { start, end }` in original UTF-16 source units. Code
-values exclude the final renderer newline. The snapshot includes `revision`,
+Authored nodes have a `range: { start, end }` in original UTF-16 source units.
+Padded table cells have `range: null`. Code values exclude the final renderer newline.
+The snapshot includes `revision`,
 `profile` and explicit enabled `capabilities`; `setText` and `edit` advance the
 revision. Snapshots remain valid after edits, WASM memory growth and disposal.
 Semantic extraction materializes the complete document; viewport decoration
@@ -85,9 +86,9 @@ and avoids a trap that could damage other documents sharing the runtime.
 ## Build
 
 The resolver builds with WASI SDK 34 as a side module (`-fPIC -shared`, no libc): tree-sitter
-and libc come from the tree-sitter-x runtime it is loaded into. The SDK defaults to
-`/work/cache/wasi-sdk-34.0-x86_64-linux`; set `WASI_SDK` for another installation. The grammar
-builds with the same WASI SDK. The tree-sitter CLI is needed only to regenerate parse tables.
+and libc come from the tree-sitter-x runtime it is loaded into. Set `WASI_SDK` to the extracted
+SDK directory before building. The grammar builds with the same WASI SDK.
+The tree-sitter CLI is needed only to regenerate parse tables.
 `web-tree-sitter` is tree-sitter-x's built package (`github:ShaulLavo/tree-sitter-x#<commit>`,
 its `web-tree-sitter` branch). The native tests compile tree-sitter-x's C runtime from a checkout:
 `TREE_SITTER_LIB` is its `lib/`, `../tree-sitter-x/lib` by default.

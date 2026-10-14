@@ -3,7 +3,7 @@
 # grammar, that calls tree-sitter's C API and libc from the host runtime it is loaded into.
 set -eu
 cd "$(dirname "$0")/.."
-: "${WASI_SDK:=/work/cache/wasi-sdk-34.0-x86_64-linux}"
+: "${WASI_SDK:?Set WASI_SDK to the extracted WASI SDK 34 directory}"
 : "${OPT:=-O3}"
 exports='tsmd_new tsmd_free tsmd_input tsmd_set_text tsmd_edit tsmd_reparse tsmd_decorations tsmd_folds tsmd_injections tsmd_out tsmd_row_start tsmd_line_count tsmd_highlights tsmd_semantics tsmd_semantic_out tsmd_semantic_release'
 flags=''

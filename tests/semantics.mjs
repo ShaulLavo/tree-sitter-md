@@ -77,6 +77,53 @@ test('header-only tables recognize complete one-dash delimiter cells at EOF', ()
   }
   assert.equal(snapshot('| Name | Value |\n| --- | :').root.children[0].type, 'paragraph')
 })
+test('streaming EOF prefixes preserve syntax and authored source ranges', () => {
+  const setext = snapshot('Summary\n===').root.children[0]
+  assert.equal(setext.type, 'heading')
+  assert.equal(setext.depth, 1)
+  for (const source of ['```', '```js\n', '~~~']) {
+    const code = snapshot(source).root.children[0]
+    assert.equal(code.type, 'code')
+    assert.equal(code.value, '')
+    assert.equal(code.range.end, source.length)
+  }
+  const quote = snapshot('> - first\n>').root.children[0]
+  assert.equal(quote.children[0].range.end, 11)
+  const quotedFence = snapshot('> ```js\n>').root.children[0].children[0]
+  assert.equal(quotedFence.type, 'code')
+  assert.equal(quotedFence.range.end, 9)
+  const indented = snapshot('    first\n    ').root.children[0]
+  assert.equal(indented.value, 'first')
+  assert.equal(indented.range.end, 14)
+  for (const source of ['    ', '\t']) assert.equal(snapshot(source).root.children.length, 0)
+  assert.equal(snapshot('\ufeff#').root.children[0].type, 'heading')
+})
+test('task-like link labels stay ordinary list content', () => {
+  const item = snapshot('- [x](streamdown:incomplete-link)').root.children[0].items[0]
+  assert.equal(item.checked, null)
+  assert.equal(item.children[0].children[0].type, 'link')
+  assert.equal(item.children[0].children[0].url, 'streamdown:incomplete-link')
+  const incomplete = snapshot('- [ ]').root.children[0].items[0]
+  assert.equal(incomplete.checked, null)
+  assert.equal(incomplete.children[0].children[0].value, '[ ]')
+  const complete = snapshot('- [x] done').root.children[0].items[0]
+  assert.equal(complete.checked, true)
+  assert.equal(complete.children[0].children[0].value, 'done')
+})
+test('UTF-16 stream fragments preserve authored lone units and genuine replacement characters', () => {
+  for (const unit of ['\ud83d', '\udc00']) {
+    const text = snapshot(`&#xD83D; ${unit} �`).root.children[0].children.map(node => node.value).join('')
+    assert.equal(text, `� ${unit} �`)
+    assert.equal(snapshot(unit).root.children[0].children[0].value, unit)
+    assert.equal(snapshot('`' + unit + '`').root.children[0].children[0].value, unit)
+    assert.equal(snapshot('```\n' + unit + '\n```').root.children[0].value, unit)
+    assert.equal(snapshot('![' + unit + '](x)').root.children[0].children[0].alt, unit)
+    assert.equal(snapshot('<div>' + unit + '</div>').root.children[0].value, '<div>' + unit + '</div>')
+  }
+  assert.equal(snapshot('&#xD83D;').root.children[0].children[0].value, '�')
+  assert.equal(snapshot('�').root.children[0].children[0].value, '�')
+  assert.equal(snapshot('😀').root.children[0].children[0].value, '😀')
+})
 
 test('semantic result validation rejects invalid ranges and metadata', () => {
   const good = snapshot('text').root

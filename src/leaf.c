@@ -148,6 +148,10 @@ void leaf_build(Document *d, TSNode node, int kind) {
     return;
   }
   uint32_t a = start(in), b = end(in);
+  for (uint32_t i = 0; i < count; i++) {
+    TSNode c = ts_node_named_child(node, i);
+    if (is(c, d->ids.task_checked) || is(c, d->ids.task_unchecked)) a = start(node);
+  }
   if (kind == ATX) {
     while (a < b && ws(d->text[a]))
       a++;

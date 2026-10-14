@@ -11,6 +11,7 @@ typedef struct {
   Footnotes *footnotes;
   Footnotes *root_footnotes;
   cmark_reference_map *defs;
+  bool lone_surrogates;
 } Semantic;
 
 static void put(Semantic *s, const char *text) { cmark_strbuf_puts(&s->json, text); }
@@ -19,11 +20,20 @@ static void number(Semantic *s, uint32_t n) {
   do { digits[count++] = '0' + n % 10; n /= 10; } while (n);
   while (count) cmark_strbuf_putc(&s->json, digits[--count]);
 }
-static void string(Semantic *s, const unsigned char *text, uint32_t len) {
+static void mapped_string(Semantic *s, const unsigned char *text, uint32_t len,
+                           const uint32_t *positions) {
   static const char hex[] = "0123456789abcdef";
   put(s, "\"");
   for (uint32_t i = 0; i < len; i++) {
     unsigned char c = text[i];
+    if (positions && i + 2 < len && c == 0xef && text[i + 1] == 0xbf && text[i + 2] == 0xbd &&
+        positions[i] != UINT32_MAX) {
+      uint16_t unit = s->d->text[positions[i]];
+      if (unit >= 0xd800 && unit < 0xe000) {
+        char escape[] = {'\\', 'u', hex[unit >> 12], hex[(unit >> 8) & 15], hex[(unit >> 4) & 15], hex[unit & 15], 0};
+        put(s, escape); i += 2; continue;
+      }
+    }
     if (c == '"' || c == '\\') {
       cmark_strbuf_putc(&s->json, '\\');
       cmark_strbuf_putc(&s->json, c);
@@ -37,6 +47,44 @@ static void string(Semantic *s, const unsigned char *text, uint32_t len) {
     put(s, escape);
   }
   put(s, "\"");
+}
+static void string(Semantic *s, const unsigned char *text, uint32_t len) {
+  mapped_string(s, text, len, NULL);
+}
+static bool lone_surrogates(Document *d) {
+  for (uint32_t i = 0; i < d->len; i++) {
+    uint16_t c = d->text[i];
+    if (c < 0xd800 || c >= 0xe000) continue;
+    if (c < 0xdc00 && i + 1 < d->len && d->text[i + 1] >= 0xdc00 && d->text[i + 1] < 0xe000) { i++; continue; }
+    return true;
+  }
+  return false;
+}
+static uint32_t literal_replacement(Document *d, uint32_t *from, uint32_t end) {
+  while (*from < end) {
+    uint32_t at = (*from)++; uint16_t c = d->text[at];
+    if (c == 0xfffd) return at;
+    if (c < 0xd800 || c >= 0xe000) continue;
+    if (c < 0xdc00 && *from < end && d->text[*from] >= 0xdc00 && d->text[*from] < 0xe000) { (*from)++; continue; }
+    return at;
+  }
+  return UINT32_MAX;
+}
+static Words literal_positions(Semantic *s, const unsigned char *text, uint32_t len,
+                                uint32_t from, uint32_t end) {
+  Words positions = {0};
+  if (!s->lone_surrogates) return positions;
+  for (uint32_t i = 0; i < len; i++) word(&positions, UINT32_MAX);
+  for (uint32_t i = 0; i + 2 < len; i++) {
+    if (text[i] != 0xef || text[i + 1] != 0xbf || text[i + 2] != 0xbd) continue;
+    positions.v[i] = literal_replacement(s->d, &from, end); i += 2;
+  }
+  return positions;
+}
+static void literal_string(Semantic *s, const unsigned char *text, uint32_t len,
+                            uint32_t from, uint32_t end) {
+  Words positions = literal_positions(s, text, len, from, end);
+  mapped_string(s, text, len, positions.v); free(positions.v);
 }
 static void nullable_string(Semantic *s, const unsigned char *text) {
   if (!text || !*text) { put(s, "null"); return; }
@@ -86,16 +134,39 @@ static void inline_range(Leaf *l, cmark_node *n, uint32_t offset, uint32_t *a, u
   *b = mapped_end(l, offset + n->source_end);
   if (*b < *a) *b = *a;
 }
-static void text_value(Semantic *s, uint32_t a, uint32_t b, const unsigned char *data, uint32_t len) {
-  begin(s, "text", a, b); put(s, ",\"value\":"); string(s, data, len); put(s, "}");
+static bool text_prefix(Leaf *l, cmark_node *n, uint32_t offset) {
+  return n->len > 0 && n->len <= n->source_end - n->source_start &&
+    !memcmp(n->data, l->text + offset + n->source_start, n->len);
 }
-static void alt_text(cmark_strbuf *out, cmark_node *n) {
+static void text_value(Semantic *s, uint32_t a, uint32_t b, const unsigned char *data, uint32_t len,
+                       const uint32_t *positions) {
+  begin(s, "text", a, b); put(s, ",\"value\":"); mapped_string(s, data, len, positions); put(s, "}");
+}
+static void alt_payload(Semantic *s, Leaf *l, cmark_node *n, uint32_t offset,
+                         cmark_strbuf *out, Words *positions) {
+  cmark_strbuf_put(out, n->data, n->len);
+  if (!s->lone_surrogates) return;
+  if (n->type == CMARK_NODE_TEXT) {
+    bool prefix = text_prefix(l, n, offset);
+    for (uint32_t i = 0; i < (uint32_t)n->len; i++)
+      word(positions, prefix ? l->starts.v[offset + n->source_start + i] : UINT32_MAX);
+    return;
+  }
+  uint32_t a, b; inline_range(l, n, offset, &a, &b);
+  Words literal = literal_positions(s, n->data, n->len, a, b);
+  for (uint32_t i = 0; i < literal.n; i++) word(positions, literal.v[i]);
+  free(literal.v);
+}
+static void alt_text(Semantic *s, Leaf *l, cmark_strbuf *out, Words *positions,
+                      cmark_node *n, uint32_t offset) {
   for (; n; n = n->next) {
     if (n->type == CMARK_NODE_TEXT || n->type == CMARK_NODE_CODE)
-      cmark_strbuf_put(out, n->data, n->len);
-    if (n->type == CMARK_NODE_SOFTBREAK || n->type == CMARK_NODE_LINEBREAK)
+      alt_payload(s, l, n, offset, out, positions);
+    if (n->type == CMARK_NODE_SOFTBREAK || n->type == CMARK_NODE_LINEBREAK) {
       cmark_strbuf_putc(out, '\n');
-    if (n->first_child) alt_text(out, n->first_child);
+      if (s->lone_surrogates) word(positions, UINT32_MAX);
+    }
+    if (n->first_child) alt_text(s, l, out, positions, n->first_child, offset);
   }
 }
 static const char *inline_type(cmark_node *n) {
@@ -126,7 +197,14 @@ static void inline_node(Semantic *s, Leaf *l, cmark_node *n, uint32_t offset, bo
     return;
   }
   if (n->type == CMARK_NODE_TEXT || n->type == CMARK_NODE_CODE || n->type == CMARK_NODE_INLINE_MATH || n->type == CMARK_NODE_HTML_INLINE) {
-    put(s, ",\"value\":"); string(s, n->data, n->len); put(s, "}");
+    put(s, ",\"value\":");
+    if (n->type != CMARK_NODE_TEXT) literal_string(s, n->data, n->len, a, b);
+    else {
+      const uint32_t *positions = s->lone_surrogates && text_prefix(l, n, offset) ?
+        l->starts.v + offset + n->source_start : NULL;
+      mapped_string(s, n->data, n->len, positions);
+    }
+    put(s, "}");
     return;
   }
   if (n->type == CMARK_NODE_LINK || n->type == CMARK_NODE_IMAGE) {
@@ -135,8 +213,9 @@ static void inline_node(Semantic *s, Leaf *l, cmark_node *n, uint32_t offset, bo
   }
   if (n->type == CMARK_NODE_IMAGE) {
     cmark_strbuf alt = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
-    alt_text(&alt, n->first_child);
-    put(s, ",\"alt\":"); string(s, alt.ptr, alt.size); cmark_strbuf_free(&alt); put(s, "}");
+    Words positions = {0}; alt_text(s, l, &alt, &positions, n->first_child, offset);
+    put(s, ",\"alt\":"); mapped_string(s, alt.ptr, alt.size, positions.v);
+    cmark_strbuf_free(&alt); free(positions.v); put(s, "}");
     return;
   }
   put(s, ",\"children\":[");
@@ -160,17 +239,26 @@ static uint32_t cjk_link_end(Leaf *l, uint32_t a, uint32_t b) {
   return b;
 }
 static void decoded_part(cmark_strbuf *out, Leaf *l, cmark_node *first, cmark_node *last,
-                         uint32_t a, uint32_t b) {
+                         uint32_t a, uint32_t b, Words *positions) {
   for (cmark_node *n = first; n; n = n->next) {
     uint32_t low = a > (uint32_t)n->source_start ? a : (uint32_t)n->source_start;
     uint32_t high = b < (uint32_t)n->source_end ? b : (uint32_t)n->source_end;
-    if (low < high && low == (uint32_t)n->source_start && high == (uint32_t)n->source_end)
+    bool prefix = text_prefix(l, n, 0);
+    if (prefix && high > (uint32_t)(n->source_start + n->len)) high = n->source_start + n->len;
+    uint32_t before = out->size;
+    if (low < high && prefix)
+      cmark_strbuf_put(out, n->data + low - n->source_start, high - low);
+    else if (low < high && low == (uint32_t)n->source_start && high == (uint32_t)n->source_end)
       cmark_strbuf_put(out, n->data, n->len);
     else if (low < high) {
       cmark_strbuf value = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
       houdini_unescape_html_f(&value, (unsigned char *)l->text + low, high - low);
       cmark_strbuf_unescape(&value);
       cmark_strbuf_put(out, value.ptr, value.size); cmark_strbuf_free(&value);
+    }
+    if (positions && low < high) {
+      uint32_t length = out->size - before;
+      for (uint32_t j = 0; j < length; j++) word(positions, length == high - low ? l->starts.v[low + j] : UINT32_MAX);
     }
     if (n == last) break;
   }
@@ -180,21 +268,22 @@ static void text_part(Semantic *s, Leaf *l, cmark_node *first, cmark_node *last,
   if (a >= b) return;
   cmark_strbuf value = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
   // Nodes use body-relative bytes; leaf mappings include the stripped definitions.
-  Leaf body = *l; body.text += offset;
-  decoded_part(&value, &body, first, last, a, b);
+  Leaf body = *l; body.text += offset; body.starts.v += offset; body.ends.v += offset;
+  Words positions = {0};
+  decoded_part(&value, &body, first, last, a, b, s->lone_surrogates ? &positions : NULL);
   separator(s, first_out);
   uint32_t start_pos = mapped_start(l, offset + a), end_pos = mapped_end(l, offset + b);
   if (!link) {
-    text_value(s, start_pos, end_pos, value.ptr, value.size);
-    cmark_strbuf_free(&value); return;
+    text_value(s, start_pos, end_pos, value.ptr, value.size, positions.v);
+    cmark_strbuf_free(&value); free(positions.v); return;
   }
   begin(s, "link", start_pos, end_pos); put(s, ",\"url\":");
   cmark_strbuf url = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
   if (value.size >= 4 && !strncasecmp((char *)value.ptr, "www.", 4)) cmark_strbuf_puts(&url, "http://");
   if (memchr(value.ptr, '@', value.size) && !memchr(value.ptr, ':', value.size)) cmark_strbuf_puts(&url, "mailto:");
   cmark_strbuf_put(&url, value.ptr, value.size); string(s, url.ptr, url.size);
-  put(s, ",\"title\":null,\"children\":["); text_value(s, start_pos, end_pos, value.ptr, value.size); put(s, "]}");
-  cmark_strbuf_free(&url); cmark_strbuf_free(&value);
+  put(s, ",\"title\":null,\"children\":["); text_value(s, start_pos, end_pos, value.ptr, value.size, positions.v); put(s, "]}");
+  cmark_strbuf_free(&url); cmark_strbuf_free(&value); free(positions.v);
 }
 static cmark_node *text_nodes(Semantic *s, Leaf *l, cmark_node *n, uint32_t offset, bool *first) {
   cmark_node *last = n;
@@ -430,7 +519,7 @@ static bool math_block(Semantic *s, TSNode n, bool *first) {
   if (width < 2) return false;
   for (uint32_t i = at; i < opening_end; i++) if (d->text[i] == '$') return false;
   cmark_strbuf value = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
-  uint32_t row = next_line(d, opening_end, limit), finish = opening_end, consumed = row;
+  uint32_t row = next_line(d, opening_end, limit), finish = opening_end, consumed = row, body_start = row;
   while (row < limit) {
     uint32_t stop = line_end(d, row, limit);
     cmark_strbuf line = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
@@ -443,7 +532,7 @@ static bool math_block(Semantic *s, TSNode n, bool *first) {
     row = consumed;
   }
   if (value.size && value.ptr[value.size - 1] == '\n') cmark_strbuf_truncate(&value, value.size - 1);
-  separator(s, first); begin(s, "math", marker, finish); put(s, ",\"value\":"); string(s, value.ptr, value.size); put(s, "}");
+  separator(s, first); begin(s, "math", marker, finish); put(s, ",\"value\":"); literal_string(s, value.ptr, value.size, body_start, finish); put(s, "}");
   cmark_strbuf_free(&value); s->skip_until = consumed;
   if (consumed < end(n)) {
     leaf_build(d, n, PARAGRAPH); Leaf *l = &d->leaf;
@@ -519,10 +608,26 @@ static void code(Semantic *s, TSNode n, bool fenced) {
     if (value.size) cmark_strbuf_putc(&value, '\n');
   }
   if (value.size && value.ptr[value.size - 1] != '\n') cmark_strbuf_putc(&value, '\n');
-  begin(s, "code", start(n), content_end(d, n)); put(s, ",\"value\":");
+  uint32_t finish = content_end(d, n);
+  if (!fenced) {
+    uint32_t line = end(n);
+    while (line > start(n) && d->text[line - 1] != '\n' && d->text[line - 1] != '\r') line--;
+    uint32_t column = 0, at = line;
+    while (at < end(n) && (d->text[at] == ' ' || d->text[at] == '\t')) {
+      column += d->text[at] == '\t' ? 4 - column % 4 : 1; at++;
+    }
+    if (at == end(n) && column >= 4) finish = end(n);
+  }
+  if (fenced) {
+    finish = end(n);
+    if (!strcmp(fence, "closed")) {
+      while (finish > start(n) && (d->text[finish - 1] == '\r' || d->text[finish - 1] == '\n')) finish--;
+    }
+  }
+  begin(s, "code", start(n), finish); put(s, ",\"value\":");
   // Semantic code excludes the renderer's terminal newline, as mdast does.
   uint32_t value_len = value.size && value.ptr[value.size - 1] == '\n' ? value.size - 1 : value.size;
-  string(s, value.ptr, value_len); put(s, ",\"language\":");
+  literal_string(s, value.ptr, value_len, a, b); put(s, ",\"language\":");
   cmark_strbuf metadata = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
   if (!ts_node_is_null(info)) append_utf16(&metadata, d, start(info), end(info));
   cmark_chunk raw = {metadata.ptr, metadata.size}; unsigned char *clean = cmark_clean_url(cmark_get_default_mem_allocator(), &raw);
@@ -595,7 +700,9 @@ static void item(Semantic *s, TSNode n) {
 static void list(Semantic *s, TSNode n) {
   Document *d = s->d; TSNode marker = ts_node_named_child(ts_node_named_child(n, 0), 0);
   bool ordered = is(marker, d->ids.marker_dot) || is(marker, d->ids.marker_paren);
-  begin(s, "list", start(n), content_end(d, n)); put(s, ordered ? ",\"ordered\":true,\"start\":" : ",\"ordered\":false,\"start\":");
+  uint32_t finish = end(n);
+  while (finish > start(n) && ws(d->text[finish - 1])) finish--;
+  begin(s, "list", start(n), finish); put(s, ordered ? ",\"ordered\":true,\"start\":" : ",\"ordered\":false,\"start\":");
   uint32_t value = 0, at = start(marker);
   while (at < end(marker) && ws(d->text[at])) at++;
   while (at < end(marker) && d->text[at] >= '0' && d->text[at] <= '9') value = value * 10 + d->text[at++] - '0';
@@ -714,7 +821,7 @@ static void html(Semantic *s, TSNode n) {
     if (!terminator) finish = content_end(s->d, n);
   }
   begin(s, "html", start(n), finish); put(s, ",\"value\":");
-  string(s, value.ptr, value.size); put(s, "}"); cmark_strbuf_free(&value);
+  literal_string(s, value.ptr, value.size, start(n), end(n)); put(s, "}"); cmark_strbuf_free(&value);
 }
 static void block(Semantic *s, TSNode n, bool *first) {
   Document *d = s->d; uint16_t id = ts_node_symbol(n); Ids *i = &d->ids;
@@ -747,6 +854,7 @@ static void block_children(Semantic *s, TSNode n, bool *first) {
 uint32_t tsmd_semantics(Document *d) {
   free(d->semantic); d->semantic = NULL; d->semantic_len = 0;
   Semantic s = {.d = d, .json = CMARK_BUF_INIT(cmark_get_default_mem_allocator())};
+  s.lone_surrogates = lone_surrogates(d);
   s.footnotes = footnotes_new(d); footnotes_scan(s.footnotes); s.root_footnotes = s.footnotes;
   s.defs = footnotes_definitions(s.footnotes);
   begin(&s, "root", 0, d->len); put(&s, ",\"children\":["); bool first = true;

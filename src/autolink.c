@@ -224,7 +224,8 @@ static size_t email_end(uint8_t *data, size_t size, size_t at, size_t lower, siz
       a--;
       continue;
     }
-    if (data[a - 1] == '\\') {
+    if (data[a - 1] == '\\' && a < size && strchr(".+-_", data[a]) &&
+        (a < 2 || data[a - 2] != '\\')) {
       a--;
       continue;
     }

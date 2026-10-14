@@ -2177,6 +2177,15 @@
       "type": "CHOICE",
       "members": [
         {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "task_literal_paragraph"
+          },
+          "named": true,
+          "value": "paragraph"
+        },
+        {
           "type": "SEQ",
           "members": [
             {
@@ -2286,6 +2295,67 @@
               }
             ]
           }
+        }
+      ]
+    },
+    "task_literal_paragraph": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "task_list_marker_checked"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "task_list_marker_unchecked"
+            }
+          ]
+        },
+        {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "task_literal_content"
+          },
+          "named": true,
+          "value": "inline"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_newline"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_eof"
+            }
+          ]
+        }
+      ]
+    },
+    "task_literal_content": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "PATTERN",
+          "value": "[^ \\t\\r\\n]"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_paragraph_lines"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
         }
       ]
     },

@@ -220,6 +220,7 @@ module.exports = grammar({
         _list_item_dot: $ => list_item($, $.list_marker_dot),
         _list_item_parenthesis: $ => list_item($, $.list_marker_parenthesis),
         _list_item_content: $ => choice(
+            alias($.task_literal_paragraph, $.paragraph),
             seq(
                 choice($.task_list_marker_checked, $.task_list_marker_unchecked),
                 optional($._whitespace),
@@ -239,6 +240,12 @@ module.exports = grammar({
                 repeat($._block)
             )),
         ),
+        task_literal_paragraph: $ => seq(
+            choice($.task_list_marker_checked, $.task_list_marker_unchecked),
+            alias($.task_literal_content, $.inline),
+            choice($._newline, $._eof),
+        ),
+        task_literal_content: $ => seq(/[^ \t\r\n]/, optional($._paragraph_lines)),
 
         _newline: $ => seq(
             $._line_ending,
