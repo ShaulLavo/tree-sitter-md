@@ -401,7 +401,8 @@ static uint32_t container_prefix(Document *d, TSNode parent, uint32_t a, uint32_
   while (virtual_spaces) { cmark_strbuf_putc(out, ' '); virtual_spaces--; }
   return a;
 }
-static void block_value(Document *d, TSNode n, uint32_t a, uint32_t b, cmark_strbuf *out) {
+static void block_value(Document *d, TSNode n, uint32_t a, uint32_t b, cmark_strbuf *out,
+                        bool preserve_whitespace) {
   bool first = true;
   while (a < b) {
     uint32_t stop = a;
@@ -409,7 +410,9 @@ static void block_value(Document *d, TSNode n, uint32_t a, uint32_t b, cmark_str
     uint32_t from = first ? a : container_prefix(d, ts_node_parent(n), a, stop, out);
     uint32_t padding = first ? initial_padding(d, n, a) : 0;
     while (padding) { cmark_strbuf_putc(out, ' '); padding--; }
-    append_line(out, d, from, stop); first = false;
+    if (preserve_whitespace) append_utf16(out, d, from, stop);
+    else append_line(out, d, from, stop);
+    first = false;
     if (stop < b) { cmark_strbuf_putc(out, '\n'); if (d->text[stop] == '\r' && stop + 1 < b && d->text[stop + 1] == '\n') stop++; stop++; }
     a = stop;
   }
@@ -502,7 +505,7 @@ static void code(Semantic *s, TSNode n, bool fenced) {
       if (is(ts_node_named_child(n, i), d->ids.fence_delimiter)) fence = "closed";
   }
   cmark_strbuf value = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
-  block_value(d, n, a, b, &value);
+  block_value(d, n, a, b, &value, true);
   normalize_indent(&value, width, false);
   if (!fenced) {
     while (value.size && value.ptr[value.size - 1] == '\n') cmark_strbuf_truncate(&value, value.size - 1);
@@ -678,7 +681,7 @@ static const char *html_terminator(cmark_strbuf *value, uint32_t at) {
 }
 static void html(Semantic *s, TSNode n) {
   cmark_strbuf value = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
-  block_value(s->d, n, start(n), end(n), &value);
+  block_value(s->d, n, start(n), end(n), &value, true);
   uint32_t at = 0;
   while (at < (uint32_t)value.size && value.ptr[at] == ' ') at++;
   const char *terminator = html_terminator(&value, at);

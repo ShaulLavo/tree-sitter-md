@@ -219,8 +219,17 @@ static bool email_protocol(uint8_t *data, size_t at, const char *protocol) {
 }
 static size_t email_end(uint8_t *data, size_t size, size_t at, size_t lower, size_t *begin) {
   size_t a = at, b = at + 1, dots = 0;
-  while (a > lower && (cmark_isalnum(data[a - 1]) || strchr(".+-_", data[a - 1])))
-    a--;
+  while (a > lower) {
+    if (cmark_isalnum(data[a - 1]) || strchr(".+-_", data[a - 1])) {
+      a--;
+      continue;
+    }
+    if (data[a - 1] == '\\') {
+      a--;
+      continue;
+    }
+    break;
+  }
   if (a == at || (a > 0 && data[a - 1] == '/'))
     return 0;
   bool xmpp = email_protocol(data, a, "xmpp:");
