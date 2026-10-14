@@ -273,10 +273,23 @@ cmark_reference_map *footnotes_definitions(const Footnotes *notes) {
   }
   for (uint32_t i = 0; i < used; i++) {
     cmark_reference *ref = refs[i];
-    cmark_chunk label = {(unsigned char *)ref->label, strlen((char *)ref->label)};
-    cmark_chunk url = {(unsigned char *)ref->url, ref->url ? strlen((char *)ref->url) : 0};
-    cmark_chunk title = {(unsigned char *)ref->title, ref->title ? strlen((char *)ref->title) : 0};
-    cmark_reference_create(result, &label, &url, &title);
+    cmark_reference *copy = result->mem->calloc(1, sizeof(*copy));
+    copy->label = result->mem->realloc(NULL, strlen((char *)ref->label) + 1);
+    strcpy((char *)copy->label, (char *)ref->label);
+    if (ref->url) {
+      copy->url = result->mem->realloc(NULL, strlen((char *)ref->url) + 1);
+      strcpy((char *)copy->url, (char *)ref->url);
+      copy->size += strlen((char *)copy->url);
+    }
+    if (ref->title) {
+      copy->title = result->mem->realloc(NULL, strlen((char *)ref->title) + 1);
+      strcpy((char *)copy->title, (char *)ref->title);
+      copy->size += strlen((char *)copy->title);
+    }
+    copy->age = ref->age;
+    copy->next = result->refs;
+    result->refs = copy;
+    result->size++;
   }
   free(refs);
   return result;
@@ -290,7 +303,11 @@ bool footnotes_map_range(const Footnotes *notes, uint32_t start, uint32_t end,
   }
   if (notes->owner_index >= notes->parent->count) return false;
   const Footnote *owner = &notes->parent->items[notes->owner_index];
-  if (end > owner->body->len || start >= owner->starts.n) return false;
+  if (!owner->starts.n || end > owner->body->len || start > owner->starts.n - 1) return false;
+  if (start == end) {
+    *mapped_start = owner->starts.v[start]; *mapped_end = *mapped_start;
+    return footnotes_map_range(notes->parent, *mapped_start, *mapped_end, mapped_start, mapped_end);
+  }
   uint32_t high = end ? end - 1 : start;
   if (high >= owner->ends.n) return false;
   uint32_t local_start = owner->starts.v[start];
