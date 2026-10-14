@@ -545,6 +545,21 @@ static bool math_block(Semantic *s, TSNode n, bool *first) {
   }
   return true;
 }
+static uint32_t fence_end(Document *d, TSNode n, bool closed) {
+  uint32_t finish = end(n);
+  for (TSNode tail = n; !closed && ts_node_named_child_count(tail);) {
+    tail = ts_node_named_child(tail, ts_node_named_child_count(tail) - 1);
+    if (end(tail) != finish) break;
+    if (is(tail, d->ids.block_continuation)) return start(tail);
+  }
+  bool quoted = false;
+  for (TSNode parent = ts_node_parent(n); !ts_node_is_null(parent); parent = ts_node_parent(parent))
+    if (is(parent, d->ids.block_quote)) quoted = true;
+  if (!closed && !quoted) return finish;
+  if (finish > start(n) && d->text[finish - 1] == '\n') finish--;
+  if (finish > start(n) && d->text[finish - 1] == '\r') finish--;
+  return finish;
+}
 static void code(Semantic *s, TSNode n, bool fenced) {
   Document *d = s->d; uint32_t a = start(n), b = end(n), width = 4;
   TSNode content = find_child(d, n, d->ids.code_fence_content), info = find_child(d, n, d->ids.info_string);
@@ -618,12 +633,7 @@ static void code(Semantic *s, TSNode n, bool fenced) {
     }
     if (at == end(n) && column >= 4) finish = end(n);
   }
-  if (fenced) {
-    finish = end(n);
-    if (!strcmp(fence, "closed")) {
-      while (finish > start(n) && (d->text[finish - 1] == '\r' || d->text[finish - 1] == '\n')) finish--;
-    }
-  }
+  if (fenced) finish = fence_end(d, n, !strcmp(fence, "closed"));
   begin(s, "code", start(n), finish); put(s, ",\"value\":");
   // Semantic code excludes the renderer's terminal newline, as mdast does.
   uint32_t value_len = value.size && value.ptr[value.size - 1] == '\n' ? value.size - 1 : value.size;

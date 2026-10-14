@@ -91,12 +91,30 @@ test('streaming EOF prefixes preserve syntax and authored source ranges', () => 
   assert.equal(quote.children[0].range.end, 11)
   const quotedFence = snapshot('> ```js\n>').root.children[0].children[0]
   assert.equal(quotedFence.type, 'code')
-  assert.equal(quotedFence.range.end, 9)
+  assert.equal(quotedFence.range.end, 8)
   const indented = snapshot('    first\n    ').root.children[0]
   assert.equal(indented.value, 'first')
   assert.equal(indented.range.end, 14)
   for (const source of ['    ', '\t']) assert.equal(snapshot(source).root.children.length, 0)
   assert.equal(snapshot('\ufeff#').root.children[0].type, 'heading')
+})
+test('quoted open fences preserve their final authored content position while streaming', () => {
+  for (const [source, end] of [
+    ['> ```js\n', 7],
+    ['> ```js\r\n', 7],
+    ['> ```js\n>', 8],
+    ['> ```js\n> ', 8],
+    ['> ```js\n>  ', 11],
+    ['> ```js\n> \n', 10],
+    ['> ```js\n> \n>', 11],
+    ['> ```js\n> x\n', 11],
+    ['> ```js\n> x\n>\n', 13],
+  ]) {
+    const code = snapshot(source).root.children[0].children[0]
+    assert.equal(code.range.end, end, source)
+  }
+  const item = snapshot('- ```js\n  ').root.children[0].items[0]
+  assert.equal(item.children[0].range.end, 8)
 })
 test('task-like link labels stay ordinary list content', () => {
   const item = snapshot('- [x](streamdown:incomplete-link)').root.children[0].items[0]
