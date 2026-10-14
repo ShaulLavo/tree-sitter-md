@@ -259,7 +259,8 @@ static bool footnote_label(const Footnotes *notes, const unsigned char *label) {
 cmark_reference_map *footnotes_definitions(const Footnotes *notes) {
   cmark_reference_map *result = cmark_reference_map_new(cmark_get_default_mem_allocator());
   if (!notes || !notes->document->defs) return result;
-  uint32_t count = notes->document->defs->size;
+  uint32_t count = 0;
+  for (cmark_reference *ref = notes->document->defs->refs; ref; ref = ref->next) count++;
   cmark_reference **refs = calloc(count ? count : 1, sizeof(*refs));
   uint32_t used = 0;
   for (cmark_reference *ref = notes->document->defs->refs; ref; ref = ref->next)
