@@ -97,6 +97,18 @@ test('footnote labels occupy their own reference namespace and image prefixes re
   }
 })
 
+test('nested definitions keep mapped source positions and resolve outside their owning body', () => {
+  const source = '[^a]: first\n\n    [^b]: nested\n\n[^b]'
+  const result = snapshot(source).root
+  const outer = descendants(result, 'footnoteDefinition')[0]
+  const nested = outer.children.find((node) => node.type === 'footnoteDefinition')
+  assert.ok(nested)
+  assert.equal(nested.identifier, 'b')
+  assert.equal(source.slice(nested.range.start, nested.range.end), '[^b]: nested')
+  assert.equal(descendants(nested, 'text')[0].value, 'nested')
+  assert.equal(descendants(result, 'footnoteReference')[0].identifier, 'b')
+})
+
 test('late definitions and removals refresh earlier references without mutating retained snapshots', () => {
   const document = new MarkdownDocument()
   try {

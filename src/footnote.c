@@ -27,6 +27,7 @@ static void clear(Footnotes *notes) {
     Footnote *note = &notes->items[i];
     free(note->identifier);
     free(note->starts.v); free(note->ends.v);
+    footnotes_free(note->nested);
     tsmd_free(note->body);
   }
   notes->count = 0;
@@ -166,8 +167,14 @@ static void add(Footnotes *notes, uint32_t a, uint32_t origin, Container contain
   note.identifier = identifier(d, a + 2, label_end, &note.identifier_len);
   if (!note.identifier) return;
   build_body(d, &note, container);
+  note.nested = footnotes_new(note.body);
+  note.nested->depth = notes->depth + 1;
+  note.nested->parent = notes;
+  footnotes_scan(note.nested);
   reserve((void **)&notes->items, &notes->capacity, notes->count + 1, sizeof(Footnote));
-  notes->items[notes->count++] = note;
+  notes->items[notes->count] = note;
+  notes->items[notes->count].nested->owner_index = notes->count;
+  notes->count++;
 }
 static void scan_leaf(Footnotes *notes, TSNode node, Container container) {
   Document *d = notes->document;
@@ -208,7 +215,7 @@ void footnotes_free(Footnotes *notes) {
 }
 void footnotes_scan(Footnotes *notes) {
   clear(notes);
-  if (!notes->document->gfm || !notes->document->tree) return;
+  if (!notes->document->gfm || !notes->document->tree || notes->depth >= 200) return;
   walk(notes, ts_tree_root_node(notes->document->tree), (Container){.limit = notes->document->len});
 }
 const Footnote *footnotes_at(const Footnotes *notes, uint32_t index) {
@@ -218,16 +225,21 @@ const Footnote *footnotes_start(const Footnotes *notes, uint32_t position) {
   for (uint32_t i = 0; i < notes->count; i++) if (notes->items[i].start == position) return &notes->items[i];
   return NULL;
 }
+static const Footnote *find(const Footnotes *notes, const char *value, uint32_t size) {
+  if (!notes) return NULL;
+  for (uint32_t i = 0; i < notes->count; i++) {
+    const Footnote *note = &notes->items[i];
+    if (note->identifier_len == size && !memcmp(note->identifier, value, size)) return note;
+    const Footnote *nested = find(note->nested, value, size);
+    if (nested) return nested;
+  }
+  return NULL;
+}
 const Footnote *footnotes_lookup(const Footnotes *notes, const unsigned char *label, uint32_t length) {
   uint32_t size = 0;
   char *value = normalize(label, length, &size);
   if (!value) return NULL;
-  const Footnote *result = NULL;
-  for (uint32_t i = 0; i < notes->count; i++) {
-    const Footnote *note = &notes->items[i];
-    if (note->identifier_len != size || memcmp(note->identifier, value, size)) continue;
-    result = note; break;
-  }
+  const Footnote *result = find(notes, value, size);
   free(value); return result;
 }
 bool footnotes_contains(const Footnotes *notes, uint32_t a, uint32_t b) {
@@ -236,4 +248,50 @@ bool footnotes_contains(const Footnotes *notes, uint32_t a, uint32_t b) {
     if (note->start <= a && note->consumed_end >= b) return true;
   }
   return false;
+}
+
+static bool footnote_label(const Footnotes *notes, const unsigned char *label) {
+  uint32_t length = strlen((const char *)label);
+  if (length && label[0] == '^') label++, length--;
+  return footnotes_lookup(notes, label, length) != NULL;
+}
+
+cmark_reference_map *footnotes_definitions(const Footnotes *notes) {
+  cmark_reference_map *result = cmark_reference_map_new(cmark_get_default_mem_allocator());
+  if (!notes || !notes->document->defs) return result;
+  uint32_t count = notes->document->defs->size;
+  cmark_reference **refs = calloc(count ? count : 1, sizeof(*refs));
+  uint32_t used = 0;
+  for (cmark_reference *ref = notes->document->defs->refs; ref; ref = ref->next)
+    if (!footnote_label(notes, ref->label)) refs[used++] = ref;
+  for (uint32_t i = 1; i < used; i++) {
+    cmark_reference *ref = refs[i]; uint32_t j = i;
+    while (j && refs[j - 1]->age > ref->age) refs[j] = refs[j - 1], j--;
+    refs[j] = ref;
+  }
+  for (uint32_t i = 0; i < used; i++) {
+    cmark_reference *ref = refs[i];
+    cmark_chunk label = {(unsigned char *)ref->label, strlen((char *)ref->label)};
+    cmark_chunk url = {(unsigned char *)ref->url, ref->url ? strlen((char *)ref->url) : 0};
+    cmark_chunk title = {(unsigned char *)ref->title, ref->title ? strlen((char *)ref->title) : 0};
+    cmark_reference_create(result, &label, &url, &title);
+  }
+  free(refs);
+  return result;
+}
+
+bool footnotes_map_range(const Footnotes *notes, uint32_t start, uint32_t end,
+                         uint32_t *mapped_start, uint32_t *mapped_end) {
+  if (!notes || !mapped_start || !mapped_end || start > end) return false;
+  if (!notes->parent) {
+    *mapped_start = start; *mapped_end = end; return true;
+  }
+  if (notes->owner_index >= notes->parent->count) return false;
+  const Footnote *owner = &notes->parent->items[notes->owner_index];
+  if (end > owner->body->len || start >= owner->starts.n) return false;
+  uint32_t high = end ? end - 1 : start;
+  if (high >= owner->ends.n) return false;
+  uint32_t local_start = owner->starts.v[start];
+  uint32_t local_end = owner->ends.v[high];
+  return footnotes_map_range(notes->parent, local_start, local_end, mapped_start, mapped_end);
 }
