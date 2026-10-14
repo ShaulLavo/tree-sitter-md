@@ -58,7 +58,12 @@ test('mapped footnote bodies retain multiple paragraphs, nested lists and outer 
 
 test('lazy continuation stays in the footnote, while a completed heading ends laziness', () => {
   const lazy = snapshot('[^a]: First.\ncontinued\n\nAfter.').root
-  assert.equal(descendants(lazy, 'footnoteDefinition')[0].children[0].children[0].value, 'First.\ncontinued')
+  const lazyParagraph = descendants(lazy, 'footnoteDefinition')[0].children[0]
+  assert.equal(
+    descendants(lazyParagraph, 'text').map((node) => node.value).join(''),
+    'First.continued',
+  )
+  assert.equal(lazyParagraph.children.some((node) => node.type === 'break' && !node.hard), true)
   const heading = snapshot('[^a]: First\n    ---\nAfter.').root
   assert.equal(descendants(heading, 'footnoteDefinition')[0].children[0].type, 'heading')
   assert.equal(heading.children.at(-1).children[0].value, 'After.')
