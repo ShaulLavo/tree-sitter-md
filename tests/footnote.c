@@ -110,6 +110,12 @@ int main(void) {
   assert(cmark_reference_lookup(filtered, &ordinary));
   assert(!cmark_reference_lookup(filtered, &caret));
   cmark_reference_map_free(filtered);
+  set_text(document, "[a] [^a]\n\n[a]: /ordinary\n[^a]: note");
+  footnotes_scan(footnotes);
+  filtered = footnotes_definitions(footnotes);
+  cmark_chunk ordinary_again = {(unsigned char *)"a", 1};
+  assert(cmark_reference_lookup(filtered, &ordinary_again));
+  cmark_reference_map_free(filtered);
   const uint16_t wide[] = {'[', '^', 0xc4, ']', ':', ' ', 0xd83d, 0xde00, '\n'};
   memcpy(tsmd_input(document, 9), wide, sizeof(wide)); tsmd_set_text(document);
   footnotes_scan(footnotes);

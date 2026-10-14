@@ -252,7 +252,8 @@ bool footnotes_contains(const Footnotes *notes, uint32_t a, uint32_t b) {
 
 static bool footnote_label(const Footnotes *notes, const unsigned char *label) {
   uint32_t length = strlen((const char *)label);
-  if (length && label[0] == '^') label++, length--;
+  if (!length || label[0] != '^') return false;
+  label++; length--;
   return footnotes_lookup(notes, label, length) != NULL;
 }
 
