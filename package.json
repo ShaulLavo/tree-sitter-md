@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-md",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Markdown for editors: a tree-sitter block grammar and a CommonMark + GFM inline resolver that runs inside tree-sitter-x",
   "type": "module",
   "main": "./js/index.js",
@@ -19,6 +19,8 @@
     "js/index.d.ts",
     "js/constants.js",
     "js/constants.d.ts",
+    "js/semantic.js",
+    "js/semantic.d.ts",
     "tree-sitter-md.wasm",
     "tree-sitter-markdown.wasm",
     "LICENSE",

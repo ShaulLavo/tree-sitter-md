@@ -256,7 +256,7 @@ static void inline_nodes(Leaf *leaf, bool gfm, cmark_node *node, uint32_t offset
       n = text_run(leaf, n, offset, out);
   }
 }
-void inline_resolve(Leaf *leaf, int kind, bool gfm, cmark_reference_map *defs, Words *out,
+void inline_resolve(Leaf *leaf, int kind, bool gfm, bool cjk, bool math, cmark_reference_map *defs, Words *out,
                     Labels *deps) {
   Leaf *l = leaf;
   if (!l->n)
@@ -280,7 +280,9 @@ void inline_resolve(Leaf *leaf, int kind, bool gfm, cmark_reference_map *defs, W
   root->start_column = 1;
   defs->lookup_label = dependency;
   defs->lookup_context = deps;
-  cmark_parse_inlines(cmark_get_default_mem_allocator(), root, defs, gfm ? CMARK_OPT_GFM : 0);
+  cmark_parse_inlines(cmark_get_default_mem_allocator(), root, defs,
+                      (gfm ? CMARK_OPT_GFM : 0) | (cjk ? CMARK_OPT_CJK : 0) |
+                        (math ? CMARK_OPT_MATH : 0));
   defs->lookup_label = NULL;
   defs->lookup_context = NULL;
   inline_nodes(leaf, gfm, root->first_child, body, out, false);

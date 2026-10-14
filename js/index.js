@@ -1,6 +1,7 @@
 // JS binding for tree-sitter-md: a tree-sitter-x extension, one document per MarkdownDocument.
 // The resolver runs inside tree-sitter-x's runtime and walks trees in C.
 import { Language, Parser, heap, loadExtension } from 'web-tree-sitter'
+import { decodeSemanticRoot } from './semantic.js'
 // Offsets are UTF-16 code units, the same units as JS strings.
 
 export { Kind, CAPTURES } from './constants.js'
@@ -61,51 +62,88 @@ function read(handle, count) {
 
 export class MarkdownDocument {
   #handle
-  constructor({ gfm = true, frontmatter = false } = {}) {
+  #length = 0
+  #revision = 0
+  #gfm
+  #cjk
+  #math
+  constructor({ gfm = true, frontmatter = false, cjk = false, math = false } = {}) {
     if (!wasm) throw new Error('tree-sitter-md: call init() first')
-    this.#handle = wasm.tsmd_new((gfm ? 1 : 0) | (frontmatter ? 2 : 0), language[0])
+    this.#handle = wasm.tsmd_new((gfm ? 1 : 0) | (frontmatter ? 2 : 0) | (cjk ? 4 : 0) | (math ? 8 : 0), language[0])
+    this.#gfm = gfm
+    this.#cjk = cjk
+    this.#math = math
+  }
+  #active() {
+    if (!this.#handle) throw new TypeError('tree-sitter-md: document is disposed')
+    return this.#handle
   }
   /** Replace the whole text and parse it. */
   setText(text) {
-    write(this.#handle, text)
+    if (typeof text !== 'string') throw new TypeError('tree-sitter-md: text must be a string')
+    write(this.#active(), text)
     wasm.tsmd_set_text(this.#handle)
+    this.#length = text.length
+    this.#revision++
   }
   /** Replace `[start, oldEnd)` with `inserted`. */
   edit(start, oldEnd, inserted) {
-    write(this.#handle, inserted)
+    this.#active()
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(oldEnd) || start < 0 || oldEnd < start || oldEnd > this.#length || typeof inserted !== 'string')
+      throw new TypeError('tree-sitter-md: edit requires a valid UTF-16 range and string')
+    write(this.#active(), inserted)
     wasm.tsmd_edit(this.#handle, start, oldEnd)
+    this.#length += inserted.length - (oldEnd - start)
+    this.#revision++
   }
   /** An unchanged reparse, for idle time after `setText` (keeps it off the first keystroke). */
   reparse() {
-    wasm.tsmd_reparse(this.#handle)
+    wasm.tsmd_reparse(this.#active())
+  }
+  /** Owned renderer semantics for the complete document, with UTF-16 source ranges. */
+  semantics() {
+    const handle = this.#active()
+    const count = wasm.tsmd_semantics(handle)
+    try {
+      const ptr = wasm.tsmd_semantic_out(handle)
+      const memory = heap().buffer
+      if (!Number.isSafeInteger(count) || count <= 0 || !Number.isSafeInteger(ptr) || ptr < 0 || ptr > memory.byteLength - count)
+        throw new TypeError('tree-sitter-md: invalid semantic buffer')
+      const text = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(memory, ptr, count))
+      const profile = this.#gfm && (this.#cjk || this.#math) ? 'fregat-chat' : this.#gfm ? 'gfm' : 'commonmark'
+      return { revision: this.#revision, profile,
+        capabilities: { commonmark: true, gfm: this.#gfm, math: this.#math, cjk: this.#cjk, footnotes: this.#gfm },
+        root: decodeSemanticRoot(text, this.#length) }
+    } finally { wasm.tsmd_semantic_release(handle) }
   }
   /** Records `[start, end, kind, extra]` for constructs intersecting `[from, to)`. */
   decorations(from, to) {
-    return read(this.#handle, wasm.tsmd_decorations(this.#handle, from, to))
+    return read(this.#active(), wasm.tsmd_decorations(this.#handle, from, to))
   }
   /** Decorations for rows `[fromRow, toRow)`. */
   decorationsForRows(fromRow, toRow) {
+    this.#active()
     const from = wasm.tsmd_row_start(this.#handle, fromRow)
     const to = wasm.tsmd_row_start(this.#handle, toRow)
     return this.decorations(from, to)
   }
   /** `[start, end]` pairs of foldable multi-line blocks intersecting `[from, to)`. */
   folds(from, to) {
-    return read(this.#handle, wasm.tsmd_folds(this.#handle, from, to))
+    return read(this.#active(), wasm.tsmd_folds(this.#handle, from, to))
   }
   /** Highlight captures `[start, end, capture]` for `[from, to)`, sorted; names in `CAPTURES`. */
   highlights(from, to) {
-    return read(this.#handle, wasm.tsmd_highlights(this.#handle, from, to))
+    return read(this.#active(), wasm.tsmd_highlights(this.#handle, from, to))
   }
   /** Fenced code injections: `[contentStart, contentEnd, languageStart, languageEnd]`. */
   injections(from, to) {
-    return read(this.#handle, wasm.tsmd_injections(this.#handle, from, to))
+    return read(this.#active(), wasm.tsmd_injections(this.#handle, from, to))
   }
   rowStart(row) {
-    return wasm.tsmd_row_start(this.#handle, row)
+    return wasm.tsmd_row_start(this.#active(), row)
   }
   get lineCount() {
-    return wasm.tsmd_line_count(this.#handle)
+    return wasm.tsmd_line_count(this.#active())
   }
   dispose() {
     if (this.#handle) wasm.tsmd_free(this.#handle)

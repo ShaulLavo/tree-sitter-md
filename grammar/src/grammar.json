@@ -1821,8 +1821,17 @@
           ]
         },
         {
-          "type": "SYMBOL",
-          "name": "_list_item_content"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_list_item_content"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_eof"
+            }
+          ]
         },
         {
           "type": "SYMBOL",
@@ -1862,8 +1871,17 @@
           ]
         },
         {
-          "type": "SYMBOL",
-          "name": "_list_item_content"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_list_item_content"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_eof"
+            }
+          ]
         },
         {
           "type": "SYMBOL",
@@ -1903,8 +1921,17 @@
           ]
         },
         {
-          "type": "SYMBOL",
-          "name": "_list_item_content"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_list_item_content"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_eof"
+            }
+          ]
         },
         {
           "type": "SYMBOL",
@@ -1944,8 +1971,17 @@
           ]
         },
         {
-          "type": "SYMBOL",
-          "name": "_list_item_content"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_list_item_content"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_eof"
+            }
+          ]
         },
         {
           "type": "SYMBOL",
@@ -1985,8 +2021,17 @@
           ]
         },
         {
-          "type": "SYMBOL",
-          "name": "_list_item_content"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "_list_item_content"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_eof"
+            }
+          ]
         },
         {
           "type": "SYMBOL",

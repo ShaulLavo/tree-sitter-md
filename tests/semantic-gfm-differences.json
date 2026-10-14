@@ -1,0 +1,146 @@
+[
+  {
+    "id": 398,
+    "kind": "spec-version",
+    "reason": "Exact source matches commonmark-389, whose newer expected nesting agrees with the baseline.",
+    "sourceSha256": "5944e1c264642733bc2b60c99f9f82a18f1d3320fbcca939339e1d9291386683",
+    "expectedSha256": "4b0207f772814e5c798bfbddf869f0fe1ec97bc8833efda3cc50f6dc68c8edfb",
+    "actualSha256": "0f1cc1cc23d4b58d9c8289eca10f074e99d48e472973ee34123afb154d10c140",
+    "actualHtml": "<p><strong>foo, <strong>bar</strong>, baz</strong></p>\n"
+  },
+  {
+    "id": 426,
+    "kind": "spec-version",
+    "reason": "Exact source matches commonmark-417, whose newer expected nesting agrees with the baseline.",
+    "sourceSha256": "076b20c47ae068d8555b7a3704619f1dc102fd5645e634eb32b82145fb0b66c8",
+    "expectedSha256": "7a67841ac145dee2a25b97d68e6f273f4a6ddea560b69fe1cbb96ffe2fa68b62",
+    "actualSha256": "b12b22eb2ab64420b3ce0fc1b6c72fdcaf704efeb1d95207cb6c249f1ba1fbf4",
+    "actualHtml": "<p>foo<strong><strong><strong>bar</strong></strong></strong>***baz</p>\n"
+  },
+  {
+    "id": 434,
+    "kind": "spec-version",
+    "reason": "Exact source matches commonmark-425, whose newer expected nesting agrees with the baseline.",
+    "sourceSha256": "c39e0cc8c06357e0945ab716a43297170112720316c7b298deb5b73a9a8e2683",
+    "expectedSha256": "04acd6f096721a9ecbc2d68deb88dc527c3c67b75d6d268fbe6ac32a15ed931c",
+    "actualSha256": "4b0ec2e325f8d23d17904ed6bb2a235b08f2f2b220041ee8cad62dc5a0a5adbb",
+    "actualHtml": "<p><strong>foo <strong>bar</strong> baz</strong></p>\n"
+  },
+  {
+    "id": 435,
+    "kind": "spec-version",
+    "reason": "Exact source matches commonmark-426, whose newer expected nesting agrees with the baseline.",
+    "sourceSha256": "a825e158a423b9aafb53afe930989888ca449048b2a18f7c887bdb3057f285a9",
+    "expectedSha256": "648e3b827ad64f41047aed67c6119ae718ae0ee021fec4de7e176d317f4d8248",
+    "actualSha256": "cb860453f41fc1a97bb64ffc7b703f7e741a0c51be6ca07993e0fe07474e7544",
+    "actualHtml": "<p><strong><strong>foo</strong> bar</strong></p>\n"
+  },
+  {
+    "id": 436,
+    "kind": "spec-version",
+    "reason": "Exact source matches commonmark-427, whose newer expected nesting agrees with the baseline.",
+    "sourceSha256": "a4aba729d8493d9d902623824b9b917bd9d583725d66cfb75d4cad08e2519ee5",
+    "expectedSha256": "648e3b827ad64f41047aed67c6119ae718ae0ee021fec4de7e176d317f4d8248",
+    "actualSha256": "37aacbe48deba6c3d1ad9923935e3e93f975d333118842de4971a3821a2a3b9f",
+    "actualHtml": "<p><strong>foo <strong>bar</strong></strong></p>\n"
+  },
+  {
+    "id": 473,
+    "kind": "spec-version",
+    "reason": "Exact source matches commonmark-464, whose newer expected nesting agrees with the baseline.",
+    "sourceSha256": "da6c9ff9c5af26a685f1e4c2c253b682e0f1a71aa1a0ce46e7d943b636caceb8",
+    "expectedSha256": "79d3f44d2299c635d04637780c91039dd6ac078407a855bb6cf88a68cca94ae9",
+    "actualSha256": "0666c8d949d9f83f4b9b9c97317e8037562a6c5be39d73183fcc292c480fa4fe",
+    "actualHtml": "<p><strong><strong>foo</strong></strong></p>\n"
+  },
+  {
+    "id": 474,
+    "kind": "spec-version",
+    "reason": "Exact source matches commonmark-465, whose newer expected nesting agrees with the baseline.",
+    "sourceSha256": "31904a09cbccfd15534e908a2b05ac82f59de4317bd310546dbb482384d18ee6",
+    "expectedSha256": "79d3f44d2299c635d04637780c91039dd6ac078407a855bb6cf88a68cca94ae9",
+    "actualSha256": "0666c8d949d9f83f4b9b9c97317e8037562a6c5be39d73183fcc292c480fa4fe",
+    "actualHtml": "<p><strong><strong>foo</strong></strong></p>\n"
+  },
+  {
+    "id": 475,
+    "kind": "spec-version",
+    "reason": "Exact source matches commonmark-466, whose newer expected nesting agrees with the baseline.",
+    "sourceSha256": "54e999d378910b8aec39a791092201a7e97c336742a13a8e0bffdc9b343b433e",
+    "expectedSha256": "79d3f44d2299c635d04637780c91039dd6ac078407a855bb6cf88a68cca94ae9",
+    "actualSha256": "f076e42c7c231d47059e45dd281602b8bbcc6cffcf9f683d2445a4d1d41134ae",
+    "actualHtml": "<p><strong><strong><strong>foo</strong></strong></strong></p>\n"
+  },
+  {
+    "id": 477,
+    "kind": "spec-version",
+    "reason": "Exact source matches commonmark-468, whose newer expected nesting agrees with the baseline.",
+    "sourceSha256": "144ce1f0cf62ee0152aa8afd146af55a7b5547b0ec9d4a89d8dc5f61ba94f306",
+    "expectedSha256": "cad576c80bc68f40b56206963b4025d2f6b8868e34b34147f05ae67bbd1bd372",
+    "actualSha256": "a57b1002953b8b06e710b36c6f2938fbf16735fafbf34242f4274647a6d287dd",
+    "actualHtml": "<p><em><strong><strong>foo</strong></strong></em></p>\n"
+  },
+  {
+    "id": 610,
+    "kind": "autolink-extension",
+    "reason": "The literal URL extension links a URL inside an invalid angle-autolink.",
+    "sourceSha256": "dc8a1f689258892c545b06f7c845ab31a342732d5e13845c57910b002ab5e6a4",
+    "expectedSha256": "2fb14f6105576e0c1bbddbce98dec6595f5fe1ea3e3c41500a273d37cbedf043",
+    "actualSha256": "d24c459777473fdc293e90cd73749a895d71b1d2db90907123ab1c201e27a2e8",
+    "actualHtml": "<p>&lt;<a href=\"http://foo.bar/baz\">http://foo.bar/baz</a> bim&gt;</p>\n"
+  },
+  {
+    "id": 614,
+    "kind": "autolink-extension",
+    "reason": "The literal email extension links decoded escaped email text inside brackets.",
+    "sourceSha256": "2636d13ed3dc316daff3893ea3fbd95570be5a8052546bfcf3743fbccc635d0c",
+    "expectedSha256": "1ee01cb89969f9cb8b5c4231467630d0fc000379446e059c035261c5251a5c76",
+    "actualSha256": "d0b1c8d7ca54387e75afb9b22c5141a2de82fe98a506059ac60818f4aae5f86e",
+    "actualHtml": "<p>&lt;foo\\<a href=\"mailto:+@bar.example.com\">+@bar.example.com</a>&gt;</p>\n"
+  },
+  {
+    "id": 616,
+    "kind": "autolink-extension",
+    "reason": "The literal URL extension links a URL inside spaced angle syntax.",
+    "sourceSha256": "b7659517713ef28e71cd7f499d80646dbc6f927174ad23ca45b671f6f39d70e4",
+    "expectedSha256": "36cad663e8179c0135ce4a9da511a7ff9c0a9bbc7ee1f9008de93a9117a56e84",
+    "actualSha256": "236a03ae6797d039281902fcfa89b040b8271f2af65e5417289c36082cdbcbe5",
+    "actualHtml": "<p>&lt; <a href=\"http://foo.bar\">http://foo.bar</a> &gt;</p>\n"
+  },
+  {
+    "id": 619,
+    "kind": "autolink-extension",
+    "reason": "The enabled literal URL extension links this inherited base-profile URL.",
+    "sourceSha256": "58176c111a79620a9c9bca82caa6ad70149a62f4c3aba9d64cd4094314f24757",
+    "expectedSha256": "dc8f750bf2f29b0915d71279c9b1851f67b664b1a6436f60a99cd277d7f36b64",
+    "actualSha256": "0aa2df3c2a505474f7a11a2a95b0125814bf785fa9df0db1bc807cad88178533",
+    "actualHtml": "<p><a href=\"http://example.com\">http://example.com</a></p>\n"
+  },
+  {
+    "id": 620,
+    "kind": "autolink-extension",
+    "reason": "The enabled literal email extension links this inherited base-profile email.",
+    "sourceSha256": "28ae0ab2a94c5601acda4466f077d51af8d559d088624d249fe50a6680b4a205",
+    "expectedSha256": "8760fdd33bc126ff302b1ac33a330c64a25b2ca6c59fae86e0586ed255339874",
+    "actualSha256": "7263134ddc976e03ab88dcd7e0b05437e47154b351ea153bab11ee01f8c02bfb",
+    "actualHtml": "<p><a href=\"mailto:foo@bar.example.com\">foo@bar.example.com</a></p>\n"
+  },
+  {
+    "id": 628,
+    "kind": "protocol-support",
+    "reason": "The installed literal extension supports HTTP and HTTPS; this example expects FTP.",
+    "sourceSha256": "390d488e07fceab3b9cab8efab66fde6a3df5eef4346bc6bbcfa361da188fbf8",
+    "expectedSha256": "1d4f45e8eeda36d93e9232582507dc9965f48966f023ef17b969ab51af3200f0",
+    "actualSha256": "c771dae660345bd30452686c50c331679f5a6a62856615ff57352f28b677d512",
+    "actualHtml": "<p><a href=\"http://commonmark.org\">http://commonmark.org</a></p>\n<p>(Visit <a href=\"https://encrypted.google.com/search?q=Markup+(business)\">https://encrypted.google.com/search?q=Markup+(business)</a>)</p>\n<p>Anonymous FTP is available at ftp://foo.bar.baz.</p>\n"
+  },
+  {
+    "id": 652,
+    "kind": "safe-render-policy",
+    "reason": "The test-only raw renderer lacks the GFM tagfilter; safe product display is checked separately.",
+    "sourceSha256": "a245889349ca138c2f8246a775ce175945a7cf1e0dbee93e6f09d12551c2657a",
+    "expectedSha256": "227b102acaf95c41ba93d3b5d89cb8421cb2312b0bf4cb97ce005e7f0f11da6b",
+    "actualSha256": "cf9a5f1c22770e19b895f41ff42ad0299d68d877ec67009ea2ed7dd9acaa7fe9",
+    "actualHtml": "<p><strong> <title> <style> <em></p>\n<blockquote>\n  <xmp> is disallowed.  <XMP> is also disallowed.\n</blockquote>\n"
+  }
+]

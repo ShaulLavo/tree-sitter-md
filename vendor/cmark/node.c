@@ -19,7 +19,7 @@ bool cmark_node_is_inline(cmark_node *node) {
     return false;
   }
   return node->type >= CMARK_NODE_FIRST_INLINE &&
-         node->type <= CMARK_NODE_STRIKETHROUGH;
+         node->type <= CMARK_NODE_LAST_INLINE;
 }
 
 bool cmark_node_is_leaf(cmark_node *node) {
@@ -33,6 +33,8 @@ bool cmark_node_is_leaf(cmark_node *node) {
     case CMARK_NODE_SOFTBREAK : return true;
     case CMARK_NODE_LINEBREAK : return true;
     case CMARK_NODE_CODE : return true;
+    case CMARK_NODE_INLINE_MATH: return true;
+    case CMARK_NODE_FOOTNOTE_REFERENCE: return true;
     case CMARK_NODE_HTML_INLINE: return true;
   }
   return false;
@@ -75,6 +77,7 @@ static bool S_can_contain(cmark_node *node, cmark_node *child) {
   case CMARK_NODE_HEADING:
   case CMARK_NODE_EMPH:
   case CMARK_NODE_STRONG:
+  case CMARK_NODE_STRIKETHROUGH:
   case CMARK_NODE_LINK:
   case CMARK_NODE_IMAGE:
   case CMARK_NODE_CUSTOM_INLINE:
@@ -130,6 +133,8 @@ static void S_free_nodes(cmark_node *e) {
     case CMARK_NODE_TEXT:
     case CMARK_NODE_HTML_INLINE:
     case CMARK_NODE_CODE:
+    case CMARK_NODE_INLINE_MATH:
+    case CMARK_NODE_FOOTNOTE_REFERENCE:
     case CMARK_NODE_HTML_BLOCK:
       mem->free(e->data);
       break;
@@ -207,6 +212,10 @@ const char *cmark_node_get_type_string(cmark_node *node) {
     return "linebreak";
   case CMARK_NODE_CODE:
     return "code";
+  case CMARK_NODE_INLINE_MATH:
+    return "inline_math";
+  case CMARK_NODE_FOOTNOTE_REFERENCE:
+    return "footnote_reference";
   case CMARK_NODE_HTML_INLINE:
     return "html_inline";
   case CMARK_NODE_CUSTOM_INLINE:
@@ -215,6 +224,8 @@ const char *cmark_node_get_type_string(cmark_node *node) {
     return "emph";
   case CMARK_NODE_STRONG:
     return "strong";
+  case CMARK_NODE_STRIKETHROUGH:
+    return "strikethrough";
   case CMARK_NODE_LINK:
     return "link";
   case CMARK_NODE_IMAGE:
@@ -310,6 +321,8 @@ const char *cmark_node_get_literal(cmark_node *node) {
   case CMARK_NODE_TEXT:
   case CMARK_NODE_HTML_INLINE:
   case CMARK_NODE_CODE:
+  case CMARK_NODE_INLINE_MATH:
+  case CMARK_NODE_FOOTNOTE_REFERENCE:
   case CMARK_NODE_CODE_BLOCK:
     return node->data ? (char *)node->data : "";
 
@@ -330,6 +343,8 @@ int cmark_node_set_literal(cmark_node *node, const char *content) {
   case CMARK_NODE_TEXT:
   case CMARK_NODE_HTML_INLINE:
   case CMARK_NODE_CODE:
+  case CMARK_NODE_INLINE_MATH:
+  case CMARK_NODE_FOOTNOTE_REFERENCE:
   case CMARK_NODE_CODE_BLOCK:
     node->len = cmark_set_cstr(node->mem, &node->data, content);
     return 1;

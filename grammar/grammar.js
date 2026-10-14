@@ -330,7 +330,7 @@ function list_item($, marker) {
     return seq(
         marker,
         optional($.block_continuation),
-        $._list_item_content,
+        choice($._list_item_content, $._eof),
         $._block_close,
         optional($.block_continuation)
     );

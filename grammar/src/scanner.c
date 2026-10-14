@@ -674,7 +674,7 @@ static bool parse_star(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
             break;
         }
     }
-    bool line_end = lexer->lookahead == '\n' || lexer->lookahead == '\r';
+    bool line_end = lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->eof(lexer);
     bool dont_interrupt = false;
     if (star_count == 1 && line_end) {
         extra_indentation = 1;
@@ -744,7 +744,7 @@ static bool parse_thematic_break_underscore(Scanner *s, TSLexer *lexer,
             break;
         }
     }
-    bool line_end = lexer->lookahead == '\n' || lexer->lookahead == '\r';
+    bool line_end = lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->eof(lexer);
     if (underscore_count >= 3 && line_end && valid_symbols[THEMATIC_BREAK]) {
         lexer->result_symbol = THEMATIC_BREAK;
         mark_end(s, lexer);
@@ -884,7 +884,7 @@ static bool parse_plus(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
                 extra_indentation += advance(s, lexer);
             }
             bool dont_interrupt = false;
-            if (lexer->lookahead == '\r' || lexer->lookahead == '\n') {
+            if (lexer->lookahead == '\r' || lexer->lookahead == '\n' || lexer->eof(lexer)) {
                 extra_indentation = 1;
                 dont_interrupt = true;
             }
@@ -946,7 +946,7 @@ static bool parse_ordered_list_marker(Scanner *s, TSLexer *lexer,
                     extra_indentation += advance(s, lexer);
                 }
                 bool line_end =
-                    lexer->lookahead == '\n' || lexer->lookahead == '\r';
+                    lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->eof(lexer);
                 if (line_end) {
                     extra_indentation = 1;
                     dont_interrupt = true;
@@ -1014,7 +1014,7 @@ static bool parse_minus(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
                 break;
             }
         }
-        bool line_end = lexer->lookahead == '\n' || lexer->lookahead == '\r';
+        bool line_end = lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->eof(lexer);
         bool dont_interrupt = false;
         if (minus_count == 1 && line_end) {
             extra_indentation = 1;
@@ -1361,7 +1361,7 @@ static bool parse_html_block(Scanner *s, TSLexer *lexer,
     while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
         advance(s, lexer);
     }
-    if (lexer->lookahead == '\r' || lexer->lookahead == '\n') {
+    if (lexer->lookahead == '\r' || lexer->lookahead == '\n' || lexer->eof(lexer)) {
         lexer->result_symbol = HTML_BLOCK_7_START;
         if (!s->simulate)
             if (!push_block(s, ANONYMOUS))

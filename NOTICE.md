@@ -9,6 +9,7 @@ the notices in `licenses/`.
 | [tree-sitter](https://github.com/tree-sitter/tree-sitter) 0.27.0 | MIT, 2018 Max Brunsfeld | C runtime in `vendor/tree-sitter/` |
 | [cmark](https://github.com/commonmark/cmark) 0.31.2 | BSD-2-Clause, 2014 John MacFarlane; bundled MIT components | Inline parser and dependencies in `vendor/cmark/` |
 | [cmark-gfm](https://github.com/github/cmark-gfm) `499789b49373bfa045d0e7547e5ee63444c77bca` | BSD-2-Clause; bundled MIT components | Strikethrough in the inline delimiter pass; autolink literals in `src/autolink.c` |
+| [markdown-cjk-friendly](https://github.com/tats-u/markdown-cjk-friendly) extensions 2.0.1, util 3.0.1; [get-east-asian-width](https://github.com/sindresorhus/get-east-asian-width) 1.7.0 | MIT | CJK delimiter flanking and Unicode 17.0 category tables in the inline resolver |
 | [wasi-libc](https://github.com/WebAssembly/wasi-libc) `2e6fb9d8ee0cdf9e431fbcabe8af3115de000a13` | MIT option; musl MIT; cloudlibc BSD-2-Clause; dlmalloc CC0 | C library and allocator from WASI SDK 34 |
 
 The cmark notices include its Houdini, buffer and utf8proc licenses. The SDK's libc notices are

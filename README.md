@@ -29,6 +29,21 @@ const fences = doc.injections(from, to) // [contentStart, contentEnd, langStart,
 doc.dispose()
 ```
 
+For renderers, `doc.semantics()` returns a complete owned tree with decoded text,
+resolved links and titles, nested blocks and inlines, ordered list starts and
+spacing metadata, task states, table rows/cells and every column's alignment.
+Each node has a `range: { start, end }` in original UTF-16 source units. Code
+values exclude the final renderer newline. The snapshot includes `revision`,
+`profile` and explicit enabled `capabilities`; `setText` and `edit` advance the
+revision. Snapshots remain valid after edits, WASM memory growth and disposal.
+Semantic extraction materializes the complete document; viewport decoration
+costs do not measure this operation.
+
+`new MarkdownDocument({ gfm: true, cjk: true, math: true })` enables the chat
+profile's CJK delimiter rules and double-dollar math. GFM enables footnotes.
+Raw HTML remains parser data; consumers own sanitization and safe activation.
+Disposal is idempotent, and subsequent document operations throw `TypeError`.
+
 Kinds are in `Kind` (`js/index.js`). Records come in tree order; inline records of a block follow
 the block. `LinkText` gives the text range of a link or image, so live preview can keep it and
 hide the brackets and destination.
@@ -86,6 +101,12 @@ sh scripts/check-native.sh  # native clang, ASan + UBSan, incremental edits, lea
 sh scripts/check-cursor.sh  # cursor byte/point seeks against sequential traversal, ASan + UBSan
 node bench/cursor-seek.mjs --check  # blank-line viewport cost across a heading-less 1 MB document
 ```
+
+The semantic suite compares complete rendered output with every official
+CommonMark/GFM example and tests decoded payloads, incremental results, source
+mapping and lifetime. Sixteen GFM spec/profile differences have individual
+source and output hashes in `tests/semantic-gfm-differences.json`; changed
+receipts fail the suite. Install `bench` dependencies before running `npm test`.
 
 The resolver imports only tree-sitter's C API and libc functions the tree-sitter-x runtime
 exports; `tests/resolver.mjs` checks this.
