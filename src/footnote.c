@@ -1,171 +1,230 @@
 #include "footnote.h"
-
 #include "utf8.h"
 
-#include <ctype.h>
+Document *tsmd_new(uint32_t, const TSLanguage *);
+void tsmd_free(Document *);
+uint16_t *tsmd_input(Document *, uint32_t);
+void tsmd_set_text(Document *);
+void tsmd_edit(Document *, uint32_t, uint32_t);
 
-static void clear(Footnotes *footnotes) {
-  for (uint32_t i = 0; i < footnotes->count; i++) free(footnotes->items[i].identifier);
-  footnotes->count = 0;
+typedef struct { uint32_t limit, quotes, indentation; } Container;
+
+static bool horizontal(uint16_t c) { return c == ' ' || c == '\t'; }
+static uint32_t line_end(Document *d, uint32_t at, uint32_t limit) {
+  while (at < limit && d->text[at] != '\n') at++;
+  return at;
 }
-
-static bool is_space(uint16_t value) {
-  return value == ' ' || value == '\t' || value == '\r' || value == '\n';
+static uint32_t line_start(Document *d, uint32_t at) {
+  while (at && d->text[at - 1] != '\n') at--;
+  return at;
 }
-
-static bool duplicate(const Footnotes *footnotes, const char *identifier, uint32_t length) {
-  for (uint32_t i = 0; i < footnotes->count; i++) {
-    const Footnote *item = &footnotes->items[i];
-    if (item->identifier_len == length && !memcmp(item->identifier, identifier, length)) return true;
+static uint32_t trim_end(Document *d, uint32_t at, uint32_t from) {
+  while (at > from && ws(d->text[at - 1])) at--;
+  return at;
+}
+static void clear(Footnotes *notes) {
+  for (uint32_t i = 0; i < notes->count; i++) {
+    Footnote *note = &notes->items[i];
+    free(note->identifier);
+    free(note->starts.v); free(note->ends.v);
+    tsmd_free(note->body);
+  }
+  notes->count = 0;
+}
+static char *normalize(const unsigned char *label, uint32_t length, uint32_t *size) {
+  cmark_strbuf buffer = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
+  cmark_utf8proc_case_fold(&buffer, label, length);
+  cmark_strbuf_trim(&buffer); cmark_strbuf_normalize_whitespace(&buffer);
+  if (!buffer.size) { cmark_strbuf_free(&buffer); return NULL; }
+  *size = buffer.size;
+  return (char *)cmark_strbuf_detach(&buffer);
+}
+static char *identifier(Document *d, uint32_t a, uint32_t b, uint32_t *size) {
+  cmark_strbuf utf8 = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
+  while (a < b) {
+    uint32_t c = d->text[a++];
+    if (c >= 0xd800 && c < 0xdc00 && a < b && d->text[a] >= 0xdc00 && d->text[a] < 0xe000)
+      c = 0x10000 + ((c - 0xd800) << 10) + (d->text[a++] - 0xdc00);
+    if (c >= 0xd800 && c < 0xe000) c = 0xfffd;
+    cmark_utf8proc_encode_char(c ? c : 0xfffd, &utf8);
+  }
+  char *result = normalize(utf8.ptr, utf8.size, size);
+  cmark_strbuf_free(&utf8); return result;
+}
+static bool header(Document *d, uint32_t a, uint32_t b, uint32_t *label_end, uint32_t *body) {
+  if (a + 4 > b || d->text[a] != '[' || d->text[a + 1] != '^') return false;
+  uint32_t at = a + 2;
+  while (at < b && d->text[at] != ']') {
+    if (ws(d->text[at]) || d->text[at] == '[') return false;
+    if (d->text[at] == '\\' && at + 1 < b) at++;
+    at++;
+  }
+  if (at == a + 2 || at + 1 >= b || d->text[at + 1] != ':') return false;
+  *label_end = at; at += 2;
+  while (at < b && horizontal(d->text[at])) at++;
+  *body = at; return true;
+}
+static uint32_t indentation(Document *d, uint32_t *at, uint32_t b, uint32_t wanted) {
+  uint32_t columns = 0;
+  while (*at < b && horizontal(d->text[*at]) && columns < wanted)
+    columns += d->text[(*at)++] == '\t' ? 4 - columns % 4 : 1;
+  return columns;
+}
+static bool strip_container(Document *d, uint32_t *at, uint32_t b, Container container) {
+  for (uint32_t i = 0; i < container.quotes; i++) {
+    indentation(d, at, b, 3);
+    if (*at == b || d->text[*at] != '>') return false;
+    (*at)++;
+    if (*at < b && horizontal(d->text[*at])) (*at)++;
+  }
+  return indentation(d, at, b, container.indentation) >= container.indentation;
+}
+static bool final_paragraph(Document *d) {
+  TSNode node = ts_tree_root_node(d->tree);
+  while (ts_node_named_child_count(node))
+    node = ts_node_named_child(node, ts_node_named_child_count(node) - 1);
+  bool paragraph = false;
+  while (!ts_node_is_null(node)) {
+    if (is(node, d->ids.paragraph)) paragraph = true;
+    if (is(node, d->ids.atx_heading) || is(node, d->ids.setext_heading) ||
+        is(node, d->ids.fenced_code_block) || is(node, d->ids.indented_code_block) ||
+        is(node, d->ids.html_block)) return false;
+    node = ts_node_parent(node);
+  }
+  return paragraph;
+}
+static bool paragraph_line(Document *d, uint32_t at) {
+  TSNode node = ts_node_descendant_for_byte_range(ts_tree_root_node(d->tree), at * 2, at * 2);
+  while (!ts_node_is_null(node)) {
+    if (is(node, d->ids.paragraph)) return true;
+    if (is(node, d->ids.atx_heading) || is(node, d->ids.setext_heading) ||
+        is(node, d->ids.fenced_code_block) || is(node, d->ids.indented_code_block) ||
+        is(node, d->ids.reference_definition) || is(node, d->ids.list_item) ||
+        is(node, d->ids.html_block) || is(node, d->ids.thematic_break)) return false;
+    node = ts_node_parent(node);
   }
   return false;
 }
-
-static char *normalize(const unsigned char *label, uint32_t length, uint32_t *normalized_length) {
-  char *result = malloc(length + 1);
-  if (!result) abort();
-  uint32_t out = 0;
-  bool pending_space = false;
-  for (uint32_t i = 0; i < length; i++) {
-    unsigned char value = label[i];
-    if (value == ' ' || value == '\t' || value == '\r' || value == '\n') {
-      pending_space = out > 0;
-      continue;
-    }
-    if (pending_space) result[out++] = ' ', pending_space = false;
-    result[out++] = (char)tolower(value);
+static void append(Document *source, Footnote *note, uint32_t a, uint32_t b, uint32_t padding) {
+  uint32_t count = b - a + padding;
+  uint16_t *input = tsmd_input(note->body, count);
+  for (uint32_t i = 0; i < padding; i++) {
+    input[i] = ' '; word(&note->starts, a ? a - 1 : a); word(&note->ends, a);
   }
-  while (out && result[out - 1] == ' ') out--;
-  result[out] = 0;
-  if (!out) {
-    free(result);
-    return NULL;
+  for (uint32_t i = 0; i < b - a; i++) {
+    input[padding + i] = source->text[a + i];
+    word(&note->starts, a + i); word(&note->ends, a + i + 1);
   }
-  *normalized_length = out;
-  return result;
+  tsmd_edit(note->body, note->body->len, note->body->len);
 }
-
-static bool definition_header(Document *document, uint32_t start, uint32_t end, uint32_t *label_start,
-                              uint32_t *label_end, uint32_t *body_start) {
-  uint32_t at = start;
-  while (at < end && is_space(document->text[at]) && document->text[at] != '\n') at++;
-  if (at + 4 >= end || document->text[at++] != '[' || document->text[at++] != '^') return false;
-  uint32_t label = at;
-  while (at < end && document->text[at] != ']') {
-    if (document->text[at] == '\n' || document->text[at] == '\r' || document->text[at] == '[')
-      return false;
-    at++;
+static void build_body(Document *d, Footnote *note, Container container) {
+  note->body = tsmd_new(d->gfm ? 1 : 0, ts_parser_language(d->parser));
+  note->body->cjk = d->cjk; note->body->math = d->math;
+  tsmd_input(note->body, 0); tsmd_set_text(note->body);
+  uint32_t stop = line_end(d, note->body_start, container.limit);
+  uint32_t cursor = stop < container.limit ? stop + 1 : stop;
+  append(d, note, note->body_start, cursor, 0);
+  note->end = trim_end(d, stop, note->start);
+  note->consumed_end = cursor;
+  bool blank = stop == note->body_start;
+  while (cursor < container.limit) {
+    uint32_t a = cursor, b = line_end(d, cursor, container.limit);
+    uint32_t next = b < container.limit ? b + 1 : b;
+    if (!strip_container(d, &a, b, container)) break;
+    uint32_t columns = indentation(d, &a, b, 4);
+    bool empty = trim_end(d, b, a) == a;
+    if (!empty && columns < 4 && (blank || !final_paragraph(note->body) || !paragraph_line(d, a))) break;
+    append(d, note, a, next, columns > 4 ? columns - 4 : 0);
+    if (!empty) note->end = trim_end(d, b, a);
+    note->consumed_end = next; blank = empty; cursor = next;
   }
-  if (at == label || at >= end || document->text[at++] != ']') return false;
-  if (at >= end || document->text[at++] != ':') return false;
-  *label_start = label;
-  *label_end = at - 2;
-  while (at < end && (document->text[at] == ' ' || document->text[at] == '\t')) at++;
-  *body_start = at;
-  return true;
+  note->body_end = note->end;
+  word(&note->starts, note->end);
 }
-
-/* A definition's continuation may be a lazy paragraph or an indented block.
- * Stop at the first blank line whose next line is a new, unindented block. */
-static uint32_t extend_body_end(Document *document, uint32_t from) {
-  uint32_t cursor = from;
-  uint32_t last = from;
-  while (cursor < document->len) {
-    uint32_t line = cursor;
-    while (cursor < document->len && document->text[cursor] != '\n') cursor++;
-    uint32_t end = cursor;
-    while (end > line && (document->text[end - 1] == '\r' || document->text[end - 1] == ' ' ||
-                          document->text[end - 1] == '\t'))
-      end--;
-    bool blank = end == line;
-    uint32_t next = cursor < document->len ? cursor + 1 : cursor;
-    if (blank) {
-      uint32_t probe = next;
-      while (probe < document->len && (document->text[probe] == ' ' || document->text[probe] == '\t')) probe++;
-      if (probe >= document->len || probe == next) break;
-    }
-    last = end;
-    if (cursor == document->len) break;
-    cursor = next;
+static bool contained(const Footnotes *notes, uint32_t at) {
+  for (uint32_t i = 0; i < notes->count; i++) {
+    const Footnote *note = &notes->items[i];
+    if (at >= note->start && at < note->consumed_end) return true;
   }
-  return last;
+  return false;
 }
-
-static void add_definition(Footnotes *footnotes, TSNode node) {
-  Document *document = footnotes->document;
-  uint32_t from = ts_node_start_byte(node) / 2, to = ts_node_end_byte(node) / 2;
-  uint32_t label_start, label_end, body_start;
-  if (!definition_header(document, from, to, &label_start, &label_end, &body_start)) return;
-  uint32_t label_length = 0;
-  char *identifier = normalize((unsigned char *)(document->text + label_start), label_end - label_start,
-                               &label_length);
-  if (!identifier || duplicate(footnotes, identifier, label_length)) {
-    free(identifier);
-    return;
+static void add(Footnotes *notes, uint32_t a, uint32_t origin, Container container) {
+  Document *d = notes->document;
+  if (contained(notes, a)) return;
+  uint32_t label_end, content;
+  if (!header(d, a, line_end(d, a, container.limit), &label_end, &content)) return;
+  uint32_t logical = line_start(d, a);
+  if (line_start(d, origin) == logical) logical = origin;
+  else if (!strip_container(d, &logical, a, container)) return;
+  if (indentation(d, &logical, a, 4) >= 4 || logical != a) return;
+  Footnote note = {.start = a, .body_start = content};
+  note.identifier = identifier(d, a + 2, label_end, &note.identifier_len);
+  if (!note.identifier) return;
+  build_body(d, &note, container);
+  reserve((void **)&notes->items, &notes->capacity, notes->count + 1, sizeof(Footnote));
+  notes->items[notes->count++] = note;
+}
+static void scan_leaf(Footnotes *notes, TSNode node, Container container) {
+  Document *d = notes->document;
+  leaf_build(d, node, PARAGRAPH);
+  Leaf *l = &d->leaf;
+  bool beginning = true;
+  for (uint32_t i = 0; i < l->n; i++) {
+    if (beginning && l->text[i] == '[') add(notes, l->starts.v[i], start(node), container);
+    beginning = l->text[i] == '\n';
   }
-  uint32_t body_end = extend_body_end(document, to);
-  reserve((void **)&footnotes->items, &footnotes->capacity, footnotes->count + 1, sizeof(Footnote));
-  footnotes->items[footnotes->count++] = (Footnote){
-      .start = from,
-      .end = to,
-      .body_start = body_start,
-      .body_end = body_end,
-      .identifier = identifier,
-      .identifier_len = label_length,
-  };
 }
-
-static void walk(Footnotes *footnotes, TSNode node) {
-  Document *document = footnotes->document;
-  if (is(node, document->ids.reference_definition)) add_definition(footnotes, node);
+static void walk(Footnotes *notes, TSNode node, Container container) {
+  Document *d = notes->document;
+  if (is(node, d->ids.fenced_code_block) || is(node, d->ids.indented_code_block) || is(node, d->ids.html_block)) return;
+  if (is(node, d->ids.block_quote)) { container.quotes++; container.limit = end(node); }
+  if (is(node, d->ids.list_item)) {
+    TSNode marker = ts_node_named_child(node, 0);
+    container.indentation += end(marker) - start(marker); container.limit = end(node);
+  }
+  if (is(node, d->ids.reference_definition) || is(node, d->ids.paragraph)) {
+    scan_leaf(notes, node, container); return;
+  }
   for (uint32_t i = 0; i < ts_node_named_child_count(node); i++)
-    walk(footnotes, ts_node_named_child(node, i));
+    walk(notes, ts_node_named_child(node, i), container);
 }
-
 Footnotes *footnotes_new(Document *document) {
-  Footnotes *footnotes = calloc(1, sizeof(*footnotes));
-  if (!footnotes) abort();
-  footnotes->document = document;
-  return footnotes;
+  Footnotes *notes = calloc(1, sizeof(*notes));
+  if (!notes) abort();
+  notes->document = document; return notes;
 }
-
-void footnotes_free(Footnotes *footnotes) {
-  if (!footnotes) return;
-  clear(footnotes);
-  free(footnotes->items);
-  free(footnotes);
+void footnotes_free(Footnotes *notes) {
+  if (!notes) return;
+  clear(notes); free(notes->items); free(notes);
 }
-
-void footnotes_scan(Footnotes *footnotes) {
-  clear(footnotes);
-  if (!footnotes->document->tree) return;
-  walk(footnotes, ts_tree_root_node(footnotes->document->tree));
+void footnotes_scan(Footnotes *notes) {
+  clear(notes);
+  if (!notes->document->gfm || !notes->document->tree) return;
+  walk(notes, ts_tree_root_node(notes->document->tree), (Container){.limit = notes->document->len});
 }
-
-const Footnote *footnotes_at(const Footnotes *footnotes, uint32_t index) {
-  return index < footnotes->count ? &footnotes->items[index] : NULL;
+const Footnote *footnotes_at(const Footnotes *notes, uint32_t index) {
+  return index < notes->count ? &notes->items[index] : NULL;
 }
-
-const Footnote *footnotes_lookup(const Footnotes *footnotes, const unsigned char *label, uint32_t length) {
-  uint32_t normalized_length = 0;
-  char *normalized = normalize(label, length, &normalized_length);
-  if (!normalized) return NULL;
+const Footnote *footnotes_start(const Footnotes *notes, uint32_t position) {
+  for (uint32_t i = 0; i < notes->count; i++) if (notes->items[i].start == position) return &notes->items[i];
+  return NULL;
+}
+const Footnote *footnotes_lookup(const Footnotes *notes, const unsigned char *label, uint32_t length) {
+  uint32_t size = 0;
+  char *value = normalize(label, length, &size);
+  if (!value) return NULL;
   const Footnote *result = NULL;
-  for (uint32_t i = 0; i < footnotes->count; i++) {
-    const Footnote *item = &footnotes->items[i];
-    if (item->identifier_len == normalized_length && !memcmp(item->identifier, normalized, normalized_length)) {
-      result = item;
-      break;
-    }
+  for (uint32_t i = 0; i < notes->count; i++) {
+    const Footnote *note = &notes->items[i];
+    if (note->identifier_len != size || memcmp(note->identifier, value, size)) continue;
+    result = note; break;
   }
-  free(normalized);
-  return result;
+  free(value); return result;
 }
-
-bool footnotes_contains(const Footnotes *footnotes, uint32_t start, uint32_t end) {
-  for (uint32_t i = 0; i < footnotes->count; i++) {
-    const Footnote *item = &footnotes->items[i];
-    if (item->start <= start && item->end >= end) return true;
+bool footnotes_contains(const Footnotes *notes, uint32_t a, uint32_t b) {
+  for (uint32_t i = 0; i < notes->count; i++) {
+    const Footnote *note = &notes->items[i];
+    if (note->start <= a && note->consumed_end >= b) return true;
   }
   return false;
 }
