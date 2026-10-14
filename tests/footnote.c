@@ -81,6 +81,10 @@ int main(void) {
   footnotes_scan(footnotes);
   assert(footnotes->count == 1);
   assert(footnotes_at(footnotes, 0)->body->len >= strlen("first\nmore\n"));
+  set_text(document, "- > [^a]: first\n  >     more\n  >\n  >     last\n");
+  footnotes_scan(footnotes);
+  assert(footnotes->count == 1);
+  assert(footnotes_at(footnotes, 0)->body->len == strlen("first\nmore\n\nlast\n"));
   set_text(document, "[^a b]: url\n\n```\n[^a]: code\n```\n\n    [^b]: code");
   footnotes_scan(footnotes);
   assert(footnotes->count == 0);

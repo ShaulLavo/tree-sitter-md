@@ -7,7 +7,7 @@ uint16_t *tsmd_input(Document *, uint32_t);
 void tsmd_set_text(Document *);
 void tsmd_edit(Document *, uint32_t, uint32_t);
 
-typedef struct { uint32_t limit, quotes, indentation; } Container;
+typedef struct { uint32_t limit, count, steps[200]; } Container;
 
 static bool horizontal(uint16_t c) { return c == ' ' || c == '\t'; }
 static uint32_t line_end(Document *d, uint32_t at, uint32_t limit) {
@@ -71,13 +71,18 @@ static uint32_t indentation(Document *d, uint32_t *at, uint32_t b, uint32_t want
   return columns;
 }
 static bool strip_container(Document *d, uint32_t *at, uint32_t b, Container container) {
-  for (uint32_t i = 0; i < container.quotes; i++) {
+  for (uint32_t i = 0; i < container.count; i++) {
+    uint32_t indent = container.steps[i];
+    if (indent) {
+      if (indentation(d, at, b, indent) < indent) return false;
+      continue;
+    }
     indentation(d, at, b, 3);
     if (*at == b || d->text[*at] != '>') return false;
     (*at)++;
     if (*at < b && horizontal(d->text[*at])) (*at)++;
   }
-  return indentation(d, at, b, container.indentation) >= container.indentation;
+  return true;
 }
 static bool final_paragraph(Document *d) {
   TSNode node = ts_tree_root_node(d->tree);
@@ -177,10 +182,14 @@ static void scan_leaf(Footnotes *notes, TSNode node, Container container) {
 static void walk(Footnotes *notes, TSNode node, Container container) {
   Document *d = notes->document;
   if (is(node, d->ids.fenced_code_block) || is(node, d->ids.indented_code_block) || is(node, d->ids.html_block)) return;
-  if (is(node, d->ids.block_quote)) { container.quotes++; container.limit = end(node); }
+  if (is(node, d->ids.block_quote)) {
+    if (container.count == 200) return;
+    container.steps[container.count++] = 0; container.limit = end(node);
+  }
   if (is(node, d->ids.list_item)) {
     TSNode marker = ts_node_named_child(node, 0);
-    container.indentation += end(marker) - start(marker); container.limit = end(node);
+    if (container.count == 200) return;
+    container.steps[container.count++] = end(marker) - start(marker); container.limit = end(node);
   }
   if (is(node, d->ids.reference_definition) || is(node, d->ids.paragraph)) {
     scan_leaf(notes, node, container); return;
