@@ -782,7 +782,7 @@ static bool parse_atx_heading(Scanner *s, TSLexer *lexer,
         }
         if (level <= 6 &&
             (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-             lexer->lookahead == '\n' || lexer->lookahead == '\r')) {
+             lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->eof(lexer))) {
             lexer->result_symbol = ATX_H1_MARKER + (level - 1);
             s->indentation = 0;
             mark_end(s, lexer);
@@ -803,7 +803,7 @@ static bool parse_setext_underline(Scanner *s, TSLexer *lexer,
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
             advance(s, lexer);
         }
-        if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+        if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->eof(lexer)) {
             lexer->result_symbol = SETEXT_H1_UNDERLINE;
             mark_end(s, lexer);
             return true;

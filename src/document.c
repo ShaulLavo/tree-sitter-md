@@ -552,8 +552,10 @@ static uint32_t metadata_end(Document *d) {
 }
 static TSTree *parse(Document *d, TSTree *old) {
   d->metadata_end = metadata_end(d);
-  TSRange range = {.start_byte = d->metadata_end * 2, .end_byte = d->len * 2,
-                   .start_point = point(d, d->metadata_end), .end_point = point(d, d->len)};
+  uint32_t parse_start = d->metadata_end;
+  if (!parse_start && d->len && d->text[0] == 0xfeff) parse_start = 1;
+  TSRange range = {.start_byte = parse_start * 2, .end_byte = d->len * 2,
+                   .start_point = point(d, parse_start), .end_point = point(d, d->len)};
   ts_parser_set_included_ranges(d->parser, &range, 1);
   return ts_parser_parse_string_encoding(d->parser, old, (char *)d->text, d->len * 2,
                                          TSInputEncodingUTF16LE);

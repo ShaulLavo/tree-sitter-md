@@ -93,12 +93,12 @@ module.exports = grammar({
 
         thematic_break: $ => seq($._thematic_break, choice($._newline, $._eof)),
 
-        _atx_heading1: $ => prec(1, seq($.atx_h1_marker, optional($._atx_heading_content), $._newline)),
-        _atx_heading2: $ => prec(1, seq($.atx_h2_marker, optional($._atx_heading_content), $._newline)),
-        _atx_heading3: $ => prec(1, seq($.atx_h3_marker, optional($._atx_heading_content), $._newline)),
-        _atx_heading4: $ => prec(1, seq($.atx_h4_marker, optional($._atx_heading_content), $._newline)),
-        _atx_heading5: $ => prec(1, seq($.atx_h5_marker, optional($._atx_heading_content), $._newline)),
-        _atx_heading6: $ => prec(1, seq($.atx_h6_marker, optional($._atx_heading_content), $._newline)),
+        _atx_heading1: $ => prec(1, seq($.atx_h1_marker, optional($._atx_heading_content), choice($._newline, $._eof))),
+        _atx_heading2: $ => prec(1, seq($.atx_h2_marker, optional($._atx_heading_content), choice($._newline, $._eof))),
+        _atx_heading3: $ => prec(1, seq($.atx_h3_marker, optional($._atx_heading_content), choice($._newline, $._eof))),
+        _atx_heading4: $ => prec(1, seq($.atx_h4_marker, optional($._atx_heading_content), choice($._newline, $._eof))),
+        _atx_heading5: $ => prec(1, seq($.atx_h5_marker, optional($._atx_heading_content), choice($._newline, $._eof))),
+        _atx_heading6: $ => prec(1, seq($.atx_h6_marker, optional($._atx_heading_content), choice($._newline, $._eof))),
         _atx_heading_content: $ => field('heading_content', alias($._line, $.inline)),
 
         _setext_heading1: $ => seq(
@@ -118,6 +118,18 @@ module.exports = grammar({
         _indented_chunk: $ => seq($._indented_chunk_start, repeat(choice($._line, $._newline)), $._block_close, optional($.block_continuation)),
 
         fenced_code_block: $ => prec.right(choice(
+            seq(
+                alias($._fenced_code_block_start_backtick, $.fenced_code_block_delimiter),
+                optional($.info_string),
+                $._eof,
+                $._block_close,
+            ),
+            seq(
+                alias($._fenced_code_block_start_tilde, $.fenced_code_block_delimiter),
+                optional($.info_string),
+                $._eof,
+                $._block_close,
+            ),
             seq(
                 alias($._fenced_code_block_start_backtick, $.fenced_code_block_delimiter),
                 optional($.info_string),
@@ -208,6 +220,11 @@ module.exports = grammar({
         _list_item_dot: $ => list_item($, $.list_marker_dot),
         _list_item_parenthesis: $ => list_item($, $.list_marker_parenthesis),
         _list_item_content: $ => choice(
+            seq(
+                choice($.task_list_marker_checked, $.task_list_marker_unchecked),
+                optional($._whitespace),
+                $._eof,
+            ),
             prec(1, seq(
                 $._blank_line,
                 $._blank_line,

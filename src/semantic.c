@@ -321,21 +321,6 @@ static void append_utf16(cmark_strbuf *out, Document *d, uint32_t a, uint32_t b)
     cmark_utf8proc_encode_char(c, out);
   }
 }
-static void continuations(Document *d, TSNode n, Words *ranges) {
-  for (uint32_t i = 0; i < ts_node_named_child_count(n); i++) {
-    TSNode c = ts_node_named_child(n, i);
-    if (is(c, d->ids.block_continuation)) { word(ranges, start(c)); word(ranges, end(c)); continue; }
-    continuations(d, c, ranges);
-  }
-}
-static void source_value(Document *d, TSNode n, uint32_t a, uint32_t b, cmark_strbuf *out) {
-  Words gaps = {0}; continuations(d, n, &gaps);
-  for (uint32_t i = 0; i < gaps.n; i += 2) {
-    if (gaps.v[i] < a || gaps.v[i] >= b) continue;
-    append_utf16(out, d, a, gaps.v[i]); a = gaps.v[i + 1];
-  }
-  append_utf16(out, d, a, b); free(gaps.v);
-}
 static uint32_t column_at(Document *d, uint32_t a) {
   uint32_t line = a, column = 0;
   while (line && d->text[line - 1] != '\n' && d->text[line - 1] != '\r') line--;
@@ -351,14 +336,6 @@ static uint32_t item_indent(Document *d, TSNode item) {
   while (a < b && ws(d->text[a])) { column += d->text[a] == '\t' ? 4 - column % 4 : 1; a++; }
   uint32_t spaces = column - padding;
   return padding - original + (spaces == 0 || spaces > 4 ? 1 : spaces);
-}
-static uint32_t quote_indent(Document *d, TSNode quote) {
-  TSNode marker = ts_node_named_child(quote, 0);
-  uint32_t a = start(marker), b = end(marker), column = column_at(d, a), original = column;
-  while (a < b && d->text[a] != '>') { column += d->text[a] == '\t' ? 4 - column % 4 : 1; a++; }
-  if (a < b) { column++; a++; }
-  if (a < b && (d->text[a] == ' ' || d->text[a] == '\t')) column++;
-  return column - original;
 }
 static void append_line(cmark_strbuf *out, Document *d, uint32_t a, uint32_t b) {
   uint32_t column = column_at(d, a);
@@ -603,10 +580,17 @@ static void item(Semantic *s, TSNode n) {
   put(s, item_spread(d, n) ? ",\"spread\":true" : ",\"spread\":false");
   put(s, ",\"checked\":");
   TSNode checked = find_child(d, n, d->ids.task_checked), unchecked = find_child(d, n, d->ids.task_unchecked);
-  if (d->gfm && !ts_node_is_null(checked)) put(s, "true");
-  else if (d->gfm && !ts_node_is_null(unchecked)) put(s, "false");
+  TSNode paragraph = find_child(d, n, d->ids.paragraph);
+  bool has_content = !ts_node_is_null(paragraph);
+  if (d->gfm && has_content && !ts_node_is_null(checked)) put(s, "true");
+  else if (d->gfm && has_content && !ts_node_is_null(unchecked)) put(s, "false");
   else put(s, "null");
-  put(s, ",\"children\":["); bool first = true; block_children(s, n, &first); put(s, "]}");
+  put(s, ",\"children\":["); bool first = true;
+  TSNode task = ts_node_is_null(checked) ? unchecked : checked;
+  if (!has_content && !ts_node_is_null(task)) {
+    leaf_single(d, start(task), end(task)); paragraph_part(s, &d->leaf, 0, d->leaf.n, &first);
+  }
+  block_children(s, n, &first); put(s, "]}");
 }
 static void list(Semantic *s, TSNode n) {
   Document *d = s->d; TSNode marker = ts_node_named_child(ts_node_named_child(n, 0), 0);
@@ -740,6 +724,11 @@ static void block(Semantic *s, TSNode n, bool *first) {
     return;
   }
   if (!block_kind(d, n)) { block_children(s, n, first); return; }
+  if (id == i->indented_code_block) {
+    bool content = false;
+    for (uint32_t at = start(n); at < end(n); at++) if (!ws(d->text[at])) content = true;
+    if (!content) return;
+  }
   separator(s, first);
   if (id == i->atx_heading || id == i->setext_heading) { heading(s, n, id == i->setext_heading); return; }
   if (id == i->list) { list(s, n); return; }
@@ -747,7 +736,9 @@ static void block(Semantic *s, TSNode n, bool *first) {
   if (id == i->html_block) { html(s, n); return; }
   if (id == i->pipe_table) { if (d->gfm) table(s, n); else plain_table(s, n); return; }
   if (id == i->thematic_break) { begin(s, "thematicBreak", start(n), content_end(d, n)); put(s, "}"); return; }
-  begin(s, "quote", start(n), content_end(d, n)); put(s, ",\"children\":[");
+  uint32_t quote_end = end(n);
+  while (quote_end > start(n) && ws(d->text[quote_end - 1])) quote_end--;
+  begin(s, "quote", start(n), quote_end); put(s, ",\"children\":[");
   bool child_first = true; block_children(s, n, &child_first); put(s, "]}");
 }
 static void block_children(Semantic *s, TSNode n, bool *first) {
