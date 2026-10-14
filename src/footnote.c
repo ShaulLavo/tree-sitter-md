@@ -260,30 +260,44 @@ static bool footnote_label(const Footnotes *notes, const unsigned char *label) {
 cmark_reference_map *footnotes_definitions(const Footnotes *notes) {
   cmark_reference_map *result = cmark_reference_map_new(cmark_get_default_mem_allocator());
   if (!notes || !notes->document->defs) return result;
+  typedef struct { cmark_reference *ref; uint32_t position; } Entry;
   uint32_t count = 0;
   for (cmark_reference *ref = notes->document->defs->refs; ref; ref = ref->next) count++;
-  cmark_reference **refs = calloc(count ? count : 1, sizeof(*refs));
+  uint32_t capacity = count + 32;
+  Entry *entries = calloc(capacity, sizeof(*entries));
   uint32_t used = 0;
   for (cmark_reference *ref = notes->document->defs->refs; ref; ref = ref->next)
-    if (!footnote_label(notes, ref->label)) refs[used++] = ref;
+    if (!footnote_label(notes, ref->label)) entries[used++] = (Entry){ref, ref->age};
+  for (uint32_t i = 0; i < notes->count; i++) {
+    Footnotes *nested = notes->items[i].nested;
+    if (!nested || nested->document == notes->document) continue;
+    for (cmark_reference *ref = nested->document->defs->refs; ref; ref = ref->next)
+      if (!footnote_label(notes, ref->label)) {
+        if (used == capacity) {
+          capacity *= 2;
+          entries = realloc(entries, capacity * sizeof(*entries));
+        }
+        entries[used++] = (Entry){ref, notes->items[i].start + ref->age};
+      }
+  }
   for (uint32_t i = 1; i < used; i++) {
-    cmark_reference *ref = refs[i]; uint32_t j = i;
-    while (j && refs[j - 1]->age > ref->age) refs[j] = refs[j - 1], j--;
-    refs[j] = ref;
+    Entry entry = entries[i]; uint32_t j = i;
+    while (j && entries[j - 1].position > entry.position) entries[j] = entries[j - 1], j--;
+    entries[j] = entry;
   }
   for (uint32_t i = 0; i < used; i++) {
-    cmark_reference *ref = refs[i];
+    cmark_reference *ref = entries[i].ref;
     cmark_reference *copy = result->mem->calloc(1, sizeof(*copy));
     copy->label = result->mem->realloc(NULL, strlen((char *)ref->label) + 1);
-    strcpy((char *)copy->label, (char *)ref->label);
+    memcpy(copy->label, ref->label, strlen((char *)ref->label) + 1);
     if (ref->url) {
       copy->url = result->mem->realloc(NULL, strlen((char *)ref->url) + 1);
-      strcpy((char *)copy->url, (char *)ref->url);
+      memcpy(copy->url, ref->url, strlen((char *)ref->url) + 1);
       copy->size += strlen((char *)copy->url);
     }
     if (ref->title) {
       copy->title = result->mem->realloc(NULL, strlen((char *)ref->title) + 1);
-      strcpy((char *)copy->title, (char *)ref->title);
+      memcpy(copy->title, ref->title, strlen((char *)ref->title) + 1);
       copy->size += strlen((char *)copy->title);
     }
     copy->age = ref->age;
@@ -291,7 +305,7 @@ cmark_reference_map *footnotes_definitions(const Footnotes *notes) {
     result->refs = copy;
     result->size++;
   }
-  free(refs);
+  free(entries);
   return result;
 }
 
