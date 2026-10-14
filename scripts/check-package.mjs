@@ -12,10 +12,13 @@ const run = (command, args, cwd = directory) => execFileSync(command, args, { cw
 const orders = ['host-first', 'markdown-first', 'concurrent']
 let server
 let browser
+const interrupted = () => { cleanup().finally(() => process.exit(130)) }
+process.once('SIGINT', interrupted)
+process.once('SIGTERM', interrupted)
 try {
   const packed = JSON.parse(run('npm', ['pack', '--json', '--pack-destination', directory], root))[0]
   const paths = packed.files.map(file => file.path)
-  for (const path of ['js/index.js', 'js/index.d.ts', 'js/constants.js', 'js/constants.d.ts', 'tree-sitter-md.wasm', 'tree-sitter-markdown.wasm', 'LICENSE', 'NOTICE.md']) assert(paths.includes(path), `Missing packed ${path}`)
+  for (const path of ['js/index.js', 'js/index.d.ts', 'js/constants.js', 'js/constants.d.ts', 'js/semantic.js', 'js/semantic.d.ts', 'tree-sitter-md.wasm', 'tree-sitter-markdown.wasm', 'LICENSE', 'NOTICE.md']) assert(paths.includes(path), `Missing packed ${path}`)
   assert(paths.some(path => path.startsWith('licenses/')), 'Third-party licenses are missing')
   // With sideEffects false, importing only Kind skips index.js and web-tree-sitter; that needs import-free constants.
   assert(!/^import /m.test(readFileSync(join(root, 'js/constants.js'), 'utf8')), 'js/constants.js must not import anything')
@@ -36,8 +39,14 @@ try {
   browser = await chromium.launch({ headless: true })
   for (const order of orders) await checkBrowser(order, address.port)
 } finally {
+  process.off('SIGINT', interrupted)
+  process.off('SIGTERM', interrupted)
+  await cleanup()
+}
+
+async function cleanup() {
   await browser?.close()
-  await new Promise(resolve => server ? server.httpServer.close(resolve) : resolve())
+  await new Promise(resolve => server?.httpServer.listening ? server.httpServer.close(resolve) : resolve())
   rmSync(directory, { recursive: true, force: true })
 }
 

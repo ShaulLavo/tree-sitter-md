@@ -39,7 +39,7 @@ typedef struct {
   TSParser *parser;
   TSTree *tree;
   Ids ids;
-  bool gfm, frontmatter;
+  bool gfm, frontmatter, cjk, math;
   uint32_t metadata_end;
   Leaf leaf;
   DefSource *sources;
@@ -47,6 +47,8 @@ typedef struct {
   cmark_reference_map *defs;
   Cache **cache;
   uint32_t cache_count, epoch;
+  char *semantic;
+  uint32_t semantic_len;
 } Document;
 enum {
   P = 1,
@@ -85,7 +87,7 @@ void record(Words *v, uint32_t a, uint32_t b, uint32_t kind, uint32_t extra);
 void leaf_build(Document *d, TSNode node, int kind);
 void leaf_single(Document *d, uint32_t a, uint32_t b);
 uint32_t strip_definitions(Leaf *leaf, cmark_reference_map *map, Words *records);
-void inline_resolve(Leaf *leaf, int kind, bool gfm, cmark_reference_map *defs, Words *out,
+void inline_resolve(Leaf *leaf, int kind, bool gfm, bool cjk, bool math, cmark_reference_map *defs, Words *out,
                     Labels *deps);
 void autolinks(Leaf *leaf, uint32_t a, uint32_t b, Words *out);
 void highlights(Document *d);

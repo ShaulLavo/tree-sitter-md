@@ -49,6 +49,11 @@ typedef struct bracket {
   bool bracket_after;
 } bracket;
 
+typedef struct {
+  bufsize_t start;
+  bufsize_t length;
+} math_run;
+
 #define FLAG_SKIP_HTML_CDATA        (1u << 0)
 #define FLAG_SKIP_HTML_DECLARATION  (1u << 1)
 #define FLAG_SKIP_HTML_PI           (1u << 2)
@@ -68,6 +73,10 @@ typedef struct {
   bufsize_t backticks[MAXBACKTICKS + 1];
   bool scanned_for_backticks;
   bool no_link_openers;
+  math_run *math_runs;
+  bufsize_t math_count;
+  bufsize_t math_capacity;
+  bool math_scanned;
 } subject;
 
 static inline bool S_is_line_end_char(char c) {
@@ -212,6 +221,9 @@ static void subject_from_buf(cmark_mem *mem, int line_number, int block_offset, 
   }
   e->scanned_for_backticks = false;
   e->no_link_openers = true;
+  e->math_runs = NULL;
+  e->math_count = e->math_capacity = 0;
+  e->math_scanned = false;
 }
 
 static inline int isbacktick(int c) { return (c == '`'); }
@@ -421,13 +433,188 @@ static cmark_node *handle_backticks(subject *subj, int options) {
   }
 }
 
+static int compare_math_runs(const void *left, const void *right) {
+  const math_run *a = left, *b = right;
+  if (a->length != b->length)
+    return a->length < b->length ? -1 : 1;
+  return a->start < b->start ? -1 : a->start > b->start;
+}
+
+static void index_math_runs(subject *subj) {
+  subj->math_scanned = true;
+  bufsize_t pos = 0;
+  while (pos < subj->input.len) {
+    if (subj->input.data[pos] != '$') {
+      pos++;
+      continue;
+    }
+    bufsize_t start = pos;
+    while (pos < subj->input.len && subj->input.data[pos] == '$')
+      pos++;
+    if (pos - start < 2)
+      continue;
+    if (subj->math_count == subj->math_capacity) {
+      subj->math_capacity = subj->math_capacity ? subj->math_capacity * 2 : 8;
+      subj->math_runs = subj->mem->realloc(subj->math_runs,
+                                         subj->math_capacity * sizeof(math_run));
+    }
+    subj->math_runs[subj->math_count++] = (math_run){start, pos - start};
+  }
+  qsort(subj->math_runs, subj->math_count, sizeof(math_run), compare_math_runs);
+}
+
+static bufsize_t closing_math_run(subject *subj, bufsize_t start, bufsize_t length) {
+  if (!subj->math_scanned)
+    index_math_runs(subj);
+  bufsize_t low = 0, high = subj->math_count;
+  while (low < high) {
+    bufsize_t mid = low + (high - low) / 2;
+    math_run run = subj->math_runs[mid];
+    if (run.length < length || (run.length == length && run.start <= start))
+      low = mid + 1;
+    else
+      high = mid;
+  }
+  if (low == subj->math_count || subj->math_runs[low].length != length)
+    return -1;
+  return subj->math_runs[low].start;
+}
+
+static void trim_math_padding(subject *subj, bufsize_t *start, bufsize_t *end) {
+  if (*end <= *start)
+    return;
+  unsigned char first = subj->input.data[*start], last = subj->input.data[*end - 1];
+  if ((first != ' ' && !S_is_line_end_char(first)) ||
+      (last != ' ' && !S_is_line_end_char(last)))
+    return;
+  bool has_data = false;
+  for (bufsize_t pos = *start; pos < *end; pos++) {
+    unsigned char c = subj->input.data[pos];
+    has_data = has_data || (c != ' ' && !S_is_line_end_char(c));
+  }
+  if (!has_data)
+    return;
+  *start += first == '\r' && subj->input.data[*start + 1] == '\n' ? 2 : 1;
+  *end -= last == '\n' && subj->input.data[*end - 2] == '\r' ? 2 : 1;
+}
+
+static bool escaped_previous_dollar(subject *subj, cmark_node *parent) {
+  cmark_node *previous = parent->last_child;
+  return previous && previous->type == CMARK_NODE_TEXT && previous->len == 1 &&
+         previous->data[0] == '$' && previous->source_end == subj->pos &&
+         previous->source_end - previous->source_start == 2 &&
+         subj->input.data[previous->source_start] == '\\';
+}
+
+static cmark_node *handle_math(subject *subj, cmark_node *parent, int options) {
+  bufsize_t initial = subj->pos;
+  bool previous_dollar = initial > 0 && subj->input.data[initial - 1] == '$' &&
+                         !escaped_previous_dollar(subj, parent);
+  while (peek_char(subj) == '$')
+    advance(subj);
+  bufsize_t length = subj->pos - initial, start = subj->pos;
+  bufsize_t close = length >= 2 && !previous_dollar ?
+                    closing_math_run(subj, initial, length) : -1;
+  if (close < 0)
+    return make_str(subj, initial, start - 1, cmark_chunk_dup(&subj->input, initial, length));
+  bufsize_t end = close;
+  trim_math_padding(subj, &start, &end);
+  cmark_node *node = make_literal(subj, CMARK_NODE_INLINE_MATH, initial, close + length - 1);
+  node->len = end - start;
+  node->data = subj->mem->realloc(NULL, node->len + 1);
+  memcpy(node->data, subj->input.data + start, node->len);
+  node->data[node->len] = 0;
+  subj->pos = close + length;
+  adjust_subj_node_newlines(subj, node, subj->pos - initial, 0, options);
+  return node;
+}
+
+enum {
+  CJK_SPACE = 1, CJK_PUNCTUATION = 2, CJK_CHARACTER = 4096,
+  CJK_IVS = 8192, CJK_VARIATION_SELECTOR = 16384
+};
+static const struct { uint32_t start, end, category; } cjk_categories[] = {
+#include "cjk_categories.inc"
+};
+
+static uint32_t cjk_category(int32_t scalar) {
+  size_t low = 0, high = sizeof(cjk_categories) / sizeof(*cjk_categories);
+  while (low < high) {
+    size_t mid = low + (high - low) / 2;
+    if ((uint32_t)scalar > cjk_categories[mid].end)
+      low = mid + 1;
+    else
+      high = mid;
+  }
+  if (low == sizeof(cjk_categories) / sizeof(*cjk_categories) ||
+      (uint32_t)scalar < cjk_categories[low].start)
+    return 0;
+  return cjk_categories[low].category;
+}
+
+static int32_t previous_scalar(subject *subj, bufsize_t end) {
+  if (end <= 0)
+    return '\n';
+  bufsize_t start = end - 1;
+  while (start > 0 && subj->input.data[start] >> 6 == 2)
+    start--;
+  int32_t scalar = '\n';
+  cmark_utf8proc_iterate(subj->input.data + start, end - start, &scalar);
+  return scalar;
+}
+
+static uint32_t preceding_cjk_category(subject *subj, int32_t scalar, bufsize_t before) {
+  uint32_t category = cjk_category(scalar);
+  if (category != CJK_VARIATION_SELECTOR)
+    return category;
+  int32_t previous = previous_scalar(subj, before);
+  uint32_t primary = cjk_category(previous);
+  if (primary & CJK_SPACE)
+    return category;
+  if (scalar == 0xfe01 && (previous == 0x2018 || previous == 0x2019 ||
+                         previous == 0x201c || previous == 0x201d))
+    return CJK_CHARACTER | CJK_PUNCTUATION;
+  return primary & ~CJK_IVS;
+}
+
+static bool non_cjk_punctuation(uint32_t category) {
+  return (category & (CJK_CHARACTER | CJK_PUNCTUATION)) == CJK_PUNCTUATION;
+}
+
+static bool attention_marker(int32_t scalar, int options) {
+  return scalar == '*' || scalar == '_' || ((options & CMARK_OPT_GFM) && scalar == '~');
+}
+
+static void cjk_delims(subject *subj, unsigned char marker, int32_t before, int32_t after,
+                       bufsize_t before_pos, int options, bool *open, bool *close) {
+  uint32_t raw_before = cjk_category(before);
+  uint32_t primary = preceding_cjk_category(subj, before, before_pos);
+  uint32_t following = cjk_category(after);
+  bool before_punct = non_cjk_punctuation(primary), after_punct = non_cjk_punctuation(following);
+  bool before_space = before_punct || (primary & CJK_SPACE);
+  bool after_space = after_punct || (following & CJK_SPACE);
+  bool before_cjk = primary & (CJK_CHARACTER | CJK_IVS);
+  if (marker == '~') {
+    *open = !after_space || (following == CJK_PUNCTUATION &&
+                            (before_space || (primary & CJK_CHARACTER) || raw_before == CJK_IVS));
+    *close = !before_space || (raw_before == CJK_PUNCTUATION &&
+                              (after_space || (following & CJK_CHARACTER)));
+    return;
+  }
+  bool left = !after_space || (after_punct && (before_space || before_cjk)) ||
+              attention_marker(after, options);
+  bool right = !before_space || (before_punct && (after_space || (following & CJK_CHARACTER))) ||
+               attention_marker(before, options);
+  *open = marker == '*' ? left : left && ((primary & (CJK_SPACE | CJK_PUNCTUATION)) || !right);
+  *close = marker == '*' ? right : right && ((following & (CJK_SPACE | CJK_PUNCTUATION)) || !left);
+}
 
 // Scan ***, **, or * and return number scanned, or 0.
 // Advances position.
 static int scan_delims(subject *subj, unsigned char c, bool *can_open,
-                       bool *can_close) {
+                       bool *can_close, int options) {
   int numdelims = 0;
-  bufsize_t before_char_pos;
+  bufsize_t before_char_pos = 0;
   int32_t after_char = 0;
   int32_t before_char = 0;
   int len;
@@ -462,6 +649,10 @@ static int scan_delims(subject *subj, unsigned char c, bool *can_open,
                                subj->input.len - subj->pos, &after_char);
   if (len == -1) {
     after_char = 10;
+  }
+  if ((options & CMARK_OPT_CJK) && (c == '*' || c == '_' || c == '~')) {
+    cjk_delims(subj, c, before_char, after_char, before_char_pos, options, can_open, can_close);
+    return numdelims;
   }
   left_flanking = numdelims > 0 && !cmark_utf8proc_is_space(after_char) &&
                   (!cmark_utf8proc_is_punctuation_or_symbol(after_char) ||
@@ -565,13 +756,14 @@ static void push_bracket(subject *subj, bool image, cmark_node *inl_text) {
 }
 
 // Assumes the subject has a c at the current position.
-static cmark_node *handle_delim(subject *subj, unsigned char c, bool smart) {
+static cmark_node *handle_delim(subject *subj, unsigned char c, int options) {
   bufsize_t numdelims;
   cmark_node *inl_text;
   bool can_open, can_close;
   cmark_chunk contents;
 
-  numdelims = scan_delims(subj, c, &can_open, &can_close);
+  bool smart = (options & CMARK_OPT_SMART) != 0;
+  numdelims = scan_delims(subj, c, &can_open, &can_close, options);
 
   if (c == '\'' && smart) {
     contents = cmark_chunk_literal(RIGHTSINGLEQUOTE);
@@ -1332,6 +1524,7 @@ static bufsize_t subject_find_special_char(subject *subj, int options) {
   bufsize_t n = subj->pos + 1;
 
   while (n < subj->input.len) {
+    if ((options & CMARK_OPT_MATH) && subj->input.data[n] == '$') return n;
     if ((options & CMARK_OPT_GFM) && subj->input.data[n] == '~') return n;
     if (SPECIAL_CHARS[subj->input.data[n]])
       return n;
@@ -1341,6 +1534,40 @@ static bufsize_t subject_find_special_char(subject *subj, int options) {
   }
 
   return subj->input.len;
+}
+
+static const char *footnote_reference(subject *subj, bufsize_t *closing) {
+  if (!subj->refmap->lookup_footnote || subj->pos + 2 >= subj->input.len ||
+      subj->input.data[subj->pos + 1] != '^')
+    return NULL;
+  bufsize_t start = subj->pos + 2, end = start;
+  while (end < subj->input.len && end - start <= MAX_LINK_LABEL_LENGTH) {
+    unsigned char c = subj->input.data[end];
+    if (c == ']')
+      break;
+    if (c == '[')
+      return NULL;
+    end += c == '\\' && end + 1 < subj->input.len && cmark_ispunct(subj->input.data[end + 1]) ? 2 : 1;
+  }
+  if (end >= subj->input.len || end == start || end - start > MAX_LINK_LABEL_LENGTH)
+    return NULL;
+  const char *identifier = subj->refmap->lookup_footnote(subj->refmap->footnote_context,
+                              subj->input.data + start, end - start);
+  *closing = end;
+  return identifier;
+}
+
+static cmark_node *handle_footnote_reference(subject *subj) {
+  bufsize_t end = 0;
+  const char *identifier = footnote_reference(subj, &end);
+  if (!identifier)
+    return NULL;
+  cmark_node *node = make_literal(subj, CMARK_NODE_FOOTNOTE_REFERENCE, subj->pos, end);
+  node->len = strlen(identifier);
+  node->data = subj->mem->realloc(NULL, node->len + 1);
+  memcpy(node->data, identifier, node->len + 1);
+  subj->pos = end + 1;
+  return node;
 }
 
 // Parse an inline, advancing subject, and add it as a child of parent.
@@ -1356,6 +1583,11 @@ static int parse_inline(subject *subj, cmark_node *parent, int options) {
     return 0;
   }
   switch (c) {
+  case '$':
+    if (!(options & CMARK_OPT_MATH))
+      goto text_run;
+    new_inl = handle_math(subj, parent, options);
+    break;
   case '\r':
   case '\n':
     new_inl = handle_newline(subj);
@@ -1382,7 +1614,7 @@ static int parse_inline(subject *subj, cmark_node *parent, int options) {
   case '_':
   case '\'':
   case '"':
-    new_inl = handle_delim(subj, c, (options & CMARK_OPT_SMART) != 0);
+    new_inl = handle_delim(subj, c, options);
     break;
   case '-':
     new_inl = handle_hyphen(subj, (options & CMARK_OPT_SMART) != 0);
@@ -1391,6 +1623,10 @@ static int parse_inline(subject *subj, cmark_node *parent, int options) {
     new_inl = handle_period(subj, (options & CMARK_OPT_SMART) != 0);
     break;
   case '[':
+    if (options & CMARK_OPT_FOOTNOTES)
+      new_inl = handle_footnote_reference(subj);
+    if (new_inl)
+      break;
     advance(subj);
     new_inl = make_str(subj, subj->pos - 1, subj->pos - 1, cmark_chunk_literal("["));
     push_bracket(subj, false, new_inl);
@@ -1400,6 +1636,11 @@ static int parse_inline(subject *subj, cmark_node *parent, int options) {
     break;
   case '!':
     advance(subj);
+    if (peek_char(subj) == '[' && (options & CMARK_OPT_FOOTNOTES) &&
+        footnote_reference(subj, &endpos)) {
+      new_inl = make_str(subj, subj->pos - 1, subj->pos - 1, cmark_chunk_literal("!"));
+      break;
+    }
     if (peek_char(subj) == '[') {
       advance(subj);
       new_inl = make_str(subj, subj->pos - 2, subj->pos - 1, cmark_chunk_literal("!["));
@@ -1409,6 +1650,7 @@ static int parse_inline(subject *subj, cmark_node *parent, int options) {
     }
     break;
   default:
+  text_run:
     endpos = subject_find_special_char(subj, options);
     contents = cmark_chunk_dup(&subj->input, subj->pos, endpos - subj->pos);
     startpos = subj->pos;
@@ -1465,6 +1707,7 @@ void cmark_parse_inlines(cmark_mem *mem, cmark_node *parent,
   while (subj.last_bracket) {
     pop_bracket(&subj);
   }
+  mem->free(subj.math_runs);
 }
 
 // Parse zero or more space characters, including at most one newline.

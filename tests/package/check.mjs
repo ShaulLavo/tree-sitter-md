@@ -11,6 +11,7 @@ function snapshot(document, length) {
     highlights: [...document.highlights(0, length)],
     folds: [...document.folds()],
     injections: [...document.injections()],
+    semantics: document.semantics(),
   }
 }
 
@@ -32,6 +33,9 @@ export async function check(order, options = {}, hostOptions = {}) {
   await init(options)
   equal(snapshot(sibling, source.length), before, 'Repeated init changed a live document')
   const kinds = before.decorations.filter((_, index) => index % 4 === 2)
+  const paragraph = before.semantics.root.children[1]
+  equal(paragraph.children[0].children[0].value, 'strong', 'Semantic inline values were not decoded')
+  equal(paragraph.children[2].url, '/target', 'Semantic destination was not resolved')
   if (!kinds.includes(Kind.Strong) || !kinds.includes(Kind.Link)) throw new Error('Inline resolver did not run')
   first.edit(source.indexOf('strong'), source.indexOf('strong') + 6, 'changed')
   equal(snapshot(sibling, source.length), before, 'Sibling document changed after edit')
@@ -45,6 +49,7 @@ export async function check(order, options = {}, hostOptions = {}) {
   tree.delete()
   parser.delete()
   sibling.dispose()
+  equal(before.semantics.root.children[0].children[0].value, 'Title', 'Owned semantic values changed after disposal')
   return { order, records: before.decorations.length / 4 }
 }
 

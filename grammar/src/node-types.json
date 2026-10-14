@@ -362,6 +362,14 @@
         {
           "type": "inline",
           "named": true
+        },
+        {
+          "type": "task_list_marker_checked",
+          "named": true
+        },
+        {
+          "type": "task_list_marker_unchecked",
+          "named": true
         }
       ]
     }

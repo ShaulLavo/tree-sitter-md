@@ -26,6 +26,11 @@ Autolink matching uses the extension's host, domain, punctuation and email rules
 unclaimed text. HTTP and HTTPS are enabled; FTP stays literal, matching micromark's GFM behavior.
 Email candidates preceded by `/` stay literal, matching the existing corpus contract.
 
+Optional CJK flanking follows markdown-cjk-friendly 2.0.1 and its util 3.0.1,
+with get-east-asian-width 1.7.0 and Unicode 17.0 category tables. Double-dollar
+inline math and callback-resolved footnote references retain their source spans
+and literal data. Their host display and safe rendering remain consumer policy.
+
 The backtick search retains the furthest observed closer for each run length. Without this,
 an unsuccessful long-run search followed by a successful shorter span can overwrite the cached
 last closer and make a later valid span disappear. `tests/resolver.mjs` covers this case.

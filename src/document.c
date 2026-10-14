@@ -97,7 +97,7 @@ static uint32_t table_cells(Document *d, Words *cells, bool delimiter, Words *ou
     uint32_t a = cells->v[j], b = cells->v[j + 1];
     if (!delimiter) {
       leaf_single(d, a, b);
-      inline_resolve(&d->leaf, ATX, d->gfm, d->defs, out, deps);
+      inline_resolve(&d->leaf, ATX, d->gfm, d->cjk, d->math, d->defs, out, deps);
       continue;
     }
     bool left = d->text[a] == ':', right = b > a && d->text[b - 1] == ':';
@@ -148,7 +148,7 @@ static void resolve_leaf(Document *d, TSNode node, int kind) {
       table(d, node, &e->items, &e->deps);
     else {
       leaf_build(d, node, kind);
-      inline_resolve(&d->leaf, kind, d->gfm, d->defs, &e->items, &e->deps);
+      inline_resolve(&d->leaf, kind, d->gfm, d->cjk, d->math, d->defs, &e->items, &e->deps);
     }
     for (uint32_t i = 0; i < e->items.n; i += 4) {
       e->items.v[i] -= base;
@@ -552,8 +552,10 @@ static uint32_t metadata_end(Document *d) {
 }
 static TSTree *parse(Document *d, TSTree *old) {
   d->metadata_end = metadata_end(d);
-  TSRange range = {.start_byte = d->metadata_end * 2, .end_byte = d->len * 2,
-                   .start_point = point(d, d->metadata_end), .end_point = point(d, d->len)};
+  uint32_t parse_start = d->metadata_end;
+  if (!parse_start && d->len && d->text[0] == 0xfeff) parse_start = 1;
+  TSRange range = {.start_byte = parse_start * 2, .end_byte = d->len * 2,
+                   .start_point = point(d, parse_start), .end_point = point(d, d->len)};
   ts_parser_set_included_ranges(d->parser, &range, 1);
   return ts_parser_parse_string_encoding(d->parser, old, (char *)d->text, d->len * 2,
                                          TSInputEncodingUTF16LE);
@@ -566,6 +568,8 @@ Document *tsmd_new(uint32_t gfm, const TSLanguage *language) {
   d->ids = make_ids(language);
   d->gfm = (gfm & 1) != 0;
   d->frontmatter = (gfm & 2) != 0;
+  d->cjk = (gfm & 4) != 0;
+  d->math = (gfm & 8) != 0;
   d->cache = calloc(CACHE_BUCKETS, sizeof(Cache *));
   d->defs = cmark_reference_map_new(cmark_get_default_mem_allocator());
   word(&d->lines, 0);
@@ -589,6 +593,7 @@ void tsmd_free(Document *d) {
   free(d->leaf.text);
   free(d->leaf.starts.v);
   free(d->leaf.ends.v);
+  free(d->semantic);
   free(d);
 }
 uint16_t *tsmd_input(Document *d, uint32_t n) {
@@ -607,7 +612,8 @@ void tsmd_set_text(Document *d) {
   d->lines.n = 0;
   word(&d->lines, 0);
   for (uint32_t i = 0; i < d->len; i++)
-    if (d->text[i] == '\n')
+    if (!d->text[i]) d->text[i] = 0xfffd;
+    else if (d->text[i] == '\n')
       word(&d->lines, i + 1);
   clear_sources(d);
   clear_cache(d);
@@ -634,6 +640,7 @@ void tsmd_edit(Document *d, uint32_t a, uint32_t b) {
   reserve((void **)&d->text, &d->cap, d->len + delta + 1, sizeof(uint16_t));
   memmove(d->text + e, d->text + b, (d->len - b) * sizeof(uint16_t));
   memcpy(d->text + a, d->input, d->input_len * sizeof(uint16_t));
+  for (uint32_t i = a; i < e; i++) if (!d->text[i]) d->text[i] = 0xfffd;
   d->len += delta;
   uint32_t la = upper(&d->lines, a), lb = upper(&d->lines, b), fresh = 0;
   for (uint32_t i = 0; i < d->input_len; i++)
