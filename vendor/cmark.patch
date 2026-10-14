@@ -258,10 +258,10 @@
 @@ -1319,0 +1527,2 @@
 +    if ((options & CMARK_OPT_MATH) && subj->input.data[n] == '$') return n;
 +    if ((options & CMARK_OPT_GFM) && subj->input.data[n] == '~') return n;
-@@ -1327,0 +1537,27 @@
+@@ -1327,0 +1537,34 @@
 +}
 +
-+static cmark_node *handle_footnote_reference(subject *subj) {
++static const char *footnote_reference(subject *subj, bufsize_t *closing) {
 +  if (!subj->refmap->lookup_footnote || subj->pos + 2 >= subj->input.len ||
 +      subj->input.data[subj->pos + 1] != '^')
 +    return NULL;
@@ -278,6 +278,13 @@
 +    return NULL;
 +  const char *identifier = subj->refmap->lookup_footnote(subj->refmap->footnote_context,
 +                              subj->input.data + start, end - start);
++  *closing = end;
++  return identifier;
++}
++
++static cmark_node *handle_footnote_reference(subject *subj) {
++  bufsize_t end = 0;
++  const char *identifier = footnote_reference(subj, &end);
 +  if (!identifier)
 +    return NULL;
 +  cmark_node *node = make_literal(subj, CMARK_NODE_FOOTNOTE_REFERENCE, subj->pos, end);
@@ -286,32 +293,38 @@
 +  memcpy(node->data, identifier, node->len + 1);
 +  subj->pos = end + 1;
 +  return node;
-@@ -1336,0 +1573 @@
+@@ -1336,0 +1580 @@
 +  bufsize_t source_start = subj->pos;
-@@ -1341,0 +1579,5 @@
+@@ -1341,0 +1586,5 @@
 +  case '$':
 +    if (!(options & CMARK_OPT_MATH))
 +      goto text_run;
 +    new_inl = handle_math(subj, parent, options);
 +    break;
-@@ -1357,0 +1600,6 @@
+@@ -1357,0 +1607,6 @@
 +  case '~':
 +    if (!(options & CMARK_OPT_GFM)) {
 +      advance(subj);
 +      new_inl = make_str(subj, source_start, source_start, cmark_chunk_literal("~"));
 +      break;
 +    }
-@@ -1362 +1610 @@
+@@ -1362 +1617 @@
 -    new_inl = handle_delim(subj, c, (options & CMARK_OPT_SMART) != 0);
 +    new_inl = handle_delim(subj, c, options);
-@@ -1370,0 +1619,4 @@
+@@ -1370,0 +1626,4 @@
 +    if (options & CMARK_OPT_FOOTNOTES)
 +      new_inl = handle_footnote_reference(subj);
 +    if (new_inl)
 +      break;
-@@ -1388,0 +1641 @@
+@@ -1379,0 +1639,5 @@
++    if (peek_char(subj) == '[' && (options & CMARK_OPT_FOOTNOTES) &&
++        footnote_reference(subj, &endpos)) {
++      new_inl = make_str(subj, subj->pos - 1, subj->pos - 1, cmark_chunk_literal("!"));
++      break;
++    }
+@@ -1388,0 +1653 @@
 +  text_run:
-@@ -1401,0 +1655,16 @@
+@@ -1401,0 +1667,16 @@
 +    new_inl->source_start = source_start;
 +    new_inl->source_end = subj->pos;
 +    if (new_inl->type == CMARK_NODE_LINEBREAK) {
@@ -328,46 +341,46 @@
 +      new_inl->label_start = source_start + 1;
 +      new_inl->label_end = subj->pos - 1;
 +    }
-@@ -1428,0 +1698 @@
+@@ -1428,0 +1710 @@
 +  mem->free(subj.math_runs);
-@@ -1443,2 +1713,2 @@
+@@ -1443,2 +1725,2 @@
 -bufsize_t cmark_parse_reference_inline(cmark_mem *mem, cmark_chunk *input,
 -                                       cmark_reference_map *refmap) {
 +static bufsize_t parse_reference(cmark_chunk *input, cmark_chunk *lab,
 +                                cmark_chunk *url, cmark_chunk *title, bufsize_t *title_start) {
-@@ -1447,3 +1716,0 @@
+@@ -1447,3 +1728,0 @@
 -  cmark_chunk lab;
 -  cmark_chunk url;
 -  cmark_chunk title;
-@@ -1454 +1721 @@
+@@ -1454 +1733 @@
 -  subject_from_buf(mem, -1, 0, &subj, input, NULL);
 +  subject_from_buf(NULL, -1, 0, &subj, input, NULL);
-@@ -1457 +1724 @@
+@@ -1457 +1736 @@
 -  if (!link_label(&subj, &lab) || lab.len == 0)
 +  if (!link_label(&subj, lab) || lab->len == 0)
-@@ -1469 +1736 @@
+@@ -1469 +1748 @@
 -  if ((matchlen = manual_scan_link_url(&subj.input, subj.pos, &url)) > -1) {
 +  if ((matchlen = manual_scan_link_url(&subj.input, subj.pos, url)) > 0) {
-@@ -1477,0 +1745,3 @@
+@@ -1477,0 +1757,3 @@
 +  if (title_start && subj.pos > beforetitle &&
 +      (peek_char(&subj) == '\'' || peek_char(&subj) == '"' || peek_char(&subj) == '('))
 +    *title_start = subj.pos;
-@@ -1480 +1750 @@
+@@ -1480 +1762 @@
 -    title = cmark_chunk_dup(&subj.input, subj.pos, matchlen);
 +    *title = cmark_chunk_dup(&subj.input, subj.pos, matchlen);
-@@ -1484 +1754 @@
+@@ -1484 +1766 @@
 -    title = cmark_chunk_literal("");
 +    *title = cmark_chunk_literal("");
-@@ -1489 +1759 @@
+@@ -1489 +1771 @@
 -  if (!skip_line_end(&subj)) {
 +  if (!skip_line_end(&subj) && !is_eof(&subj)) {
-@@ -1493 +1763 @@
+@@ -1493 +1775 @@
 -      if (!skip_line_end(&subj)) {
 +      if (!skip_line_end(&subj) && !is_eof(&subj)) {
-@@ -1500,2 +1769,0 @@
+@@ -1500,2 +1781,0 @@
 -  // insert reference into refmap
 -  cmark_reference_create(refmap, &lab, &url, &title);
-@@ -1503,0 +1772,16 @@
+@@ -1503,0 +1784,16 @@
 +
 +bufsize_t cmark_reference_definition_length(cmark_chunk *input, bufsize_t *title_start) {
 +  cmark_chunk label, url, title;
@@ -454,7 +467,7 @@
 +++ b/src/cjk_categories.inc
 @@ -0,0 +1,451 @@
 +/* Generated from CJK utility 3.0.1, East Asian Width 1.7.0, Unicode 17.0.
-+ * Classifier sha256: d8326d1e1a57552abc341dcc31ec4f4e480fbb9166591112b87caaa9cada7d96. See tests/generate-inline-categories.mjs. */
++ * Classifier sha256: d8326d1e1a57552abc341dcc31ec4f4e480fbb9166591112b87caaa9cada7d96. See scripts/generate-inline-categories.mjs. */
 +  {0x9, 0xd, 1},
 +  {0x20, 0x20, 1},
 +  {0x21, 0x2f, 2},

@@ -1536,7 +1536,7 @@ static bufsize_t subject_find_special_char(subject *subj, int options) {
   return subj->input.len;
 }
 
-static cmark_node *handle_footnote_reference(subject *subj) {
+static const char *footnote_reference(subject *subj, bufsize_t *closing) {
   if (!subj->refmap->lookup_footnote || subj->pos + 2 >= subj->input.len ||
       subj->input.data[subj->pos + 1] != '^')
     return NULL;
@@ -1553,6 +1553,13 @@ static cmark_node *handle_footnote_reference(subject *subj) {
     return NULL;
   const char *identifier = subj->refmap->lookup_footnote(subj->refmap->footnote_context,
                               subj->input.data + start, end - start);
+  *closing = end;
+  return identifier;
+}
+
+static cmark_node *handle_footnote_reference(subject *subj) {
+  bufsize_t end = 0;
+  const char *identifier = footnote_reference(subj, &end);
   if (!identifier)
     return NULL;
   cmark_node *node = make_literal(subj, CMARK_NODE_FOOTNOTE_REFERENCE, subj->pos, end);
@@ -1629,6 +1636,11 @@ static int parse_inline(subject *subj, cmark_node *parent, int options) {
     break;
   case '!':
     advance(subj);
+    if (peek_char(subj) == '[' && (options & CMARK_OPT_FOOTNOTES) &&
+        footnote_reference(subj, &endpos)) {
+      new_inl = make_str(subj, subj->pos - 1, subj->pos - 1, cmark_chunk_literal("!"));
+      break;
+    }
     if (peek_char(subj) == '[') {
       advance(subj);
       new_inl = make_str(subj, subj->pos - 2, subj->pos - 1, cmark_chunk_literal("!["));

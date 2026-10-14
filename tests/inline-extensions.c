@@ -15,6 +15,10 @@ static const InlineCase cases[] = {
   {"p [^unknown] q", 4, "T{p [^unknown] q}"},
   {"p [\\^known] q", 4, "T{p [^known] q}"},
   {"p [^known] q", 0, "T{p [^known] q}"},
+  {"p ![^known] q", 4, "T{p !}F{KNOWN}T{ q}"},
+  {"p ![^known] q", 0, "T{p ![^known] q}"},
+  {"p [ordinary][^known] q", 4, "T{p [ordinary]}F{KNOWN}T{ q}"},
+  {"p ![image][^known] q", 4, "T{p ![image]}F{KNOWN}T{ q}"},
 };
 
 static const char *lookup_footnote(void *context, const unsigned char *label, uint32_t length) {
