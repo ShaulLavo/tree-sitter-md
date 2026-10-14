@@ -1492,7 +1492,7 @@ static bool parse_pipe_table(Scanner *s, TSLexer *lexer,
             advance(s, lexer);
             continue;
         }
-        if (lexer->lookahead != '\r' && lexer->lookahead != '\n') {
+        if (lexer->lookahead != '\r' && lexer->lookahead != '\n' && !lexer->eof(lexer)) {
             return false;
         } else {
             break;

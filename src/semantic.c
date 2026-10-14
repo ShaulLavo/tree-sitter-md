@@ -360,15 +360,6 @@ static uint32_t quote_indent(Document *d, TSNode quote) {
   if (a < b && (d->text[a] == ' ' || d->text[a] == '\t')) column++;
   return column - original;
 }
-static uint32_t initial_padding(Document *d, TSNode n, uint32_t a) {
-  uint32_t columns = 0;
-  for (TSNode p = ts_node_parent(n); !ts_node_is_null(p); p = ts_node_parent(p)) {
-    if (is(p, d->ids.list_item)) columns += item_indent(d, p);
-    if (is(p, d->ids.block_quote)) columns += quote_indent(d, p);
-  }
-  uint32_t actual = column_at(d, a);
-  return actual > columns ? actual - columns : 0;
-}
 static void append_line(cmark_strbuf *out, Document *d, uint32_t a, uint32_t b) {
   uint32_t column = column_at(d, a);
   while (a < b && (d->text[a] == ' ' || d->text[a] == '\t')) {
@@ -408,8 +399,6 @@ static void block_value(Document *d, TSNode n, uint32_t a, uint32_t b, cmark_str
     uint32_t stop = a;
     while (stop < b && d->text[stop] != '\r' && d->text[stop] != '\n') stop++;
     uint32_t from = first ? a : container_prefix(d, ts_node_parent(n), a, stop, out);
-    uint32_t padding = first ? initial_padding(d, n, a) : 0;
-    while (padding) { cmark_strbuf_putc(out, ' '); padding--; }
     if (preserve_whitespace) append_utf16(out, d, from, stop);
     else append_line(out, d, from, stop);
     first = false;
@@ -505,8 +494,49 @@ static void code(Semantic *s, TSNode n, bool fenced) {
       if (is(ts_node_named_child(n, i), d->ids.fence_delimiter)) fence = "closed";
   }
   cmark_strbuf value = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
-  block_value(d, n, a, b, &value, true);
+  block_value(d, n, a, b, &value, fenced);
+  uint32_t first_padding = 0;
+  if (!fenced) {
+    TSNode parent = ts_node_parent(n);
+    if (!is(parent, d->ids.list_item) && !is(parent, d->ids.block_quote)) {
+      uint32_t line = start(n);
+      while (line && d->text[line - 1] != '\n' && d->text[line - 1] != '\r') line--;
+      bool only_indent = true;
+      for (uint32_t at = line; at < start(n); at++)
+        if (d->text[at] != ' ' && d->text[at] != '\t') only_indent = false;
+      uint32_t columns = column_at(d, start(n));
+      if (only_indent && columns > 4) first_padding = columns - 4;
+    }
+    if (is(parent, d->ids.list_item)) {
+      TSNode marker = ts_node_named_child(parent, 0);
+      if (end(marker) == start(n)) {
+        uint32_t marker_width = column_at(d, end(marker)) - column_at(d, start(marker));
+        uint32_t required = item_indent(d, parent) + 4;
+        if (marker_width > required) first_padding = marker_width - required;
+      }
+      for (uint32_t i = 0; i < ts_node_named_child_count(parent); i++) {
+        TSNode child = ts_node_named_child(parent, i);
+        if (start(child) == start(n) && end(child) == end(n) && ts_node_symbol(child) == ts_node_symbol(n)) break;
+        if (!is(child, d->ids.block_continuation)) continue;
+        uint32_t width = 0;
+        for (uint32_t at = start(child); at < end(child); at++)
+          width += d->text[at] == '\t' ? 4 - width % 4 : 1;
+        if (width > item_indent(d, parent)) first_padding = width - item_indent(d, parent);
+      }
+    }
+    if (is(parent, d->ids.block_quote)) {
+      TSNode marker = find_child(d, parent, d->ids.block_quote_marker);
+      for (uint32_t at = start(marker); at < end(marker); at++)
+        if (d->text[at] == '\t') first_padding = 2;
+    }
+  }
   normalize_indent(&value, width, false);
+  if (first_padding) {
+    cmark_strbuf prefixed = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
+    while (first_padding--) cmark_strbuf_putc(&prefixed, ' ');
+    cmark_strbuf_put(&prefixed, value.ptr, value.size);
+    cmark_strbuf_free(&value); value = prefixed;
+  }
   if (!fenced) {
     while (value.size && value.ptr[value.size - 1] == '\n') cmark_strbuf_truncate(&value, value.size - 1);
     if (value.size) cmark_strbuf_putc(&value, '\n');

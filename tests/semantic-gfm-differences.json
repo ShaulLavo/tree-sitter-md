@@ -95,8 +95,8 @@
     "reason": "The literal email extension links decoded escaped email text inside brackets.",
     "sourceSha256": "2636d13ed3dc316daff3893ea3fbd95570be5a8052546bfcf3743fbccc635d0c",
     "expectedSha256": "1ee01cb89969f9cb8b5c4231467630d0fc000379446e059c035261c5251a5c76",
-    "actualSha256": "d0b1c8d7ca54387e75afb9b22c5141a2de82fe98a506059ac60818f4aae5f86e",
-    "actualHtml": "<p>&lt;foo\\<a href=\"mailto:+@bar.example.com\">+@bar.example.com</a>&gt;</p>\n"
+    "actualSha256": "3ae3224c4c203b521e91ad423cbcb4d7d48ad17879833372754211af785d1017",
+    "actualHtml": "<p>&lt;<a href=\"mailto:foo+@bar.example.com\">foo+@bar.example.com</a>&gt;</p>\n"
   },
   {
     "id": 616,

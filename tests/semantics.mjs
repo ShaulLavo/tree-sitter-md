@@ -68,6 +68,15 @@ test('semantic tables keep every alignment and pad short rows', () => {
   assert.equal(table.rows[1].cells.length, 40)
   assert.equal(table.rows[1].cells[39].children.length, 0)
 })
+test('header-only tables recognize complete one-dash delimiter cells at EOF', () => {
+  for (const source of ['| Name | Value |\n| --- | -', '| Name | Value |\n| --- | -:']) {
+    const table = snapshot(source).root.children[0]
+    assert.equal(table.type, 'table')
+    assert.equal(table.rows.length, 1)
+    assert.equal(table.rows[0].cells.length, 2)
+  }
+  assert.equal(snapshot('| Name | Value |\n| --- | :').root.children[0].type, 'paragraph')
+})
 
 test('semantic result validation rejects invalid ranges and metadata', () => {
   const good = snapshot('text').root
