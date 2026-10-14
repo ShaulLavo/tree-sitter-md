@@ -286,20 +286,19 @@ static int compare_definitions(const void *first, const void *second) {
   return 0;
 }
 
-static unsigned char *copy_string(cmark_mem *memory, const unsigned char *value) {
+static unsigned char *copy_string(const unsigned char *value) {
   if (!value) return NULL;
-  uint32_t length = strlen((const char *)value) + 1;
-  unsigned char *result = memory->realloc(NULL, length);
+  unsigned char *result = (unsigned char *)strdup((const char *)value);
   if (!result) abort();
-  memcpy(result, value, length); return result;
+  return result;
 }
 
 static void clone_definition(cmark_reference_map *map, const cmark_reference *ref, uint32_t age) {
   cmark_reference *copy = map->mem->calloc(1, sizeof(*copy));
   if (!copy) abort();
-  copy->label = copy_string(map->mem, ref->label);
-  copy->url = copy_string(map->mem, ref->url);
-  copy->title = copy_string(map->mem, ref->title);
+  copy->label = copy_string(ref->label);
+  copy->url = copy_string(ref->url);
+  copy->title = copy_string(ref->title);
   copy->size = ref->size; copy->age = age;
   copy->next = map->refs; map->refs = copy; map->size++;
 }
