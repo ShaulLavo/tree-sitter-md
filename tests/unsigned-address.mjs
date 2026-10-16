@@ -46,26 +46,24 @@ test('Wasm i32 pointers above 2 GiB are unsigned byte offsets', async t => {
   finally { hooks.deregister(); delete globalThis[key] }
   await binding.init({ grammar: new Language(), resolver: new Uint8Array() })
   const doc = new binding.MarkdownDocument()
-  try {
-    await t.test('setText and edit write UTF-16 at the unsigned input address', () => {
-      doc.setText('Aλ')
-      assert.deepEqual(Array.from(new Uint16Array(memory.buffer, input, 2)), [65, 955])
-      doc.edit(0, 2, '😀')
-      assert.deepEqual(Array.from(new Uint16Array(memory.buffer, input, 2)), [0xd83d, 0xde00])
-    })
-    await t.test('record readers copy from the unsigned output address', () => {
-      for (const method of ['decorations', 'folds', 'highlights', 'injections']) {
-        const records = doc[method](0, 2)
-        assert.deepEqual(records, new Uint32Array([0, 2, 3, 4]))
-        assert.notEqual(records.buffer, memory.buffer)
-      }
-    })
-    await t.test('semantics validates and decodes the unsigned semantic address', () => {
-      const empty = new binding.MarkdownDocument()
-      try {
-        assert.deepEqual(empty.semantics().root, root)
-        assert.equal(releases, 1)
-      } finally { empty.dispose() }
-    })
-  } finally { doc.dispose() }
+  t.after(() => doc.dispose())
+  await t.test('setText and edit write UTF-16 at the unsigned input address', () => {
+    doc.setText('Aλ')
+    assert.deepEqual(Array.from(new Uint16Array(memory.buffer, input, 2)), [65, 955])
+    doc.edit(0, 2, '\u{1f600}')
+    assert.deepEqual(Array.from(new Uint16Array(memory.buffer, input, 2)), [0xd83d, 0xde00])
+  })
+  await t.test('record readers copy from the unsigned output address', () => {
+    for (const method of ['decorations', 'folds', 'highlights', 'injections']) {
+      const records = doc[method](0, 2)
+      assert.deepEqual(records, new Uint32Array([0, 2, 3, 4]))
+      assert.notEqual(records.buffer, memory.buffer)
+    }
+  })
+  await t.test('semantics validates and decodes the unsigned semantic address', t => {
+    const empty = new binding.MarkdownDocument()
+    t.after(() => empty.dispose())
+    assert.deepEqual(empty.semantics().root, root)
+    assert.equal(releases, 1)
+  })
 })
