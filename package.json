@@ -59,12 +59,12 @@
   "devDependencies": {
     "playwright": "1.63.0",
     "vite": "8.3.1",
-    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#a052adf5c2c34ef78f97d1631c41ca83db9816d3"
+    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#691b7dc7b6fef3049d0c748770ca44917e182c80"
   },
   "peerDependencies": {
     "web-tree-sitter": "^0.28.1"
   },
   "overrides": {
-    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#a052adf5c2c34ef78f97d1631c41ca83db9816d3"
+    "web-tree-sitter": "github:ShaulLavo/tree-sitter-x#691b7dc7b6fef3049d0c748770ca44917e182c80"
   }
 }
