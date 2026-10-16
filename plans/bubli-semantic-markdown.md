@@ -1,6 +1,15 @@
 # Shared semantic Markdown for Fregat and editor consumers
 
-Status: proposed implementation plan, requested by the owner on 2026-09-28. This PR contains documentation only. No parser, runtime, dependency, release or consumer changes are implemented by merging it.
+Status: Approved implementation plan, requested by the owner on 2026-09-28. Planning changes alone do not deliver parser, runtime, dependency, release, or consumer changes.
+
+Update, 2026-10-16: [PR 13](https://github.com/ShaulLavo/tree-sitter-md/pull/13)
+delivered native `semantics()` snapshots, decoded content, source ranges, math,
+CJK rules, and footnotes. The historical inventory below describes the earlier
+baseline; it does not mean those APIs remain unimplemented. Broader M0–M4 gates
+are not all complete. The Approved [native AI chat streaming plan](ai-chat-streaming.md)
+expands M3 with ecosystem-derived behavior, native provisional interpretation,
+source fidelity, independent prefix/lifecycle tests, and package gates. Fregat
+integration and renderer verification follow that producer work separately.
 
 Owner revision, 2026-09-29: the terminal consumer is now Fregat's `apps/tui/src/ui/` on upstream OpenTUI. The separate bubli toolkit and permanent renderer-fork assumption are dropped. M0-M4, semantic fidelity, streaming, packaging and the Singapore work remain unchanged in scope. This existing filename is retained for link stability, not as an active toolkit dependency.
 
