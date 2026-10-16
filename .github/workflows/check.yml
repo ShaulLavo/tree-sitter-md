@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 26
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
@@ -33,5 +33,7 @@ jobs:
       - name: Check native ASan and UBSan
         run: TREE_SITTER_LIB="$PWD/target/tree-sitter-x/lib" bun run test:native
       - run: bunx playwright install --with-deps chromium
+      - name: Check semantics with resizable Wasm memory
+        run: bun run test:browser
       - name: Check packed Node, Bun, and Vite browser consumers
         run: bun run test:package

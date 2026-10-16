@@ -109,7 +109,7 @@ export class MarkdownDocument {
       const memory = heap().buffer
       if (!Number.isSafeInteger(count) || count <= 0 || !Number.isSafeInteger(ptr) || ptr < 0 || ptr > memory.byteLength - count)
         throw new TypeError('tree-sitter-md: invalid semantic buffer')
-      const text = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(memory, ptr, count))
+      const text = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(memory, ptr, count).slice())
       const profile = this.#gfm && (this.#cjk || this.#math) ? 'fregat-chat' : this.#gfm ? 'gfm' : 'commonmark'
       return { revision: this.#revision, profile,
         capabilities: { commonmark: true, gfm: this.#gfm, math: this.#math, cjk: this.#cjk, footnotes: this.#gfm },
