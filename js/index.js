@@ -49,14 +49,14 @@ async function load({ grammar, resolver }) {
 }
 
 function write(handle, text) {
-  const ptr = wasm.tsmd_input(handle, text.length)
+  const ptr = wasm.tsmd_input(handle, text.length) >>> 0
   const view = new Uint16Array(heap().buffer, ptr, text.length)
   for (let i = 0; i < text.length; i++) view[i] = text.charCodeAt(i)
 }
 
 function read(handle, count) {
   if (count === 0) return new Uint32Array(0)
-  const ptr = wasm.tsmd_out(handle)
+  const ptr = wasm.tsmd_out(handle) >>> 0
   return new Uint32Array(heap().buffer, ptr, count).slice()
 }
 
@@ -105,7 +105,7 @@ export class MarkdownDocument {
     const handle = this.#active()
     const count = wasm.tsmd_semantics(handle)
     try {
-      const ptr = wasm.tsmd_semantic_out(handle)
+      const ptr = wasm.tsmd_semantic_out(handle) >>> 0
       const memory = heap().buffer
       if (!Number.isSafeInteger(count) || count <= 0 || !Number.isSafeInteger(ptr) || ptr < 0 || ptr > memory.byteLength - count)
         throw new TypeError('tree-sitter-md: invalid semantic buffer')
