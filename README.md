@@ -136,6 +136,11 @@ with `bunx playwright install chromium` first. Each runtime tests host-first, Ma
 and concurrent initialization, repeated initialization, sibling document isolation and
 continued host parsing. The browser must fetch all three wasm assets.
 
+`bun run test:browser` checks public semantics with resizable Wasm memory, including
+Unicode, heap growth, edits and retained results after disposal. Pass `chromium firefox webkit`
+to run all three installed Playwright browsers. Set `TREE_SITTER_RUNTIME` to a built runtime
+package directory to check that artifact.
+
 The release workflow runs these checks plus both wasm builds and native sanitizers.
 The native source revision is pinned separately from the built JavaScript host package. Paired timing checks use `scripts/compare-builds.sh` and
 `scripts/summarize.mjs` as described in FINDINGS.
