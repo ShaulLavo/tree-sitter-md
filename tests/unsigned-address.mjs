@@ -27,6 +27,16 @@ test('Wasm i32 pointers above 2 GiB are unsigned byte offsets', async t => {
       tsmd_highlights: () => 4,
       tsmd_injections: () => 4,
       tsmd_semantics: () => encoded.length,
+      tsmd_source: () => input | 0,
+      tsmd_presentation: (handle, ended) => {
+        const span = { start: 0, end: 2 }
+        const value = { input: ended ? 'ended' : 'open', provisional: [], suppressed: [], references: [],
+          root: { type: 'root', range: span, children: [{ type: 'paragraph', range: span,
+            children: [{ type: 'text', range: span, value: '\uFFFD\uD800' }] }] } }
+        const bytes = new TextEncoder().encode(JSON.stringify(value))
+        new Uint8Array(memory.buffer, semantic, bytes.length).set(bytes)
+        return bytes.length
+      },
       tsmd_semantic_out: () => semantic | 0,
       tsmd_semantic_release() { releases++ },
       tsmd_free() {},
@@ -65,5 +75,12 @@ test('Wasm i32 pointers above 2 GiB are unsigned byte offsets', async t => {
     t.after(() => empty.dispose())
     assert.deepEqual(empty.semantics().root, root)
     assert.equal(releases, 1)
+  })
+  await t.test('presentation copies original UTF-16 from an unsigned source address', () => {
+    doc.setText('\0\uD800')
+    const result = doc.presentation({ input: 'open' })
+    assert.equal(result.source, '\0\uD800')
+    assert.equal(result.root.children[0].children[0].value, '\uFFFD\uD800')
+    assert.equal(releases, 2)
   })
 })
