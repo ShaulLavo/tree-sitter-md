@@ -586,6 +586,7 @@ void tsmd_free(Document *d) {
   free(d->cache);
   free(d->sources);
   free(d->text);
+  free(d->source);
   free(d->input);
   free(d->lines.v);
   free(d->out.v);
@@ -603,9 +604,14 @@ uint16_t *tsmd_input(Document *d, uint32_t n) {
 }
 void tsmd_set_text(Document *d) {
   free(d->text);
-  d->text = d->input;
+  free(d->source);
+  d->text = NULL;
+  d->cap = 0;
+  d->source = d->input;
+  d->raw_cap = d->input_cap;
   d->len = d->input_len;
-  d->cap = d->input_cap;
+  reserve((void **)&d->text, &d->cap, d->len + 1, sizeof(uint16_t));
+  memcpy(d->text, d->source, d->len * sizeof(uint16_t));
   d->input = NULL;
   d->input_len = 0;
   d->input_cap = 0;
@@ -632,16 +638,20 @@ void tsmd_reparse(Document *d) {
 void tsmd_edit(Document *d, uint32_t a, uint32_t b) {
   uint32_t e = a + d->input_len;
   int64_t delta = (int64_t)e - b;
+  uint32_t next_len = (uint32_t)((int64_t)d->len + delta);
   TSInputEdit edit = {.start_byte = a * 2,
                       .old_end_byte = b * 2,
                       .new_end_byte = e * 2,
                       .start_point = point(d, a),
                       .old_end_point = point(d, b)};
-  reserve((void **)&d->text, &d->cap, d->len + delta + 1, sizeof(uint16_t));
+  reserve((void **)&d->source, &d->raw_cap, next_len + 1, sizeof(uint16_t));
+  memmove(d->source + e, d->source + b, (d->len - b) * sizeof(uint16_t));
+  memcpy(d->source + a, d->input, d->input_len * sizeof(uint16_t));
+  reserve((void **)&d->text, &d->cap, next_len + 1, sizeof(uint16_t));
   memmove(d->text + e, d->text + b, (d->len - b) * sizeof(uint16_t));
   memcpy(d->text + a, d->input, d->input_len * sizeof(uint16_t));
   for (uint32_t i = a; i < e; i++) if (!d->text[i]) d->text[i] = 0xfffd;
-  d->len += delta;
+  d->len = next_len;
   uint32_t la = upper(&d->lines, a), lb = upper(&d->lines, b), fresh = 0;
   for (uint32_t i = 0; i < d->input_len; i++)
     if (d->input[i] == '\n')
@@ -656,10 +666,10 @@ void tsmd_edit(Document *d, uint32_t a, uint32_t b) {
       d->lines.v[la++] = a + i + 1;
   edit.new_end_point = point(d, e);
   TSTree *old = d->tree;
-  ts_tree_edit(old, &edit);
+  if (old) ts_tree_edit(old, &edit);
   d->tree = parse(d, old);
   uint32_t count = 0;
-  TSRange *ranges = ts_tree_get_changed_ranges(old, d->tree, &count);
+  TSRange *ranges = old ? ts_tree_get_changed_ranges(old, d->tree, &count) : NULL;
   ts_tree_delete(old);
   d->epoch++;
   uint32_t scan_from = remove_sources(d, a, b);
@@ -696,3 +706,4 @@ uint32_t tsmd_row_start(Document *d, uint32_t row) {
   return row < d->lines.n ? d->lines.v[row] : d->len;
 }
 uint32_t tsmd_line_count(Document *d) { return d->lines.n; }
+uint16_t *tsmd_source(Document *d) { return d->source; }

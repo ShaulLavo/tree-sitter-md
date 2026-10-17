@@ -43,3 +43,54 @@ export type SemanticSnapshot = {
   readonly capabilities: SemanticCapabilities
   readonly root: SemanticRoot
 }
+export type PresentationInput = 'open' | 'ended'
+export type PresentationProvisional = {
+  readonly path: readonly (string | number)[]
+  readonly reason: string
+}
+export type PresentationSuppressed = {
+  readonly range: SemanticRange
+  readonly reason: string
+}
+export type PresentationReference = {
+  readonly kind: 'link' | 'footnote'
+  readonly identifier: string
+  readonly range: SemanticRange
+  readonly resolution: 'resolved' | 'unresolved'
+}
+type PresentationChildren<Node> = {
+  readonly [Key in keyof Node]: Key extends 'children'
+    ? Node[Key] extends readonly SemanticInline[] ? readonly PresentationInline[] : readonly PresentationBlock[]
+    : Key extends 'items' ? readonly PresentationListItem[]
+    : Key extends 'rows' ? readonly PresentationTableRow[]
+    : Key extends 'cells' ? readonly PresentationTableCell[]
+    : Node[Key]
+}
+export type PresentationInline = PresentationChildren<SemanticInline> | Base & (
+  | { readonly type: 'pendingLink'; readonly children: readonly PresentationInline[] }
+  | { readonly type: 'pendingImage'; readonly alt: string }
+  | { readonly type: 'pendingMath'; readonly value: string }
+)
+export type PresentationListItem = PresentationChildren<SemanticListItem>
+export type PresentationTableCell = PresentationChildren<SemanticTableCell>
+export type PresentationTableRow = PresentationChildren<SemanticTableRow>
+export type PresentationBlock = PresentationChildren<SemanticBlock>
+  | Base & { readonly type: 'pendingMath'; readonly value: string }
+export type PresentationRoot = PresentationChildren<SemanticRoot>
+type PresentationMetadata = Omit<SemanticSnapshot, 'root'> & {
+  readonly source: string
+  readonly references: readonly PresentationReference[]
+}
+export type PresentationSnapshot<Input extends PresentationInput = PresentationInput> = PresentationMetadata & (
+  Input extends 'ended' ? {
+    readonly input: 'ended'
+    readonly root: SemanticRoot
+    readonly provisional: readonly []
+    readonly suppressed: readonly []
+  } : {
+    readonly input: 'open'
+    readonly root: PresentationRoot
+    readonly provisional: readonly PresentationProvisional[]
+    readonly suppressed: readonly PresentationSuppressed[]
+  }
+)

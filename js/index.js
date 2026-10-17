@@ -1,7 +1,7 @@
 // JS binding for tree-sitter-md: a tree-sitter-x extension, one document per MarkdownDocument.
 // The resolver runs inside tree-sitter-x's runtime and walks trees in C.
 import { Language, Parser, heap, loadExtension } from 'web-tree-sitter'
-import { decodeSemanticRoot } from './semantic.js'
+import { decodePresentation, decodeSemanticRoot } from './semantic.js'
 // Offsets are UTF-16 code units, the same units as JS strings.
 
 export { Kind, CAPTURES } from './constants.js'
@@ -60,6 +60,29 @@ function read(handle, count) {
   return new Uint32Array(heap().buffer, ptr, count).slice()
 }
 
+function sourceText(handle, length) {
+  if (length === 0) return ''
+  const ptr = wasm.tsmd_source(handle) >>> 0
+  const memory = heap().buffer
+  if (ptr === 0 || ptr % 2 !== 0 || ptr > memory.byteLength - length * 2)
+    throw new TypeError('tree-sitter-md: invalid source buffer')
+  const units = new Uint16Array(memory, ptr, length)
+  let value = ''
+  // Bound argument counts while preserving lone UTF-16 units without decoding.
+  for (let offset = 0; offset < length; offset += 0x8000) {
+    value += String.fromCharCode(...units.subarray(offset, Math.min(length, offset + 0x8000)))
+  }
+  return value
+}
+
+function semanticText(handle, count) {
+  const ptr = wasm.tsmd_semantic_out(handle) >>> 0
+  const memory = heap().buffer
+  if (!Number.isSafeInteger(count) || count <= 0 || ptr > memory.byteLength - count)
+    throw new TypeError('tree-sitter-md: invalid semantic buffer')
+  return new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(memory, ptr, count).slice())
+}
+
 export class MarkdownDocument {
   #handle
   #length = 0
@@ -102,19 +125,32 @@ export class MarkdownDocument {
   }
   /** Owned renderer semantics for the complete document, with UTF-16 source ranges. */
   semantics() {
+    return this.#snapshot()
+  }
+  #snapshot(input) {
     const handle = this.#active()
-    const count = wasm.tsmd_semantics(handle)
+    const count = input === undefined ? wasm.tsmd_semantics(handle) : wasm.tsmd_presentation(handle, Number(input === 'ended'))
     try {
-      const ptr = wasm.tsmd_semantic_out(handle) >>> 0
-      const memory = heap().buffer
-      if (!Number.isSafeInteger(count) || count <= 0 || !Number.isSafeInteger(ptr) || ptr < 0 || ptr > memory.byteLength - count)
-        throw new TypeError('tree-sitter-md: invalid semantic buffer')
-      const text = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(memory, ptr, count).slice())
-      const profile = this.#gfm && (this.#cjk || this.#math) ? 'fregat-chat' : this.#gfm ? 'gfm' : 'commonmark'
-      return { revision: this.#revision, profile,
+      const text = semanticText(handle, count)
+      const result = input === undefined
+        ? { root: decodeSemanticRoot(text, this.#length) }
+        : { ...decodePresentation(text, this.#length, input), source: sourceText(handle, this.#length) }
+      let profile = 'commonmark'
+      if (this.#gfm) profile = this.#cjk || this.#math ? 'fregat-chat' : 'gfm'
+      return { ...result, revision: this.#revision, profile,
         capabilities: { commonmark: true, gfm: this.#gfm, math: this.#math, cjk: this.#cjk, footnotes: this.#gfm },
-        root: decodeSemanticRoot(text, this.#length) }
+      }
     } finally { wasm.tsmd_semantic_release(handle) }
+  }
+  /** Owned presentation metadata and original source around the native tree. */
+  presentation(options) {
+    if (options === null || typeof options !== 'object' ||
+        ![Object.prototype, null].includes(Object.getPrototypeOf(options)))
+      throw new TypeError('tree-sitter-md: presentation expects { input: open | ended }')
+    const input = options.input
+    if (!['open', 'ended'].includes(input))
+      throw new TypeError('tree-sitter-md: presentation expects { input: open | ended }')
+    return this.#snapshot(input)
   }
   /** Records `[start, end, kind, extra]` for constructs intersecting `[from, to)`. */
   decorations(from, to) {
