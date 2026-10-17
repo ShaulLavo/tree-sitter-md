@@ -1,70 +1,129 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { spawnSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { init, MarkdownDocument } from '../js/index.js'
-import {
-  chunksFor,
-  readFixtureManifest,
-  runExactFixture,
-  runFixtureMatrix,
-  validateFixtureManifest,
-} from './streaming/driver.mjs'
+import manifest from './streaming/fixtures.mjs'
+import { chunksFor, runFixtureMatrix, validateFixtureManifest } from './streaming/driver.mjs'
 
-const manifest = readFixtureManifest()
 validateFixtureManifest(manifest)
 await init()
+const report = runFixtureMatrix(MarkdownDocument, manifest)
 
-test('streaming fixture matrix has independent expectations for every required family', () => {
-  const ids = new Set(manifest.fixtures.map(fixture => fixture.id))
-  for (const id of ['nested-emphasis', 'pending-link', 'open-fence', 'table-candidate', 'late-reference', 'footnote-reference', 'pending-math', 'nested-container-tail']) {
-    assert.ok(ids.has(id), `missing required fixture ${id}`)
-  }
-  assert.ok(manifest.fixtures.every(fixture => fixture.sourceSpans?.length > 0))
-  assert.ok(manifest.fixtures.some(fixture => fixture.checkpoints?.length > 0))
+for (const fixture of manifest.fixtures) {
+  test('independent ended roots and incremental prefixes: ' + fixture.id, () => {
+    const failures = report.exact.checks.filter(check => check.fixture === fixture.id && check.status === 'failed')
+    assert.deepEqual(failures, [])
+  })
+}
+
+test('every planned behavior has independently authored nested checkpoint expectations', () => {
+  assert.equal(validateFixtureManifest(manifest), 33)
+  assert.equal(report.checkpointCount, 76)
+  assert.equal(new Set(manifest.fixtures.flatMap(fixture => fixture.behaviors)).size, manifest.requiredBehaviors.length)
+  assert.deepEqual(manifest.requiredBehaviors, [
+    'ordinary-text', 'nested-emphasis', 'literal-delimiters', 'unclosed-code',
+    'bare-delimiters', 'open-fence', 'pending-link', 'pending-image',
+    'table-reclassification', 'bare-markers', 'setext-reclassification',
+    'incomplete-html', 'pending-math', 'currency', 'references',
+  ])
 })
 
-test('streaming schedules preserve UTF-16 units and source boundaries', () => {
+test('UTF-16 appends really split a surrogate pair while codepoint appends preserve it', () => {
   const source = '🙂 **שלום**'
-  assert.deepEqual(chunksFor(source, 'codepoint').join(''), source)
-  assert.deepEqual(chunksFor(source, 'utf16').join(''), source)
-  assert.equal(chunksFor(source, 'utf16').length, source.length)
-  assert.equal(chunksFor(source, 'codepoint').length, Array.from(source).length)
+  const units = chunksFor(source, 'utf16')
+  assert.equal(units[0], '\ud83d')
+  assert.equal(units[1], '\ude42')
+  assert.equal(chunksFor(source, 'codepoint')[0], '🙂')
+  for (const schedule of ['whole', 'utf16', 'codepoint', 'midpoint']) assert.equal(chunksFor(source, schedule).join(''), source)
 })
 
-test('exact semantics remain fresh-equivalent across the two-chunk schedule', () => {
+test('the Textual replay uses the three recorded chunks and exercises unresolved and resolved uses', () => {
   const fixture = manifest.fixtures.find(value => value.id === 'late-reference')
-  assert.ok(fixture)
-  const result = runExactFixture(MarkdownDocument, fixture, 'two-chunk')
-  assert.equal(result.chunks, 2)
-  assert.equal(result.prefixes, 2)
+  const chunks = chunksFor(fixture.source, fixture.replay)
+  assert.deepEqual(chunks, ['[late][id]\n\n', 'Tail\n\n', '[id]: https://example.com\n'])
+  const checks = report.exact.checks.filter(check => check.fixture === fixture.id && check.schedule === fixture.replay.id)
+  assert.ok(checks.some(check => check.at === 18))
+  assert.ok(checks.some(check => check.at === fixture.source.length))
 })
 
-test('negative control proves the driver detects stale source', () => {
-  const fresh = new MarkdownDocument()
-  const stale = new MarkdownDocument()
-  try {
-    fresh.setText('[ref]\n\n[ref]: /target')
-    stale.setText('[ref]')
-    assert.notDeepEqual(fresh.semantics().root, stale.semantics().root)
-  } finally {
-    fresh.dispose()
-    stale.dispose()
-  }
-})
-
-test('candidate capability is explicit before native presentation exists', () => {
-  const report = runFixtureMatrix(MarkdownDocument, { ...manifest, fixtures: manifest.fixtures.slice(0, 1) })
+test('every required candidate checkpoint stays visible in the denominator', () => {
+  assert.ok(report.candidate.required >= report.checkpointCount)
+  assert.equal(report.candidate.checks.filter(check => check.schedule === 'checkpoint').length, report.checkpointCount)
+  if (typeof MarkdownDocument.prototype.presentation === 'function') return
   assert.equal(report.candidate.status, 'missing-capability')
-  assert.deepEqual(report.candidate.missing, ['MarkdownDocument.presentation'])
+  assert.equal(report.candidate.missing, report.candidate.required)
+  assert.equal(report.candidate.passed, 0)
+  assert.equal(report.verdict, 'NOT READY')
 })
 
-test('fixture validation rejects missing independent expectations', () => {
-  const invalid = structuredClone(manifest)
-  delete invalid.fixtures[0].open.reasons
-  assert.throws(() => validateFixtureManifest(invalid), /reasons must be an array/)
+function controlManifest() {
+  const fixtures = manifest.fixtures.filter(fixture => fixture.id === 'ordinary-without-newline')
+  return { ...manifest, fixtures, requiredBehaviors: ['ordinary-text'] }
+}
+
+function ordinaryObservation(document, input) {
+  return { ...document.semantics(), source: 'Hello chat', input, provisional: [], suppressed: [], references: [] }
+}
+
+test('a valid control observer is evaluated through the real qualification path', () => {
+  const result = runFixtureMatrix(MarkdownDocument, controlManifest(), { observePresentation: ordinaryObservation })
+  assert.equal(result.exact.failed, 0)
+  assert.equal(result.candidate.failed, 0)
+  assert.equal(result.candidate.passed, result.candidate.required)
+  assert.equal(result.verdict, 'READY')
 })
 
-test('fixture validation rejects a checkpoint outside the received source', () => {
+test('method presence and a malformed observation cannot make qualification ready', () => {
+  const result = runFixtureMatrix(MarkdownDocument, controlManifest(), { observePresentation: () => ({}) })
+  assert.equal(result.candidate.status, 'failed')
+  assert.equal(result.candidate.failed, result.candidate.required)
+  assert.equal(result.verdict, 'NOT READY')
+})
+
+test('a stale input mode is rejected even when source and exact tree are unchanged', () => {
+  const result = runFixtureMatrix(MarkdownDocument, controlManifest(), {
+    observePresentation: document => ordinaryObservation(document, 'open'),
+  })
+  assert.ok(result.candidate.checks.some(check => check.input === 'ended' && check.status === 'failed'))
+  assert.equal(result.verdict, 'NOT READY')
+})
+
+test('a stale presentation source revision is rejected through the matrix', () => {
+  const result = runFixtureMatrix(MarkdownDocument, controlManifest(), {
+    observePresentation: (document, input) => ({ ...ordinaryObservation(document, input), revision: 1 }),
+  })
+  assert.ok(result.candidate.failed > 0)
+  assert.equal(result.verdict, 'NOT READY')
+})
+
+test('a wrong profile is rejected through the matrix', () => {
+  const result = runFixtureMatrix(MarkdownDocument, controlManifest(), {
+    observePresentation: (document, input) => ({ ...ordinaryObservation(document, input), profile: 'commonmark' }),
+  })
+  assert.ok(result.candidate.failed > 0)
+  assert.equal(result.verdict, 'NOT READY')
+})
+
+test('invalid fixture structure and missing behavior coverage fail before qualification', () => {
   const invalid = structuredClone(manifest)
-  invalid.fixtures.find(fixture => fixture.id === 'late-reference').checkpoints[0].source = 'not a prefix'
-  assert.throws(() => validateFixtureManifest(invalid), /must be a prefix/)
+  invalid.fixtures[0].checkpoints[0].expected.root.children = 'flat text'
+  assert.throws(() => validateFixtureManifest(invalid), assert.AssertionError)
+  const missing = { ...manifest, requiredBehaviors: manifest.requiredBehaviors.concat(['absent-behavior']) }
+  assert.throws(() => validateFixtureManifest(missing), /missing required behavior/)
+})
+
+test('qualification CLI preserves denominators, artifact identity, and nonzero missing-capability status', () => {
+  const command = fileURLToPath(new URL('../scripts/check-streaming.mjs', import.meta.url))
+  const result = spawnSync(process.execPath, [command], { encoding: 'utf8', timeout: 10000 })
+  assert.equal(result.error, undefined)
+  const output = JSON.parse(result.stdout)
+  assert.equal(output.fixtureHash, report.fixtureHash)
+  assert.equal(output.candidate.required, report.candidate.required)
+  assert.equal(output.candidate.missing, report.candidate.missing)
+  assert.equal(output.toolchain.node, process.version)
+  assert.match(output.artifacts.runtimePin, /^github:ShaulLavo\/tree-sitter-x#[a-f0-9]{40}$/u)
+  for (const hash of Object.values(output.artifacts.wasm)) assert.match(hash, /^[a-f0-9]{64}$/u)
+  const failures = output.exact.failed + output.candidate.failed
+  assert.equal(result.status, failures > 0 ? 1 : output.candidate.missing > 0 ? 2 : 0)
 })
