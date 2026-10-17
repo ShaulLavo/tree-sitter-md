@@ -23,6 +23,38 @@ static void semantic_equal(Document *incremental, Document *fresh) {
   tsmd_semantic_release(incremental);
   assert(incremental->semantic == NULL && incremental->semantic_len == 0);
 }
+static void source_equal(Document *d, const uint16_t *source, uint32_t length) {
+  assert(d->len == length);
+  assert(d->source != d->text);
+  assert(!memcmp(d->source, source, length * sizeof(uint16_t)));
+  for (uint32_t i = 0; i < length; i++)
+    assert(d->text[i] == (source[i] ? source[i] : 0xfffd));
+}
+static void source_ownership(void) {
+  Document *d = tsmd_new(13, tree_sitter_markdown());
+  Document *sibling = tsmd_new(13, tree_sitter_markdown());
+  const uint16_t original[] = {0xfeff, 'a', 0, 0xfffd, '\r', '\n', 0xd83d};
+  set(d, original, 7);
+  source_equal(d, original, 7);
+  tsmd_input(d, 1)[0] = 0xde00;
+  tsmd_edit(d, 7, 7);
+  const uint16_t paired[] = {0xfeff, 'a', 0, 0xfffd, '\r', '\n', 0xd83d, 0xde00};
+  source_equal(d, paired, 8);
+  tsmd_input(d, 1)[0] = 0;
+  tsmd_edit(d, 3, 7);
+  const uint16_t replaced[] = {0xfeff, 'a', 0, 0, 0xde00};
+  source_equal(d, replaced, 5);
+  set(sibling, original, 7);
+  set(d, original, 0);
+  source_equal(d, original, 0);
+  tsmd_free(d);
+  source_equal(sibling, original, 7);
+  tsmd_input(sibling, 1)[0] = 'z';
+  tsmd_edit(sibling, 0, 7);
+  const uint16_t final[] = {'z'};
+  source_equal(sibling, final, 1);
+  tsmd_free(sibling);
+}
 static uint16_t source_unit(unsigned char c) {
   if (c == '?') return 0xd83d;
   if (c == '\x01') return 0xde00;
@@ -43,6 +75,7 @@ static void semantic_prefixes(Document *incremental, Document *fresh, const char
   }
 }
 int main(void) {
+  source_ownership();
   Document *incremental = tsmd_new(13, tree_sitter_markdown()), *fresh = tsmd_new(13, tree_sitter_markdown());
   const char *fixtures[] = {
     "- [ ] pending\n- [x](streamdown:incomplete-link)\n- [x] done",

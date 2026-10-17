@@ -1,9 +1,12 @@
 export { Kind, CAPTURES } from './constants.js'
 export type { Alignment, SemanticRange, SemanticInline, SemanticBlock, SemanticListItem,
-  SemanticTableCell, SemanticTableRow, SemanticRoot, SemanticSnapshot, SemanticCapabilities } from './semantic.js'
+  SemanticTableCell, SemanticTableRow, SemanticRoot, SemanticSnapshot, SemanticCapabilities,
+  PresentationInput, PresentationInline, PresentationBlock, PresentationListItem,
+  PresentationTableCell, PresentationTableRow, PresentationRoot, PresentationSnapshot,
+  PresentationProvisional, PresentationSuppressed, PresentationReference } from './semantic.js'
 
 import type { Language } from 'web-tree-sitter'
-import type { SemanticSnapshot } from './semantic.js'
+import type { PresentationInput, PresentationSnapshot, SemanticSnapshot } from './semantic.js'
 
 export type WasmSource = URL | string | Response | Promise<Response> | ArrayBuffer | ArrayBufferView | WebAssembly.Module
 
@@ -21,6 +24,7 @@ export declare class MarkdownDocument {
   edit(start: number, oldEnd: number, inserted: string): void
   reparse(): void
   semantics(): SemanticSnapshot
+  presentation<Input extends PresentationInput>(options: { readonly input: Input }): PresentationSnapshot<Input>
   decorations(from: number, to: number): Uint32Array
   decorationsForRows(fromRow: number, toRow: number): Uint32Array
   highlights(from: number, to: number): Uint32Array

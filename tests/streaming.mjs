@@ -113,7 +113,7 @@ test('invalid fixture structure and missing behavior coverage fail before qualif
   assert.throws(() => validateFixtureManifest(missing), /missing required behavior/)
 })
 
-test('qualification CLI preserves denominators, artifact identity, and nonzero missing-capability status', () => {
+test('qualification CLI preserves denominators, artifact identity, and incomplete-profile status', () => {
   const command = fileURLToPath(new URL('../scripts/check-streaming.mjs', import.meta.url))
   const result = spawnSync(process.execPath, [command], { encoding: 'utf8', timeout: 10000 })
   assert.equal(result.error, undefined)

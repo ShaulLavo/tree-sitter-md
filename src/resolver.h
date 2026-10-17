@@ -33,8 +33,8 @@ typedef struct Cache {
 } Cache;
 #include "ids.h"
 typedef struct {
-  uint16_t *text, *input;
-  uint32_t len, cap, input_len, input_cap;
+  uint16_t *text, *source, *input;
+  uint32_t len, cap, raw_cap, input_len, input_cap;
   Words lines, out, spare;
   TSParser *parser;
   TSTree *tree;

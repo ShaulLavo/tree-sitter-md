@@ -12,6 +12,7 @@ function snapshot(document, length) {
     folds: [...document.folds()],
     injections: [...document.injections()],
     semantics: document.semantics(),
+    presentation: document.presentation({ input: 'ended' }),
   }
 }
 
@@ -27,6 +28,13 @@ export async function check(order, options = {}, hostOptions = {}) {
   const source = '# Title\n\n**strong** and [link](/target)\n\n```js\nlet x = 1\n```\n'
   const first = new MarkdownDocument()
   const sibling = new MarkdownDocument()
+  const received = 'received\0\uD83D\r\n'
+  first.edit(0, 0, received)
+  const retained = first.presentation({ input: 'open' })
+  equal(retained.source, received, 'Packed presentation lost received UTF-16 source')
+  equal(retained.input, 'open', 'Packed presentation lost requested input mode')
+  equal(retained.root, first.semantics().root, 'P1 presentation changed exact semantics')
+  const retainedText = JSON.stringify(retained)
   first.setText(source)
   sibling.setText(source)
   const before = snapshot(sibling, source.length)
@@ -40,6 +48,7 @@ export async function check(order, options = {}, hostOptions = {}) {
   first.edit(source.indexOf('strong'), source.indexOf('strong') + 6, 'changed')
   equal(snapshot(sibling, source.length), before, 'Sibling document changed after edit')
   first.dispose()
+  equal(JSON.stringify(retained), retainedText, 'Packed presentation changed after edits/disposal')
   equal(snapshot(sibling, source.length), before, 'Sibling document changed after disposal')
   const language = await loadHostGrammar(options)
   const parser = new Parser()

@@ -861,18 +861,23 @@ static void block(Semantic *s, TSNode n, bool *first) {
 static void block_children(Semantic *s, TSNode n, bool *first) {
   for (uint32_t i = 0; i < ts_node_named_child_count(n); i++) block(s, ts_node_named_child(n, i), first);
 }
-uint32_t tsmd_semantics(Document *d) {
+static uint32_t semantic_result(Document *d, bool presentation, uint32_t ended) {
   free(d->semantic); d->semantic = NULL; d->semantic_len = 0;
   Semantic s = {.d = d, .json = CMARK_BUF_INIT(cmark_get_default_mem_allocator())};
   s.lone_surrogates = lone_surrogates(d);
   s.footnotes = footnotes_new(d); footnotes_scan(s.footnotes); s.root_footnotes = s.footnotes;
   s.defs = footnotes_definitions(s.footnotes);
+  if (presentation) put(&s, ended ? "{\"input\":\"ended\",\"root\":" : "{\"input\":\"open\",\"root\":");
   begin(&s, "root", 0, d->len); put(&s, ",\"children\":["); bool first = true;
   if (d->tree) block_children(&s, ts_tree_root_node(d->tree), &first);
-  put(&s, "]}"); d->semantic_len = s.json.size; d->semantic = (char *)cmark_strbuf_detach(&s.json);
+  put(&s, "]}");
+  if (presentation) put(&s, ",\"provisional\":[],\"suppressed\":[],\"references\":[]}");
+  d->semantic_len = s.json.size; d->semantic = (char *)cmark_strbuf_detach(&s.json);
   footnotes_free(s.footnotes);
   cmark_reference_map_free(s.defs);
   return d->semantic_len;
 }
+uint32_t tsmd_semantics(Document *d) { return semantic_result(d, false, 0); }
+uint32_t tsmd_presentation(Document *d, uint32_t ended) { return semantic_result(d, true, ended); }
 char *tsmd_semantic_out(Document *d) { return d->semantic; }
 void tsmd_semantic_release(Document *d) { free(d->semantic); d->semantic = NULL; d->semantic_len = 0; }

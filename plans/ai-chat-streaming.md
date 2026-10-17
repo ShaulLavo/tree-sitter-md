@@ -1,6 +1,13 @@
 # Native Markdown streaming for AI chat
 
-Status: **Approved**, requested 2026-10-16. P0 is implemented; P1 through P5 have not started.
+Status: **Approved**, requested 2026-10-16. P0 and P1 are implemented; P2 through P5 have not started.
+
+P1 delivery, 2026-10-18: the native document retains original UTF-16 separately
+from normalized parser text. `presentation({ input })` returns owned source,
+mode, revision, profile, exact root, and presentation metadata through a native
+entry point and strict decoder. Recursive pending types are defined. P1 keeps
+both modes exact with empty metadata; the full P0 presentation matrix remains
+unqualified until native interpretation and reference reporting are implemented.
 
 P0 delivery, 2026-10-17: 33 original fixtures contain 76 independently authored
 open and ended checkpoints. The driver compares nested trees, ranges, interpretation
@@ -180,17 +187,17 @@ outputs. No blanket fixture regeneration from our parser, remend, or remark outp
 
 ### P1. Establish source and result ownership
 
-- [ ] Settle the small presentation request/result declarations in `js/index.d.ts`
+- [x] Settle the small presentation request/result declarations in `js/index.d.ts`
   and shared semantic types. Include independent input state and source revision.
-- [ ] Audit raw-source ownership in `src/document.c`. The baseline normalizes NUL
+- [x] Audit raw-source ownership in `src/document.c`. The baseline normalizes NUL
   to U+FFFD in its parser buffer. That is legitimate Markdown normalization, but the
   new source field must preserve the original supplied UTF-16 sequence independently.
   Choose raw retention or normalization at a parser-input boundary; test NUL,
   literal U+FFFD, BOM, CRLF, and split surrogate pairs separately.
-- [ ] Carry the request through `src/resolver.h`, `scripts/build.sh`, `src/semantic.c`,
+- [x] Carry the request through `src/resolver.h`, `scripts/build.sh`, `src/semantic.c`,
   and `js/index.js`. Extend the strict native-result decoder in `js/semantic.js`.
   Keep new interpretation logic out of JavaScript.
-- [ ] Preserve exact `semantics()`, decorations, highlights, folds, and injections.
+- [x] Preserve exact `semantics()`, decorations, highlights, folds, and injections.
   Add invalid-request, disposal, owned-result, and same-revision/different-mode checks.
 
 Exit: exact output and source fidelity pass, with native/binding ownership and
