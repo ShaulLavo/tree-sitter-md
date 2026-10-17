@@ -116,6 +116,15 @@ const cases = [
   ['pending display math preserves received payload on the opening line', '$$x *a*', [
     node('pendingMath', 0, 7, { value: 'x *a*' }),
   ], [provisional(['children', 0], 'unclosed-math')]],
+  ['pending display math normalizes one final newline after opening-line payload', '$$x\n', [
+    node('pendingMath', 0, 3, { value: 'x' }),
+  ], [provisional(['children', 0], 'unclosed-math')]],
+  ['pending display math normalizes final CRLF after opening-line payload', '$$x\r\n', [
+    node('pendingMath', 0, 3, { value: 'x' }),
+  ], [provisional(['children', 0], 'unclosed-math')]],
+  ['pending display math preserves a received newline before the final newline', '$$x\n\n', [
+    node('pendingMath', 0, 4, { value: 'x\n' }),
+  ], [provisional(['children', 0], 'unclosed-math')]],
   ['pending inline math preserves all-space received payload', 'p $$   ', [
     paragraph(0, 7, [text('p ', 0, 2), node('pendingMath', 2, 7, { value: '   ' })]),
   ], [provisional(['children', 0, 'children', 1], 'unclosed-math')]],

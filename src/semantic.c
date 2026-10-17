@@ -605,7 +605,6 @@ static bool math_block(Semantic *s, TSNode n, bool *first) {
     if (stop < limit) cmark_strbuf_putc(&value, '\n');
     row = consumed;
   }
-  if (value.size && value.ptr[value.size - 1] == '\n') cmark_strbuf_truncate(&value, value.size - 1);
   bool pending = !closed && open_source_end(s, consumed);
   if (pending && at < opening_end) {
     cmark_strbuf received = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
@@ -614,6 +613,7 @@ static bool math_block(Semantic *s, TSNode n, bool *first) {
     cmark_strbuf_put(&received, value.ptr, value.size);
     cmark_strbuf_free(&value); value = received; body_start = at;
   }
+  if (value.size && value.ptr[value.size - 1] == '\n') cmark_strbuf_truncate(&value, value.size - 1);
   separator(s, first); begin(s, pending ? "pendingMath" : "math", marker, finish);
   if (pending) provisional(s, "unclosed-math");
   put(s, ",\"value\":"); literal_string(s, value.ptr, value.size, body_start, finish); put(s, "}");

@@ -22,7 +22,7 @@ An observation contains:
   link/footnote uses. This list includes both unresolved and resolved uses in fixtures
   whose purpose is reference invalidation.
 
-The driver adapter converts future public presentation results to this test-only
+The driver adapter converts public presentation results to this test-only
 observation. It may translate declared metadata; it must not parse or heal Markdown,
 invent missing semantic structure, or use the expected observation as a fallback.
 Exact-parser comparisons use the independent ended root and separately compare
@@ -34,7 +34,7 @@ schedule. Exhaustive two-chunk splits and the broader lifecycle matrix remain P4
 Checkpoints are actively evaluated whenever their source prefix is visited, and are
 also loaded independently so a chunk schedule cannot accidentally skip an oracle.
 
-The missing native presentation capability is a recorded result for every required
+A missing native presentation capability is a recorded result for every required
 checkpoint, never a passing comparison. A candidate method's presence alone cannot
 make qualification ready. Deliberately corrupted observations must fail through the
 same comparator used for actual candidates.
@@ -42,8 +42,10 @@ same comparator used for actual candidates.
 The corpus currently has 33 fixtures, 76 checkpoints, and all 15 planned behavior
 rows. `fixtures.mjs` contains original authored expectations and source provenance.
 Its small constructors only build literal semantic nodes and ranges; they do not
-call a parser. Exact ended roots run against the real native parser. Pending
-presentation remains unimplemented.
+call a parser. Exact ended roots run against the real native parser. Native inline
+presentation is implemented. Block-marker suppression and reference
+metadata remain unqualified. `tests/presentation-inline.mjs` requires the P2 subset
+of this same matrix, with additional authored EOF, ownership and payload cases.
 
 After the root dependencies are installed, run:
 
@@ -62,7 +64,7 @@ the recorded source baseline, actual runtime and package versions, runtime pin,
 WASM hashes, and Node/platform identity. They contain no machine-specific source
 paths. Current source inspection confirms that exact renderer semantics, math, CJK,
 and footnotes already exist. This driver exercises that delivered API and reports
-the separate missing presentation API honestly.
+the remaining presentation differences honestly.
 
 The one explicit observer override exists to test the driver at its adapter boundary.
 Normal qualification calls `MarkdownDocument.presentation({ input })` directly; the
