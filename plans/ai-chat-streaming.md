@@ -1,6 +1,13 @@
 # Native Markdown streaming for AI chat
 
-Status: **Approved**, requested 2026-10-16. Implementation has not started.
+Status: **Approved**, requested 2026-10-16. P0 is implemented; P1 through P5 have not started.
+
+P0 delivery, 2026-10-17: 33 original fixtures contain 76 independently authored
+open and ended checkpoints. The driver compares nested trees, ranges, interpretation
+metadata, and reference outcomes, and runs exact fresh/incremental comparisons.
+The Textual three-append replay and comparator corruption controls are included.
+Native presentation is still missing and produces a nonzero qualification result.
+See the [fixture contract and commands](../tests/streaming/README.md).
 
 Deliver an AI chat presentation API in tree-sitter-md that interprets unfinished
 Markdown in native code, preserves received source, and permits earlier content to
@@ -150,22 +157,22 @@ the host must select that behavior explicitly when it integrates the API.
 
 ### P0. Freeze independent expectations
 
-- [ ] Record parser and runtime revisions, toolchains, options, and corpus provenance.
+- [x] Record parser and runtime revisions, toolchains, options, and corpus provenance.
   Reconcile actual delivered semantics with the older producer-plan inventory.
-- [ ] Add original fixtures under `tests/streaming/`, with IDs, received source,
+- [x] Add original fixtures under `tests/streaming/`, with IDs, received source,
   configured dialect, selected input state, expected nested interpretation, provisional
   reasons, ranges, and reference outcomes. Include every behavior row above.
-- [ ] Include the nested-remend case and Textual's exact input
+- [x] Include the nested-remend case and Textual's exact input
   `[late][id]\n\nTail\n\n[id]: https://example.com\n` under batch, three-append, and
   one-code-unit schedules. Record actual nested nodes, not flattened visible text.
-- [ ] Build one reusable fixture driver for fresh and edited documents. A missing
+- [x] Build one reusable fixture driver for fresh and edited documents. A missing
   presentation implementation produces an explicit missing-capability result, never
   a ready verdict. Native features land with their failing expectations made passing.
-- [ ] Add `tests/streaming.mjs` as a top-level Node test entry for fixture-schema
+- [x] Add `tests/streaming.mjs` as a top-level Node test entry for fixture-schema
   and negative-control checks. Add feature assertions alongside their native
   implementations; the full qualification driver must still report every required
   unimplemented fixture as missing until all families are delivered.
-- [ ] Prove the driver rejects wrong nesting, stale references, missing text, and
+- [x] Prove the driver rejects wrong nesting, stale references, missing text, and
   range corruption through negative controls. Expected failures do not certify a row.
 
 Exit: reviewed executable expectations and a driver that detects deliberately wrong
