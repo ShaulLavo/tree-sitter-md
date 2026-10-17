@@ -133,6 +133,15 @@ void leaf_single(Document *d, uint32_t a, uint32_t b) {
   push_lines(d, a, b, &line_start);
   word(&d->leaf.starts, b);
 }
+static uint32_t push_block_tail(Document *d, TSNode node, uint32_t from, bool *line_start) {
+  for (uint32_t i = 0; i < ts_node_named_child_count(node); i++) {
+    TSNode c = ts_node_named_child(node, i);
+    if (!is(c, d->ids.block_continuation) || start(c) < from) continue;
+    push_lines(d, from, start(c), line_start); from = end(c);
+  }
+  push_lines(d, from, end(node), line_start);
+  return end(node);
+}
 void leaf_build(Document *d, TSNode node, int kind) {
   leaf_clear(&d->leaf);
   d->leaf.source_end = end(node);
@@ -181,14 +190,7 @@ void leaf_build(Document *d, TSNode node, int kind) {
     a = end(c);
   }
   push_lines(d, a, b, &line_start);
-  if (kind == PARAGRAPH && b < end(node)) {
-    for (uint32_t i = 0; i < ts_node_named_child_count(node); i++) {
-      TSNode c = ts_node_named_child(node, i);
-      if (!is(c, d->ids.block_continuation) || start(c) < b) continue;
-      push_lines(d, b, start(c), &line_start); b = end(c);
-    }
-    push_lines(d, b, end(node), &line_start); b = end(node);
-  }
+  if (kind == PARAGRAPH && b < end(node)) b = push_block_tail(d, node, b, &line_start);
   word(&d->leaf.starts, b);
 }
 static void leaf_record(Leaf *l, Words *out, uint32_t a, uint32_t b, uint32_t kind) {
