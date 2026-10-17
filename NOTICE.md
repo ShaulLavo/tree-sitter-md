@@ -17,6 +17,12 @@ in `wasi-libc.txt`, `musl.txt`, `cloudlibc.txt` and `dlmalloc.txt`. Tree-sitter'
 retain the ICU notice in `icu.txt`. The SDK compiler runtime's Apache-2.0 license with LLVM
 exceptions is in `llvm.txt`.
 
+Local changes to the cmark inline resolver add temporary-EOF presentation mode.
+It reuses native delimiter pairing, bracket ownership, destination scanning, code
+normalization and configured dialect rules to build provisional nodes before
+cleanup. Node presentation status and received payload length remain request-local;
+the exact parser entry point keeps its ordinary interpretation.
+
 Benchmark inputs, outside the npm package: `bench/spec/gfm-spec.txt` is the cmark-gfm spec,
 CC-BY-SA 4.0, John MacFarlane. `bench/web/lezer.min.js` bundles `@lezer/markdown` and
 `@lezer/common`, MIT, Marijn Haverbeke. `bench/docs/` holds text from the

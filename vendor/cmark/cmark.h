@@ -710,3 +710,4 @@ const char *cmark_version_string(void);
 #define CMARK_OPT_CJK (1 << 21)
 #define CMARK_OPT_MATH (1 << 22)
 #define CMARK_OPT_FOOTNOTES (1 << 23)
+#define CMARK_OPT_PRESENTATION (1 << 24)
