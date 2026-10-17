@@ -51,11 +51,17 @@ UTF-16 `source`, requested `input`, revision, profile, capabilities, root, and
 when more source is no longer expected. Queries do not change the source revision
 or seal the document; further edits and open queries remain valid.
 
-Version 0.1.7 establishes this ownership and API boundary. Both modes currently
-return the exact Markdown interpretation with empty presentation metadata. Native
-unfinished-syntax interpretation follows in the [AI chat streaming plan](plans/ai-chat-streaming.md).
-The streaming qualification command remains nonzero until those behaviors pass.
-`semantics()` keeps its existing exact interpretation.
+Open presentation interprets eligible unfinished emphasis, strike, code, links,
+images, and math in native code. Nested openers retain their native ownership;
+code and TeX keep received content opaque. `provisional` records each affected
+node's path and reason. Ambiguous trailing inline markers without content appear
+in `suppressed`; an empty resulting paragraph is omitted. Only the final open
+source-mapped leaf receives this interpretation, including quote/list continuations.
+Ended presentation and `semantics()` keep the exact interpretation.
+
+Block-marker suppression and reference reporting remain in the
+[AI chat streaming plan](plans/ai-chat-streaming.md). The full streaming
+qualification command remains nonzero until those behaviors pass.
 
 Received source preserves NUL, BOM, CRLF, and lone surrogate units separately from
 Markdown normalization. Presentation trees are recursively distinct from exact

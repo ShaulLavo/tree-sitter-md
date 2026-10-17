@@ -18,6 +18,7 @@ typedef struct {
 typedef struct {
   char *text;
   uint32_t n, cap;
+  uint32_t source_end;
   Words starts, ends;
 } Leaf;
 typedef struct {

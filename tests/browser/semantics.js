@@ -51,14 +51,37 @@ async function run() {
     memory.grow(1)
     check(doc.semantics().revision === 2, 'Semantics failed after edit and growth')
     check(doc.presentation({ input: 'ended' }).source === '**new**\n\nASCII café 中文 😀\0 end\n', 'Presentation failed after edit/growth')
+    doc.setText('**outside *inside')
+    const live = doc.presentation({ input: 'open' })
+    const strong = live.root.children[0].children[0]
+    check(strong.type === 'strong', 'Browser presentation lost provisional strong')
+    check(strong.children[1].type === 'emphasis', 'Browser presentation lost nested provisional emphasis')
+    check(strong.children[1].children[0].value === 'inside', 'Browser presentation lost provisional content')
+    check(live.provisional.length === 2, 'Browser presentation lost provisional metadata')
+    const ended = doc.presentation({ input: 'ended' })
+    check(ended.revision === live.revision, 'Browser mode change advanced source revision')
+    check(JSON.stringify(ended.root) === JSON.stringify(doc.semantics().root), 'Browser ended presentation differs from exact semantics')
+    check(ended.provisional.length === 0, 'Browser ended presentation retained provisional metadata')
+    const retainedLive = JSON.stringify(live)
+    memory.grow(1)
+    check(JSON.stringify(live) === retainedLive, 'Memory growth changed retained provisional snapshot')
+    doc.setText('[label](https://exa')
+    const pendingSnapshot = doc.presentation({ input: 'open' })
+    const pending = pendingSnapshot.root.children[0].children[0]
+    check(pending.type === 'pendingLink', 'Browser presentation lost pending link')
+    check(!('url' in pending) && !('title' in pending), 'Browser pending link invented a destination')
+    const retainedPending = JSON.stringify(pendingSnapshot)
+    doc.edit(0, 0, 'before ')
     doc.setText('replacement')
     check(doc.semantics().root.children[0].children[0].value === 'replacement', 'Later allocation changed semantics')
     check(JSON.stringify(first) === retained, 'Returned semantics must own their decoded strings')
     doc.dispose()
     check(JSON.stringify(first) === retained, 'Disposal changed a retained result')
     check(JSON.stringify(presented) === retainedPresentation, 'Disposal changed retained presentation')
+    check(JSON.stringify(live) === retainedLive, 'Edits/disposal changed retained provisional snapshot')
+    check(JSON.stringify(pendingSnapshot) === retainedPending, 'Edits/disposal changed retained pending link')
   } finally { doc.dispose() }
-  return { resizable: buffer.resizable, rawDecodeRejected, growths: 2, retainedBytes: retained.length }
+  return { resizable: buffer.resizable, rawDecodeRejected, growths: 3, retainedBytes: retained.length }
 }
 
 run().then(result => { window.result = result }, error => { window.failure = error.stack })

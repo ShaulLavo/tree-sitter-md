@@ -53,6 +53,16 @@ enum cmark_node__internal_flags {
   CMARK_NODE__LIST_LAST_LINE_BLANK = (1 << 3),
 };
 
+typedef enum {
+  CMARK_PRESENTATION_EXACT = 0,
+  CMARK_PRESENTATION_DELIMITER,
+  CMARK_PRESENTATION_CODE,
+  CMARK_PRESENTATION_LINK,
+  CMARK_PRESENTATION_IMAGE,
+  CMARK_PRESENTATION_MATH,
+  CMARK_PRESENTATION_SUPPRESSED
+} cmark_presentation;
+
 struct cmark_node {
   cmark_mem *mem;
 
@@ -76,6 +86,7 @@ struct cmark_node {
   int end_column;
   uint16_t type;
   uint16_t flags;
+  cmark_presentation presentation;
 
   union {
     cmark_list list;

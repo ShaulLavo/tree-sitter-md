@@ -128,12 +128,23 @@ static void push_lines(Document *d, uint32_t a, uint32_t b, bool *line_start) {
 }
 void leaf_single(Document *d, uint32_t a, uint32_t b) {
   leaf_clear(&d->leaf);
+  d->leaf.source_end = b;
   bool line_start = true;
   push_lines(d, a, b, &line_start);
   word(&d->leaf.starts, b);
 }
+static uint32_t push_block_tail(Document *d, TSNode node, uint32_t from, bool *line_start) {
+  for (uint32_t i = 0; i < ts_node_named_child_count(node); i++) {
+    TSNode c = ts_node_named_child(node, i);
+    if (!is(c, d->ids.block_continuation) || start(c) < from) continue;
+    push_lines(d, from, start(c), line_start); from = end(c);
+  }
+  push_lines(d, from, end(node), line_start);
+  return end(node);
+}
 void leaf_build(Document *d, TSNode node, int kind) {
   leaf_clear(&d->leaf);
+  d->leaf.source_end = end(node);
   TSNode in = {0};
   uint32_t count = ts_node_named_child_count(node);
   for (uint32_t i = 0; i < count; i++) {
@@ -160,11 +171,13 @@ void leaf_build(Document *d, TSNode node, int kind) {
     uint32_t h = b;
     while (h > a && d->text[h - 1] == '#')
       h--;
-    if (h < b && (h == a || d->text[h - 1] == ' ' || d->text[h - 1] == '\t'))
+    bool closed = h < b && (h == a || d->text[h - 1] == ' ' || d->text[h - 1] == '\t');
+    if (closed)
       b = h;
     while (b > a && ws(d->text[b - 1]))
       b--;
-    leaf_single(d, a, b);
+    leaf_single(d, a, closed ? b : end(in));
+    d->leaf.source_end = closed ? b : end(node);
     return;
   }
   bool line_start = true;
@@ -177,6 +190,7 @@ void leaf_build(Document *d, TSNode node, int kind) {
     a = end(c);
   }
   push_lines(d, a, b, &line_start);
+  if (kind == PARAGRAPH && b < end(node)) b = push_block_tail(d, node, b, &line_start);
   word(&d->leaf.starts, b);
 }
 static void leaf_record(Leaf *l, Words *out, uint32_t a, uint32_t b, uint32_t kind) {

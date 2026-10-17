@@ -1,6 +1,14 @@
 # Native Markdown streaming for AI chat
 
-Status: **Approved**, requested 2026-10-16. P0 and P1 are implemented; P2 through P5 have not started.
+Status: **Approved**, requested 2026-10-16. P0 through P2 are implemented; P3 through P5 have not started.
+
+P2 delivery, 2026-10-18: native inline resolution interprets eligible unmatched
+emphasis, strike, code, brackets, destinations, images and math. Provisional paths
+count emitted nodes; suppressed inline markers retain original source ranges.
+EOF eligibility follows source extents through containers and footnotes. Code and
+TeX remain opaque received content. Ended reads retain exact semantics. The focused
+inline matrix passes; the full matrix still has 76 presentation failures for later
+block-marker and reference work, with zero exact failures.
 
 P1 delivery, 2026-10-18: the native document retains original UTF-16 separately
 from normalized parser text. `presentation({ input })` returns owned source,
@@ -205,27 +213,38 @@ presentation variants tested. Do not advertise the full streaming profile yet.
 
 ### P2. Interpret unfinished inline syntax natively
 
-- [ ] Observe delimiter/bracket state before cleanup in `vendor/cmark/inlines.c`.
+- [x] Observe delimiter/bracket state before cleanup in `vendor/cmark/inlines.c`.
   Keep the exact entry point's behavior intact. Document any intentional local change
   to the vendored inline resolver; avoid a second delimiter scanner.
-- [ ] First prove nested opener ownership, pending brackets, and source mapping in
+- [x] First prove nested opener ownership, pending brackets, and source mapping in
   a bounded native fixture. If emphasis cleanup has already lost the needed state,
   move observation earlier in native resolution before broad implementation.
-- [ ] Pass temporary EOF from `src/semantic.c` to eligible leaves; reuse `src/leaf.c`
+- [x] Pass temporary EOF from `src/semantic.c` to eligible leaves; reuse `src/leaf.c`
   continuation mapping and configured CJK/flanking rules.
   Test trailing spaces, a single newline, and trailing nested-container prefixes.
   Determine EOF from original source mapping, not trimmed inline-buffer length.
-- [ ] Implement nested provisional emphasis, code spans, pending links/images,
+- [x] Implement nested provisional emphasis, code spans, pending links/images,
   escaped delimiters, and pending math with each family's independent prefix fixtures.
   Define `pendingMath` explicitly in recursive presentation types and the decoder;
   its TeX is received data, never a synthesized valid math expression.
-- [ ] Keep all destinations absent until the link/image syntax is complete. Preserve
+- [x] Keep all destinations absent until the link/image syntax is complete. Preserve
   code content and existing normalization rules without synthetic source characters.
 
 Exit: inline families agree with their specified prefixes and ended exact semantics.
 Interleaving open and exact reads cannot contaminate either result or another document.
 
 ### P3. Handle block reclassification and document dependencies
+
+Known exact-math gap found during P2 review: with `{ math: true }`,
+`semantics()` for `$$x *a*` returns a block `math` node with an empty value because
+`src/semantic.c:math_block` consumes the opening line as a marker. This behavior
+predates P2. Open pending output now retains `x *a*`; ended output still follows
+exact semantics. Before expanding block math in P3, add independently authored
+ended expectations and decide whether a block opener requires a standalone line
+or includes its same-line suffix. Reproduce with `node --input-type=module` after
+`await init()`, `document.setText('$$x *a*')`, then inspect
+`document.semantics().root` and both presentation modes. No reference definition,
+chunk schedule, or JavaScript healing is involved.
 
 - [ ] Cover fences with arbitrary matching runs, language/info fragments, nested
   containers, headings, list/task markers, tightness, table candidates, wide tables,

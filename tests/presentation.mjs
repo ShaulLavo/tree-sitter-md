@@ -27,14 +27,16 @@ function plainValue(result) {
   return result.root.children[0].children[0].value
 }
 
-test('presentation modes are independent reads of exact semantics', () => {
+test('presentation modes are independent reads of the same source revision', () => {
   const document = new MarkdownDocument({ gfm: true, cjk: true, math: true })
   try {
     assert.equal(exact(document, '').revision, 0)
     document.setText('**bold** and **unfinished')
-    const open = exact(document, '**bold** and **unfinished')
+    const open = snapshot(document)
     const ended = exact(document, open.source, 'ended')
-    const reopened = exact(document, open.source)
+    const reopened = snapshot(document)
+    assert.notDeepEqual(open.root, ended.root)
+    assert.equal(open.provisional.length, 1)
     assert.equal(open.revision, 1)
     assert.equal(ended.revision, 1)
     assert.deepEqual(reopened, open)
