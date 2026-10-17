@@ -45,6 +45,25 @@ profile's CJK delimiter rules and double-dollar math. GFM enables footnotes.
 Raw HTML remains parser data; consumers own sanitization and safe activation.
 Disposal is idempotent, and subsequent document operations throw `TypeError`.
 
+`doc.presentation({ input: 'open' })` returns an owned snapshot with the original
+UTF-16 `source`, requested `input`, revision, profile, capabilities, root, and
+`provisional`, `suppressed`, and `references` metadata arrays. Use `input: 'ended'`
+when more source is no longer expected. Queries do not change the source revision
+or seal the document; further edits and open queries remain valid.
+
+Version 0.1.7 establishes this ownership and API boundary. Both modes currently
+return the exact Markdown interpretation with empty presentation metadata. Native
+unfinished-syntax interpretation follows in the [AI chat streaming plan](plans/ai-chat-streaming.md).
+The streaming qualification command remains nonzero until those behaviors pass.
+`semantics()` keeps its existing exact interpretation.
+
+Received source preserves NUL, BOM, CRLF, and lone surrogate units separately from
+Markdown normalization. Presentation trees are recursively distinct from exact
+trees and define pending link, image, and math variants for native interpretation.
+Pending links and images have no destination field. Ended snapshots expose exact
+roots and empty provisional/suppressed arrays. Returned strings, arrays, and trees
+remain owned after edits, shared-memory growth, and disposal.
+
 Kinds are in `Kind` (`js/index.js`). Records come in tree order; inline records of a block follow
 the block. `LinkText` gives the text range of a link or image, so live preview can keep it and
 hide the brackets and destination.
@@ -98,6 +117,7 @@ npm run generate   # only when changing the grammar; tree-sitter CLI 0.26
 npm run build      # tree-sitter-md.wasm, then tree-sitter-markdown.wasm
 OPT=-Oz npm run build
 npm test           # focused wasm API regressions
+bun run test:types # public exact/presentation type contracts
 sh scripts/check-native.sh  # native clang, ASan + UBSan, incremental edits, leaf mapping and cursor oracle
 sh scripts/check-cursor.sh  # cursor byte/point seeks against sequential traversal, ASan + UBSan
 node bench/cursor-seek.mjs --check  # blank-line viewport cost across a heading-less 1 MB document

@@ -23,6 +23,8 @@ jobs:
         run: bun run build
       - name: Check JavaScript and incremental regressions
         run: npm test
+      - name: Check public presentation types
+        run: bun run test:types
       - name: Check spec, pinned repository and chat corpora, and fuzz controls
         run: bun run check
       - uses: actions/checkout@v4

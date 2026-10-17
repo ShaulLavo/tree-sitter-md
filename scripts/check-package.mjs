@@ -8,7 +8,7 @@ import { chromium } from 'playwright'
 const root = resolve(import.meta.dirname, '..')
 mkdirSync(join(root, 'target'), { recursive: true })
 const directory = mkdtempSync(join(root, 'target/package-'))
-const run = (command, args, cwd = directory) => execFileSync(command, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+const run = (command, args, cwd = directory) => execFileSync(command, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 60000 })
 const orders = ['host-first', 'markdown-first', 'concurrent']
 let server
 let browser
