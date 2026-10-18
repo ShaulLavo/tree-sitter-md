@@ -1512,6 +1512,7 @@ static bool scan_continuation_interrupt(Scanner *s, TSLexer *lexer, bool table) 
         return scan(s, lexer, paragraph_interrupt_symbols);
     bool symbols[sizeof(paragraph_interrupt_symbols) / sizeof(bool)];
     memcpy(symbols, paragraph_interrupt_symbols, sizeof(symbols));
+    symbols[INDENTED_CHUNK_START] = true;
     symbols[LIST_MARKER_MINUS_DONT_INTERRUPT] = true;
     symbols[LIST_MARKER_PLUS_DONT_INTERRUPT] = true;
     symbols[LIST_MARKER_STAR_DONT_INTERRUPT] = true;
