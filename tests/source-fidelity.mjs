@@ -33,6 +33,7 @@ const literals = [
   ['> > `a\n    >    > b`', 'a\nb'], ['- > `a\n      >  b`', 'a\n b'],
   ['- > `a\r\n   b`', 'a\r\n b'], ['> `a\r\n    > b`', 'a\r\nb'],
   ['- > `a\r   b`', 'a\r b'], ['> `a\r    > b`', 'a\rb'],
+  ['- > `a\n\tb`', 'a\n  b'], ['-  - `a\n\tb`', 'a\n b'],
 ]
 for (const [source, expected] of literals) test('inline sourceValue ' + JSON.stringify(source), () => {
   for (const input of [undefined, 'open', 'ended']) {
