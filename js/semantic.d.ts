@@ -2,10 +2,14 @@ export type SemanticRange = { readonly start: number; readonly end: number }
 export type Alignment = 'left' | 'center' | 'right' | null
 type Base = { readonly range: SemanticRange }
 export type SemanticInline = Base & (
-  | { readonly type: 'text' | 'code' | 'html' | 'math'; readonly value: string }
+  | { readonly type: 'text' | 'html' | 'math'; readonly value: string }
+  | { readonly type: 'code'; readonly value: string; readonly sourceValue: string }
   | { readonly type: 'emphasis' | 'strong' | 'delete'; readonly children: readonly SemanticInline[] }
   | { readonly type: 'break'; readonly hard: boolean }
-  | { readonly type: 'link'; readonly children: readonly SemanticInline[]; readonly url: string; readonly title: string | null }
+  | { readonly type: 'link'; readonly children: readonly SemanticInline[]; readonly url: string; readonly title: string | null } & (
+      | { readonly origin: 'markdown' | 'autolink' }
+      | { readonly origin: 'gfm-autolink'; readonly sourceUrl: string; readonly sourceValue: string }
+    )
   | { readonly type: 'image'; readonly alt: string; readonly url: string; readonly title: string | null }
   | { readonly type: 'footnoteReference'; readonly identifier: string }
 )

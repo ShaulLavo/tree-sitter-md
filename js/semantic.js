@@ -23,12 +23,20 @@ function link(node) { field(node, 'url', 'string'); nullable(node, 'title', 'str
 function inline(node, length, presentation = false) {
   range(node, length)
   if (presentation && pending(node, length)) return
-  if (VALUES.has(node.type)) { field(node, 'value', 'string'); return }
+  if (VALUES.has(node.type)) {
+    field(node, 'value', 'string')
+    if (node.type === 'code') field(node, 'sourceValue', 'string')
+    return
+  }
   if (node.type === 'break') { field(node, 'hard', 'boolean'); return }
   if (node.type === 'footnoteReference') { field(node, 'identifier', 'string'); return }
   if (node.type === 'image') { field(node, 'alt', 'string'); link(node); return }
   if (!INLINE_CONTAINERS.has(node.type)) invalid()
-  if (node.type === 'link') link(node)
+  if (node.type === 'link') {
+    link(node)
+    if (!['markdown', 'autolink', 'gfm-autolink'].includes(node.origin)) invalid()
+    if (node.origin === 'gfm-autolink') { field(node, 'sourceUrl', 'string'); field(node, 'sourceValue', 'string') }
+  }
   children(node, 'children', inline, length, presentation)
 }
 function item(node, length, presentation = false) {

@@ -61,3 +61,25 @@ if (selected.input === 'ended') {
   const narrowed: SemanticRoot = selected.root
   const empty: readonly [] = selected.provisional
 }
+
+const sourceCode: SemanticInline = { type: 'code', range, value: 'a b', sourceValue: 'a\n b' }
+const sourceLink: SemanticInline = {
+  type: 'link', range, origin: 'gfm-autolink', url: 'https://a/?x&y', title: null,
+  sourceUrl: 'https://a/?x&amp;y', sourceValue: 'https://a/?x&amp;y', children: [],
+}
+const angleLink: PresentationInline = {
+  type: 'link', range, origin: 'autolink', url: 'https://a/', title: null, children: [],
+}
+// @ts-expect-error Inline code must expose its source-faithful value.
+const missingSource: SemanticInline = { type: 'code', range, value: 'a b' }
+// @ts-expect-error GFM autolinks must expose both literal source fields.
+const missingGfmSource: SemanticInline = { type: 'link', range, origin: 'gfm-autolink', url: '', title: null, children: [] }
+// @ts-expect-error Every completed link identifies its parsing origin.
+const missingOrigin: PresentationInline = { type: 'link', range, url: '', title: null, children: [] }
+function literalValue(node: PresentationInline): string {
+  if (node.type === 'code') return node.sourceValue
+  if (node.type === 'link' && node.origin === 'gfm-autolink') return node.sourceValue
+  return ''
+}
+// @ts-expect-error Markdown and angle links do not claim GFM source metadata.
+angleLink.sourceUrl
