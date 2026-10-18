@@ -1,4 +1,5 @@
 // Adapted from github/cmark-gfm extensions/autolink.c. See licenses/cmark-gfm.txt.
+#include "autolink.h"
 #include "cmark_ctype.h"
 #include "resolver.h"
 #include "utf8.h"
@@ -265,6 +266,48 @@ static size_t url_end(uint8_t *data, size_t size, size_t begin, size_t finish) {
   finish = begin + autolink_delim(data + begin, finish - begin);
   return finish;
 }
+size_t tsmd_cjk_autolink_end(const uint8_t *data, size_t a, size_t b) {
+  for (size_t i = a; i < b;) {
+    int32_t c = 0; int width = cmark_utf8proc_iterate(data + i, b - i, &c);
+    if (width <= 0) break;
+    if (c == 0x3002 || c == 0xff0e || c == 0xff0c || c == 0x3001 || c == 0xff1f || c == 0xff01 ||
+        c == 0xff1a || c == 0xff1b || c == 0xff08 || c == 0xff09 || c == 0x3010 || c == 0x3011 ||
+        c == 0x300c || c == 0x300d || c == 0x300e || c == 0x300f || c == 0x3008 || c == 0x3009 ||
+        c == 0x300a || c == 0x300b) return i;
+    i += width;
+  }
+  return b;
+}
+bool tsmd_gfm_autolink_match(const uint8_t *data, size_t size, size_t at,
+                             size_t *begin, size_t *end, bool cjk) {
+  size_t start = at, finish = 0;
+
+  if (at >= size)
+    return false;
+  if (size - at >= 4 && !strncasecmp((const char *)data + at, "www.", 4) &&
+      (!at || cmark_isspace(data[at - 1]) || strchr("*_~([]", data[at - 1]))) {
+    if (!check_domain((uint8_t *)data + at, size - at, 0))
+      return false;
+    finish = at + 4;
+  } else if (data[at] == ':' && size - at > 3 && data[at + 1] == '/' && data[at + 2] == '/') {
+    while (start > 0 && cmark_isalpha(data[start - 1]))
+      start--;
+    if (!sd_autolink_issafe(data + start, size - start) ||
+        !check_domain((uint8_t *)data + at + 3, size - at - 3, 1))
+      return false;
+    finish = at + 3;
+  } else {
+    return false;
+  }
+
+  finish = url_end((uint8_t *)data, size, start, finish);
+  if (cjk) finish = tsmd_cjk_autolink_end(data, start, finish);
+  if (finish <= start)
+    return false;
+  *begin = start;
+  *end = finish;
+  return true;
+}
 void autolinks(Leaf *l, uint32_t a, uint32_t b, Words *out) {
   uint8_t *data = (uint8_t *)l->text + a;
   size_t size = b - a, consumed = 0;
@@ -272,22 +315,10 @@ void autolinks(Leaf *l, uint32_t a, uint32_t b, Words *out) {
     size_t begin = i, finish = 0;
     if (data[i] == '@')
       finish = email_end(data, size, i, consumed, &begin);
-    if (size - i >= 4 && !strncasecmp((char *)data + i, "www.", 4) &&
-        (!i || cmark_isspace(data[i - 1]) || strchr("*_~([]", data[i - 1]))) {
-      if (check_domain(data + i, size - i, 0))
-        finish = i + 4;
-    }
-    if (data[i] == ':' && size - i > 3 && data[i + 1] == '/' && data[i + 2] == '/') {
-      while (begin > 0 && cmark_isalpha(data[begin - 1]))
-        begin--;
-      if (sd_autolink_issafe(data + begin, size - begin) &&
-          check_domain(data + i + 3, size - i - 3, 1))
-        finish = i + 3;
-    }
+    if (data[i] != '@')
+      tsmd_gfm_autolink_match(data, size, i, &begin, &finish, false);
     if (!finish)
       continue;
-    if (data[i] != '@')
-      finish = url_end(data, size, begin, finish);
     if (finish <= begin)
       continue;
     record(out, l->starts.v[a + begin], l->ends.v[a + finish - 1], A, 0);

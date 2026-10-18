@@ -132,7 +132,22 @@ static void semantic_prefixes(Document *incremental, Document *fresh, const char
     presentation_equal(incremental, fresh);
   }
 }
+static void ordinary_text_runs(void) {
+  const char *fixtures[] = {"wwwwwwwwwwww", "WWW.invalid", "::::::::::::"};
+  for (uint32_t i = 0; i < sizeof(fixtures) / sizeof(fixtures[0]); i++) {
+    cmark_node *root = cmark_node_new(CMARK_NODE_PARAGRAPH);
+    cmark_reference_map *refs = cmark_reference_map_new(cmark_get_default_mem_allocator());
+    root->data = (unsigned char *)fixtures[i]; root->len = strlen(fixtures[i]);
+    root->start_line = 1; root->start_column = 1;
+    cmark_parse_inlines(cmark_get_default_mem_allocator(), root, refs, CMARK_OPT_GFM, NULL);
+    assert(root->first_child && root->first_child->type == CMARK_NODE_TEXT);
+    assert(!root->first_child->next && root->first_child->len == root->len);
+    root->data = NULL; root->len = 0;
+    cmark_node_free(root); cmark_reference_map_free(refs);
+  }
+}
 int main(void) {
+  ordinary_text_runs();
   source_ownership();
   deep_nesting();
   many_documents();
@@ -147,7 +162,9 @@ int main(void) {
     "[late][id] ![alt][id] [^n]\n\n[id]: /first\n[id]: /second\n\n[^n]: note",
     "> - [ ]\n> - x\n> -",
     "Title\n---\n\n| a | b |\n| --- | --- |\n| c | d |",
-    "$$same *line*\nnext\n$$"
+    "$$same *line*\nnext\n$$",
+    "A **see(https://exa**mple.test/a)ded** message.\n\n",
+    "**www.example.test/a**b** **https://example.test/a\\*b**"
   };
   for (uint32_t i = 0; i < sizeof(fixtures) / sizeof(fixtures[0]); i++)
     semantic_prefixes(incremental, fresh, fixtures[i]);

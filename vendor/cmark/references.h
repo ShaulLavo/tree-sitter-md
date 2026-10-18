@@ -26,6 +26,7 @@ struct cmark_reference_map {
   void *lookup_context;
   const char *(*lookup_footnote)(void *, const unsigned char *, uint32_t);
   void *footnote_context;
+  bool (*match_autolink)(const unsigned char *, size_t, size_t, size_t *, size_t *, bool);
   cmark_reference *refs;
   cmark_reference **sorted;
   unsigned int size;
