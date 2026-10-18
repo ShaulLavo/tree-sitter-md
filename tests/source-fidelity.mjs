@@ -60,6 +60,27 @@ test('GFM literals expose raw URL and text without changing canonical payloads',
     assert.equal(link.sourceValue, literal)
   }
 })
+
+for (const [source, sourceUrl] of [
+  ['www.a.test/&#58;@b', 'http://www.a.test/&#58;@b'],
+  ['www.a.test/a@b', 'http://www.a.test/a@b'],
+  ['person@example.test', 'mailto:person@example.test'],
+]) test('GFM literal scheme ' + source, () => {
+  for (const input of [undefined, 'open', 'ended']) {
+    const link = nodes(read(source, input), 'link')[0]
+    assert.equal(link.origin, 'gfm-autolink')
+    assert.equal(link.sourceUrl, sourceUrl)
+    assert.equal(link.sourceValue, source)
+  }
+})
+
+test('literal scheme metadata leaves the canonical destination unchanged', () => {
+  for (const input of [undefined, 'open', 'ended']) {
+    const link = nodes(read('www.a.test/&#58;@b', input), 'link')[0]
+    assert.equal(link.url, 'http://www.a.test/:@b')
+    assert.equal(link.children[0].value, 'www.a.test/:@b')
+  }
+})
 test('Markdown and angle autolinks retain CommonMark decoding and origin', () => {
   const url = 'https://example.test/a?a=1&amp;b=2'
   for (const options of [{ gfm: false }, { gfm: true }]) {

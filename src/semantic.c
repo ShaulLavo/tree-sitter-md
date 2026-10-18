@@ -349,7 +349,7 @@ static void text_part(Semantic *s, Leaf *l, cmark_node *first, cmark_node *last,
   cmark_strbuf_clear(&url);
   const unsigned char *source = (unsigned char *)l->text + offset + a;
   if (b - a >= 4 && !strncasecmp((char *)source, "www.", 4)) cmark_strbuf_puts(&url, "http://");
-  if (memchr(source, '@', b - a) && !memchr(source, ':', b - a)) cmark_strbuf_puts(&url, "mailto:");
+  else if (memchr(source, '@', b - a) && !memchr(source, ':', b - a)) cmark_strbuf_puts(&url, "mailto:");
   cmark_strbuf_put(&url, source, b - a);
   put(s, ",\"sourceUrl\":"); literal_string(s, url.ptr, url.size, start_pos, end_pos);
   put(s, ",\"title\":null,\"children\":["); text_value(s, start_pos, end_pos, value.ptr, value.size, positions.v); put(s, "]}");
