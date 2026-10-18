@@ -109,3 +109,43 @@ test('failed URL candidates preserve the next inline delimiter', () => {
     assert.deepEqual(nodes(root, 'strong')[0].range, { start: 0, end: source.length })
   }
 })
+
+
+function assertInvalidWww(source, cjk) {
+  for (const input of [undefined, 'open', 'ended']) {
+    const { root, decorations } = read(source, input, { cjk })
+    assert.deepEqual(nodes(root, 'link'), [], source)
+    assert.deepEqual(linkDecorations(source, decorations), [], source)
+  }
+}
+test('trailing delimiters cannot validate an incomplete www domain', () => {
+  const sources = ['**www.**', '**www.!**', '**www.?**', '**WWW.**', '*www.*',
+    '_www._', '~~www.~~', '**www.,**', '**www.:**', '**www.;**', '**www.)**', '**www.]**']
+  for (const source of sources) {
+    assertInvalidWww(source, false)
+    assertInvalidWww(source, true)
+  }
+  assert.deepEqual(nodes(read('**www.**').root, 'strong')[0].children,
+    [{ type: 'text', range: { start: 2, end: 6 }, value: 'www.' }])
+})
+
+function assertLabelShape(source, label, cjk) {
+  for (const input of [undefined, 'open', 'ended']) {
+    const { root } = read(source, input, { cjk })
+    const link = nodes(root, 'link')[0]
+    const start = source.indexOf(label)
+    assert.equal(link.origin, 'markdown')
+    assert.equal(link.url, 'target')
+    assert.deepEqual(link.children,
+      [{ type: 'text', range: { start, end: start + label.length }, value: label }], source)
+  }
+}
+test('disabled literal autolinks do not fragment Markdown link labels', () => {
+  const labels = ['https://example.test/a', 'www.example.test/a', 'x www.example.test/a',
+    'https://one.test/a https://two.test/b']
+  for (const label of labels) {
+    assertLabelShape('[' + label + '](target)', label, false)
+    assertLabelShape('**[' + label + '](target)**', label, true)
+    assertLabelShape('[' + label + '][id]\n\n[id]: target', label, true)
+  }
+})

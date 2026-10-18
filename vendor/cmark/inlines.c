@@ -1791,13 +1791,14 @@ static bufsize_t subject_find_special_char(subject *subj, int options) {
   };
 
   bufsize_t n = subj->pos + 1;
+  bool gfm_autolink = (options & CMARK_OPT_GFM) && !subj->last_bracket && subj->refmap->match_autolink;
 
   while (n < subj->input.len) {
     if ((options & CMARK_OPT_MATH) && subj->input.data[n] == '$') return n;
     if ((options & CMARK_OPT_GFM) && subj->input.data[n] == '~') return n;
-    if ((options & CMARK_OPT_GFM) && subj->input.data[n] == ':' && n + 2 < subj->input.len &&
+    if (gfm_autolink && subj->input.data[n] == ':' && n + 2 < subj->input.len &&
         subj->input.data[n + 1] == '/' && subj->input.data[n + 2] == '/') return n;
-    if ((options & CMARK_OPT_GFM) && n + 3 < subj->input.len &&
+    if (gfm_autolink && n + 3 < subj->input.len &&
         (subj->input.data[n] == 'w' || subj->input.data[n] == 'W') &&
         (subj->input.data[n + 1] == 'w' || subj->input.data[n + 1] == 'W') &&
         (subj->input.data[n + 2] == 'w' || subj->input.data[n + 2] == 'W') && subj->input.data[n + 3] == '.' &&

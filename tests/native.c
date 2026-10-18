@@ -133,7 +133,8 @@ static void semantic_prefixes(Document *incremental, Document *fresh, const char
   }
 }
 static void ordinary_text_runs(void) {
-  const char *fixtures[] = {"wwwwwwwwwwww", "WWW.invalid", "::::::::::::"};
+  const char *fixtures[] = {"wwwwwwwwwwww", "WWW.invalid", "::::::::::::",
+    "https://example.test/a", "x www.example.test/a"};
   for (uint32_t i = 0; i < sizeof(fixtures) / sizeof(fixtures[0]); i++) {
     cmark_node *root = cmark_node_new(CMARK_NODE_PARAGRAPH);
     cmark_reference_map *refs = cmark_reference_map_new(cmark_get_default_mem_allocator());
@@ -164,7 +165,9 @@ int main(void) {
     "Title\n---\n\n| a | b |\n| --- | --- |\n| c | d |",
     "$$same *line*\nnext\n$$",
     "A **see(https://exa**mple.test/a)ded** message.\n\n",
-    "**www.example.test/a**b** **https://example.test/a\\*b**"
+    "**www.example.test/a**b** **https://example.test/a\\*b**",
+    "**www.** **www.!** **www.?**",
+    "[https://example.test/a](target) **[https://example.test/a](target)**"
   };
   for (uint32_t i = 0; i < sizeof(fixtures) / sizeof(fixtures[0]); i++)
     semantic_prefixes(incremental, fresh, fixtures[i]);

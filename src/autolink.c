@@ -281,13 +281,13 @@ size_t tsmd_cjk_autolink_end(const uint8_t *data, size_t a, size_t b) {
 bool tsmd_gfm_autolink_match(const uint8_t *data, size_t size, size_t at,
                              size_t *begin, size_t *end, bool cjk) {
   size_t start = at, finish = 0;
+  bool www = false;
 
   if (at >= size)
     return false;
   if (size - at >= 4 && !strncasecmp((const char *)data + at, "www.", 4) &&
       (!at || cmark_isspace(data[at - 1]) || strchr("*_~([]", data[at - 1]))) {
-    if (!check_domain((uint8_t *)data + at, size - at, 0))
-      return false;
+    www = true;
     finish = at + 4;
   } else if (data[at] == ':' && size - at > 3 && data[at + 1] == '/' && data[at + 2] == '/') {
     while (start > 0 && cmark_isalpha(data[start - 1]))
@@ -303,6 +303,8 @@ bool tsmd_gfm_autolink_match(const uint8_t *data, size_t size, size_t at,
   finish = url_end((uint8_t *)data, size, start, finish);
   if (cjk) finish = tsmd_cjk_autolink_end(data, start, finish);
   if (finish <= start)
+    return false;
+  if (www && !check_domain((uint8_t *)data + start, finish - start, 0))
     return false;
   *begin = start;
   *end = finish;
