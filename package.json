@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-md",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Markdown for editors: a tree-sitter block grammar and a CommonMark + GFM inline resolver that runs inside tree-sitter-x",
   "type": "module",
   "main": "./js/index.js",
