@@ -6,12 +6,19 @@
 
 typedef struct { const char *field; uint32_t index; } SemanticPath;
 typedef struct {
+  uint32_t start, end;
+  unsigned char *identifier;
+  bool footnote, resolved;
+} SemanticReference;
+typedef struct {
   Document *d;
   cmark_strbuf json;
   cmark_strbuf provisional, suppressed;
   SemanticPath *path;
   uint32_t path_count, path_cap, source_length;
-  bool open;
+  bool open, presentation;
+  SemanticReference *references;
+  uint32_t reference_count, reference_cap;
   uint32_t skip_until;
   Footnotes *footnotes;
   Footnotes *root_footnotes;
@@ -138,8 +145,8 @@ static void suppressed(Semantic *s, uint32_t a, uint32_t b) {
   s->suppressed = metadata.json;
 }
 static bool open_source_end(Semantic *s, uint32_t end) {
-  uint32_t a, b;
-  return s->open && footnotes_map_range(s->footnotes, end, end, &a, &b) && b == s->source_length;
+  uint32_t mapped;
+  return s->open && footnotes_map_source_end(s->footnotes, end, &mapped) && mapped == s->source_length;
 }
 static uint32_t mapped_start(Leaf *l, uint32_t at) { return l->starts.v[at]; }
 static uint32_t mapped_end(Leaf *l, uint32_t at) {
@@ -371,21 +378,37 @@ static const char *lookup_footnote(void *context, const unsigned char *label, ui
   const Footnote *note = footnotes_lookup(context, label, length);
   return note ? note->identifier : NULL;
 }
-static cmark_node *inline_root(Semantic *s, Leaf *l, uint32_t body) {
+static void collect_references(Semantic *s, Leaf *l, uint32_t body,
+                                 cmark_reference_uses *uses) {
+  for (size_t i = 0; i < uses->count; i++) {
+    cmark_reference_use *use = &uses->items[i];
+    uint32_t a = mapped_start(l, body + use->start), b = mapped_end(l, body + use->end);
+    if (!footnotes_map_range(s->footnotes, a, b, &a, &b)) abort();
+    reserve((void **)&s->references, &s->reference_cap, s->reference_count + 1, sizeof(*s->references));
+    s->references[s->reference_count++] = (SemanticReference){a, b, use->identifier,
+      use->form == CMARK_REFERENCE_FOOTNOTE, use->resolved};
+    use->identifier = NULL;
+  }
+}
+static cmark_node *inline_root(Semantic *s, Leaf *l, uint32_t body, bool observe) {
   cmark_node *root = cmark_node_new(CMARK_NODE_PARAGRAPH);
   root->data = (unsigned char *)l->text + body; root->len = l->n - body;
   root->start_line = 1; root->start_column = 1;
   s->defs->lookup_footnote = lookup_footnote; s->defs->footnote_context = s->root_footnotes;
+  cmark_reference_uses uses = {0};
   cmark_parse_inlines(cmark_get_default_mem_allocator(), root, s->defs,
                       (s->d->gfm ? CMARK_OPT_GFM : 0) | (s->d->cjk ? CMARK_OPT_CJK : 0) |
                         (s->d->math ? CMARK_OPT_MATH : 0) | (s->d->gfm ? CMARK_OPT_FOOTNOTES : 0) |
-                        (open_source_end(s, l->source_end) ? CMARK_OPT_PRESENTATION : 0));
+                        (open_source_end(s, l->source_end) ? CMARK_OPT_PRESENTATION : 0),
+                      s->presentation && observe ? &uses : NULL);
+  collect_references(s, l, body, &uses);
+  cmark_reference_uses_free(cmark_get_default_mem_allocator(), &uses);
   s->defs->lookup_footnote = NULL; s->defs->footnote_context = NULL;
   root->data = NULL; root->len = 0;
   return root;
 }
 static void parse_inlines(Semantic *s, Leaf *l, uint32_t body) {
-  cmark_node *root = inline_root(s, l, body);
+  cmark_node *root = inline_root(s, l, body, true);
   inline_children(s, l, root->first_child, body, false);
   cmark_node_free(root);
 }
@@ -426,7 +449,7 @@ static void paragraph_part(Semantic *s, Leaf *l, uint32_t a, uint32_t limit, boo
   uint32_t body = definitions(s, l, first), b = l->n;
   while (b > body && ws(l->text[b - 1])) b--;
   if (body == b) return;
-  cmark_node *root = inline_root(s, l, body);
+  cmark_node *root = inline_root(s, l, body, true);
   bool visible = false;
   for (cmark_node *n = root->first_child; n; n = n->next) {
     if (n->presentation == CMARK_PRESENTATION_SUPPRESSED) continue;
@@ -606,7 +629,7 @@ static bool math_block(Semantic *s, TSNode n, bool *first) {
     row = consumed;
   }
   bool pending = !closed && open_source_end(s, consumed);
-  if (pending && at < opening_end) {
+  if (at < opening_end) {
     cmark_strbuf received = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
     append_utf16(&received, d, at, opening_end);
     if (opening_end < limit) cmark_strbuf_putc(&received, '\n');
@@ -746,8 +769,81 @@ static bool block_kind(Document *d, TSNode n) {
     id == i->block_quote || id == i->list || id == i->thematic_break || id == i->fenced_code_block ||
     id == i->indented_code_block || id == i->html_block || id == i->pipe_table;
 }
+static bool trailing_source_end(Semantic *s, uint32_t position) {
+  while (position < s->d->len && ws(s->d->text[position])) position++;
+  return open_source_end(s, position);
+}
+static bool visible_inline(cmark_node *root) {
+  for (cmark_node *node = root->first_child; node; node = node->next) {
+    if (node->presentation == CMARK_PRESENTATION_SUPPRESSED) continue;
+    if (node->type == CMARK_NODE_TEXT && !node->len) continue;
+    return true;
+  }
+  return false;
+}
+static bool leaf_definitions(Semantic *s, TSNode node, Leaf *leaf) {
+  for (uint32_t i = 0; i < s->footnotes->count; i++) {
+    const Footnote *note = footnotes_at(s->footnotes, i);
+    if (note->start >= start(node) && note->start < end(node)) return true;
+  }
+  cmark_reference_map *map = cmark_reference_map_new(cmark_get_default_mem_allocator());
+  bool definitions = strip_definitions(leaf, map, NULL) != 0;
+  cmark_reference_map_free(map);
+  return definitions;
+}
+static bool empty_inline_block(Semantic *s, TSNode node, int kind) {
+  leaf_build(s->d, node, kind);
+  Leaf *leaf = &s->d->leaf;
+  if (kind == PARAGRAPH && leaf_definitions(s, node, leaf)) return false;
+  uint32_t budget = s->defs->ref_size;
+  cmark_node *root = inline_root(s, leaf, 0, false);
+  bool empty = !visible_inline(root);
+  cmark_node_free(root); s->defs->ref_size = budget;
+  return empty;
+}
+static TSNode task_marker(Document *document, TSNode item) {
+  TSNode checked = find_child(document, item, document->ids.task_checked);
+  return ts_node_is_null(checked) ? find_child(document, item, document->ids.task_unchecked) : checked;
+}
+static bool empty_task(Semantic *s, TSNode node) {
+  TSNode task = task_marker(s->d, node);
+  if (ts_node_is_null(task)) return true;
+  if (!s->d->gfm) return false;
+  leaf_single(s->d, start(task), end(task));
+  uint32_t budget = s->defs->ref_size;
+  cmark_node *root = inline_root(s, &s->d->leaf, 0, false);
+  bool empty = true;
+  for (cmark_node *n = root->first_child; n; n = n->next)
+    if (n->type != CMARK_NODE_TEXT) empty = false;
+  cmark_node_free(root); s->defs->ref_size = budget;
+  return empty;
+}
+static bool empty_trailing_block(Semantic *s, TSNode node) {
+  Document *d = s->d; uint16_t id = ts_node_symbol(node); Ids *ids = &d->ids;
+  if (!trailing_source_end(s, end(node))) return false;
+  if (id == ids->atx_heading) return empty_inline_block(s, node, ATX);
+  if (id == ids->paragraph) return empty_inline_block(s, node, PARAGRAPH);
+  if (id != ids->block_quote && id != ids->list && id != ids->list_item) return false;
+  if (id == ids->list_item && !empty_task(s, node)) return false;
+  for (uint32_t i = 0; i < ts_node_named_child_count(node); i++) {
+    TSNode child = ts_node_named_child(node, i);
+    if (!block_kind(d, child) && !is(child, ids->list_item)) continue;
+    if (!empty_trailing_block(s, child)) return false;
+  }
+  return true;
+}
+static bool suppress_empty_block(Semantic *s, TSNode node) {
+  if (!s->open || !empty_trailing_block(s, node)) return false;
+  uint32_t finish = end(node);
+  while (finish > start(node) && ws(s->d->text[finish - 1])) finish--;
+  if (finish == start(node)) return false;
+  suppressed(s, start(node), finish);
+  return true;
+}
 static bool item_spread(Document *d, TSNode item) {
-  uint32_t previous = 0; bool found = false;
+  TSNode task = task_marker(d, item);
+  uint32_t previous = ts_node_is_null(task) ? 0 : end(task);
+  bool found = !ts_node_is_null(task);
   for (uint32_t i = 0; i < ts_node_named_child_count(item); i++) {
     TSNode c = ts_node_named_child(item, i);
     if (!block_kind(d, c)) continue;
@@ -778,14 +874,14 @@ static void item(Semantic *s, TSNode n) {
   Document *d = s->d; begin(s, "listItem", start(n), content_end(d, n));
   put(s, item_spread(d, n) ? ",\"spread\":true" : ",\"spread\":false");
   put(s, ",\"checked\":");
-  TSNode checked = find_child(d, n, d->ids.task_checked), unchecked = find_child(d, n, d->ids.task_unchecked);
+  TSNode task = task_marker(d, n);
   TSNode paragraph = find_child(d, n, d->ids.paragraph);
-  bool has_content = !ts_node_is_null(paragraph);
-  if (d->gfm && has_content && !ts_node_is_null(checked)) put(s, "true");
-  else if (d->gfm && has_content && !ts_node_is_null(unchecked)) put(s, "false");
+  bool has_content = !ts_node_is_null(paragraph) &&
+    (ts_node_is_null(task) || !blank_between(d, end(task), start(paragraph)));
+  if (d->gfm && has_content && is(task, d->ids.task_checked)) put(s, "true");
+  else if (d->gfm && has_content && is(task, d->ids.task_unchecked)) put(s, "false");
   else put(s, "null");
   child_array(s, "children"); bool first = true;
-  TSNode task = ts_node_is_null(checked) ? unchecked : checked;
   if (!has_content && !ts_node_is_null(task)) {
     leaf_single(d, start(task), end(task)); paragraph_part(s, &d->leaf, 0, d->leaf.n, &first);
   }
@@ -805,6 +901,7 @@ static void list(Semantic *s, TSNode n) {
   bool first = true;
   for (uint32_t i = 0; i < ts_node_named_child_count(n); i++) {
     TSNode c = ts_node_named_child(n, i); if (!is(c, d->ids.list_item)) continue;
+    if (suppress_empty_block(s, c)) continue;
     separator(s, &first); item(s, c);
   }
   child_array_end(s);
@@ -921,6 +1018,7 @@ static void html(Semantic *s, TSNode n) {
 static void block(Semantic *s, TSNode n, bool *first) {
   Document *d = s->d; uint16_t id = ts_node_symbol(n); Ids *i = &d->ids;
   if (end(n) <= s->skip_until) return;
+  if (suppress_empty_block(s, n)) return;
   if (id == i->paragraph || id == i->reference_definition) {
     if (!math_block(s, n, first)) paragraph(s, n, first);
     return;
@@ -946,12 +1044,29 @@ static void block(Semantic *s, TSNode n, bool *first) {
 static void block_children(Semantic *s, TSNode n, bool *first) {
   for (uint32_t i = 0; i < ts_node_named_child_count(n); i++) block(s, ts_node_named_child(n, i), first);
 }
+static int reference_order(const void *left, const void *right) {
+  const SemanticReference *a = left, *b = right;
+  if (a->start != b->start) return a->start < b->start ? -1 : 1;
+  if (a->end != b->end) return a->end < b->end ? -1 : 1;
+  return 0;
+}
+static void reference_metadata(Semantic *s) {
+  if (s->reference_count) qsort(s->references, s->reference_count, sizeof(*s->references), reference_order);
+  for (uint32_t i = 0; i < s->reference_count; i++) {
+    const SemanticReference *use = &s->references[i];
+    if (i) put(s, ",");
+    put(s, use->footnote ? "{\"kind\":\"footnote\",\"identifier\":" : "{\"kind\":\"link\",\"identifier\":");
+    string(s, use->identifier, strlen((char *)use->identifier)); put(s, ",");
+    range(s, use->start, use->end);
+    put(s, use->resolved ? ",\"resolution\":\"resolved\"}" : ",\"resolution\":\"unresolved\"}");
+  }
+}
 static uint32_t semantic_result(Document *d, bool presentation, uint32_t ended) {
   free(d->semantic); d->semantic = NULL; d->semantic_len = 0;
   Semantic s = {.d = d, .json = CMARK_BUF_INIT(cmark_get_default_mem_allocator()),
     .provisional = CMARK_BUF_INIT(cmark_get_default_mem_allocator()),
     .suppressed = CMARK_BUF_INIT(cmark_get_default_mem_allocator()),
-    .open = presentation && !ended, .source_length = d->len};
+    .open = presentation && !ended, .presentation = presentation, .source_length = d->len};
   s.lone_surrogates = lone_surrogates(d);
   s.footnotes = footnotes_new(d); footnotes_scan(s.footnotes); s.root_footnotes = s.footnotes;
   s.defs = footnotes_definitions(s.footnotes);
@@ -962,9 +1077,11 @@ static uint32_t semantic_result(Document *d, bool presentation, uint32_t ended) 
   if (presentation) {
     put(&s, ",\"provisional\":["); cmark_strbuf_put(&s.json, s.provisional.ptr, s.provisional.size);
     put(&s, "],\"suppressed\":["); cmark_strbuf_put(&s.json, s.suppressed.ptr, s.suppressed.size);
-    put(&s, "],\"references\":[]}");
+    put(&s, "],\"references\":["); reference_metadata(&s); put(&s, "]}");
   }
   d->semantic_len = s.json.size; d->semantic = (char *)cmark_strbuf_detach(&s.json);
+  for (uint32_t i = 0; i < s.reference_count; i++) free(s.references[i].identifier);
+  free(s.references);
   footnotes_free(s.footnotes);
   cmark_reference_map_free(s.defs);
   cmark_strbuf_free(&s.provisional); cmark_strbuf_free(&s.suppressed); free(s.path);

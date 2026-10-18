@@ -1,462 +1,3 @@
---- a/src/inlines.c
-+++ b/src/inlines.c
-@@ -50,0 +51,5 @@
-+
-+typedef struct {
-+  bufsize_t start;
-+  bufsize_t length;
-+} math_run;
-@@ -70,0 +76,4 @@
-+  math_run *math_runs;
-+  bufsize_t math_count;
-+  bufsize_t math_capacity;
-+  bool math_scanned;
-@@ -93,0 +103,2 @@
-+  e->source_start = start_column;
-+  e->source_end = end_column + 1;
-@@ -212,0 +224,3 @@
-+  e->math_runs = NULL;
-+  e->math_count = e->math_capacity = 0;
-+  e->math_scanned = false;
-@@ -346 +360 @@
--    if (numticks <= MAXBACKTICKS) {
-+    if (numticks <= MAXBACKTICKS && subj->pos - numticks > subj->backticks[numticks]) {
-@@ -421,0 +436,175 @@
-+static int compare_math_runs(const void *left, const void *right) {
-+  const math_run *a = left, *b = right;
-+  if (a->length != b->length)
-+    return a->length < b->length ? -1 : 1;
-+  return a->start < b->start ? -1 : a->start > b->start;
-+}
-+
-+static void index_math_runs(subject *subj) {
-+  subj->math_scanned = true;
-+  bufsize_t pos = 0;
-+  while (pos < subj->input.len) {
-+    if (subj->input.data[pos] != '$') {
-+      pos++;
-+      continue;
-+    }
-+    bufsize_t start = pos;
-+    while (pos < subj->input.len && subj->input.data[pos] == '$')
-+      pos++;
-+    if (pos - start < 2)
-+      continue;
-+    if (subj->math_count == subj->math_capacity) {
-+      subj->math_capacity = subj->math_capacity ? subj->math_capacity * 2 : 8;
-+      subj->math_runs = subj->mem->realloc(subj->math_runs,
-+                                         subj->math_capacity * sizeof(math_run));
-+    }
-+    subj->math_runs[subj->math_count++] = (math_run){start, pos - start};
-+  }
-+  qsort(subj->math_runs, subj->math_count, sizeof(math_run), compare_math_runs);
-+}
-+
-+static bufsize_t closing_math_run(subject *subj, bufsize_t start, bufsize_t length) {
-+  if (!subj->math_scanned)
-+    index_math_runs(subj);
-+  bufsize_t low = 0, high = subj->math_count;
-+  while (low < high) {
-+    bufsize_t mid = low + (high - low) / 2;
-+    math_run run = subj->math_runs[mid];
-+    if (run.length < length || (run.length == length && run.start <= start))
-+      low = mid + 1;
-+    else
-+      high = mid;
-+  }
-+  if (low == subj->math_count || subj->math_runs[low].length != length)
-+    return -1;
-+  return subj->math_runs[low].start;
-+}
-+
-+static void trim_math_padding(subject *subj, bufsize_t *start, bufsize_t *end) {
-+  if (*end <= *start)
-+    return;
-+  unsigned char first = subj->input.data[*start], last = subj->input.data[*end - 1];
-+  if ((first != ' ' && !S_is_line_end_char(first)) ||
-+      (last != ' ' && !S_is_line_end_char(last)))
-+    return;
-+  bool has_data = false;
-+  for (bufsize_t pos = *start; pos < *end; pos++) {
-+    unsigned char c = subj->input.data[pos];
-+    has_data = has_data || (c != ' ' && !S_is_line_end_char(c));
-+  }
-+  if (!has_data)
-+    return;
-+  *start += first == '\r' && subj->input.data[*start + 1] == '\n' ? 2 : 1;
-+  *end -= last == '\n' && subj->input.data[*end - 2] == '\r' ? 2 : 1;
-+}
-+
-+static bool escaped_previous_dollar(subject *subj, cmark_node *parent) {
-+  cmark_node *previous = parent->last_child;
-+  return previous && previous->type == CMARK_NODE_TEXT && previous->len == 1 &&
-+         previous->data[0] == '$' && previous->source_end == subj->pos &&
-+         previous->source_end - previous->source_start == 2 &&
-+         subj->input.data[previous->source_start] == '\\';
-+}
-+
-+static cmark_node *handle_math(subject *subj, cmark_node *parent, int options) {
-+  bufsize_t initial = subj->pos;
-+  bool previous_dollar = initial > 0 && subj->input.data[initial - 1] == '$' &&
-+                         !escaped_previous_dollar(subj, parent);
-+  while (peek_char(subj) == '$')
-+    advance(subj);
-+  bufsize_t length = subj->pos - initial, start = subj->pos;
-+  bufsize_t close = length >= 2 && !previous_dollar ?
-+                    closing_math_run(subj, initial, length) : -1;
-+  if (close < 0)
-+    return make_str(subj, initial, start - 1, cmark_chunk_dup(&subj->input, initial, length));
-+  bufsize_t end = close;
-+  trim_math_padding(subj, &start, &end);
-+  cmark_node *node = make_literal(subj, CMARK_NODE_INLINE_MATH, initial, close + length - 1);
-+  node->len = end - start;
-+  node->data = subj->mem->realloc(NULL, node->len + 1);
-+  memcpy(node->data, subj->input.data + start, node->len);
-+  node->data[node->len] = 0;
-+  subj->pos = close + length;
-+  adjust_subj_node_newlines(subj, node, subj->pos - initial, 0, options);
-+  return node;
-+}
-+
-+enum {
-+  CJK_SPACE = 1, CJK_PUNCTUATION = 2, CJK_CHARACTER = 4096,
-+  CJK_IVS = 8192, CJK_VARIATION_SELECTOR = 16384
-+};
-+static const struct { uint32_t start, end, category; } cjk_categories[] = {
-+#include "cjk_categories.inc"
-+};
-+
-+static uint32_t cjk_category(int32_t scalar) {
-+  size_t low = 0, high = sizeof(cjk_categories) / sizeof(*cjk_categories);
-+  while (low < high) {
-+    size_t mid = low + (high - low) / 2;
-+    if ((uint32_t)scalar > cjk_categories[mid].end)
-+      low = mid + 1;
-+    else
-+      high = mid;
-+  }
-+  if (low == sizeof(cjk_categories) / sizeof(*cjk_categories) ||
-+      (uint32_t)scalar < cjk_categories[low].start)
-+    return 0;
-+  return cjk_categories[low].category;
-+}
-+
-+static int32_t previous_scalar(subject *subj, bufsize_t end) {
-+  if (end <= 0)
-+    return '\n';
-+  bufsize_t start = end - 1;
-+  while (start > 0 && subj->input.data[start] >> 6 == 2)
-+    start--;
-+  int32_t scalar = '\n';
-+  cmark_utf8proc_iterate(subj->input.data + start, end - start, &scalar);
-+  return scalar;
-+}
-+
-+static uint32_t preceding_cjk_category(subject *subj, int32_t scalar, bufsize_t before) {
-+  uint32_t category = cjk_category(scalar);
-+  if (category != CJK_VARIATION_SELECTOR)
-+    return category;
-+  int32_t previous = previous_scalar(subj, before);
-+  uint32_t primary = cjk_category(previous);
-+  if (primary & CJK_SPACE)
-+    return category;
-+  if (scalar == 0xfe01 && (previous == 0x2018 || previous == 0x2019 ||
-+                         previous == 0x201c || previous == 0x201d))
-+    return CJK_CHARACTER | CJK_PUNCTUATION;
-+  return primary & ~CJK_IVS;
-+}
-+
-+static bool non_cjk_punctuation(uint32_t category) {
-+  return (category & (CJK_CHARACTER | CJK_PUNCTUATION)) == CJK_PUNCTUATION;
-+}
-+
-+static bool attention_marker(int32_t scalar, int options) {
-+  return scalar == '*' || scalar == '_' || ((options & CMARK_OPT_GFM) && scalar == '~');
-+}
-+
-+static void cjk_delims(subject *subj, unsigned char marker, int32_t before, int32_t after,
-+                       bufsize_t before_pos, int options, bool *open, bool *close) {
-+  uint32_t raw_before = cjk_category(before);
-+  uint32_t primary = preceding_cjk_category(subj, before, before_pos);
-+  uint32_t following = cjk_category(after);
-+  bool before_punct = non_cjk_punctuation(primary), after_punct = non_cjk_punctuation(following);
-+  bool before_space = before_punct || (primary & CJK_SPACE);
-+  bool after_space = after_punct || (following & CJK_SPACE);
-+  bool before_cjk = primary & (CJK_CHARACTER | CJK_IVS);
-+  if (marker == '~') {
-+    *open = !after_space || (following == CJK_PUNCTUATION &&
-+                            (before_space || (primary & CJK_CHARACTER) || raw_before == CJK_IVS));
-+    *close = !before_space || (raw_before == CJK_PUNCTUATION &&
-+                              (after_space || (following & CJK_CHARACTER)));
-+    return;
-+  }
-+  bool left = !after_space || (after_punct && (before_space || before_cjk)) ||
-+              attention_marker(after, options);
-+  bool right = !before_space || (before_punct && (after_space || (following & CJK_CHARACTER))) ||
-+               attention_marker(before, options);
-+  *open = marker == '*' ? left : left && ((primary & (CJK_SPACE | CJK_PUNCTUATION)) || !right);
-+  *close = marker == '*' ? right : right && ((following & (CJK_SPACE | CJK_PUNCTUATION)) || !left);
-+}
-@@ -426 +615 @@
--                       bool *can_close) {
-+                       bool *can_close, int options) {
-@@ -428 +617 @@
--  bufsize_t before_char_pos;
-+  bufsize_t before_char_pos = 0;
-@@ -462,0 +652,4 @@
-+  }
-+  if ((options & CMARK_OPT_CJK) && (c == '*' || c == '_' || c == '~')) {
-+    cjk_delims(subj, c, before_char, after_char, before_char_pos, options, can_open, can_close);
-+    return numdelims;
-@@ -566 +759 @@
--static cmark_node *handle_delim(subject *subj, unsigned char c, bool smart) {
-+static cmark_node *handle_delim(subject *subj, unsigned char c, int options) {
-@@ -572 +765,2 @@
--  numdelims = scan_delims(subj, c, &can_open, &can_close);
-+  bool smart = (options & CMARK_OPT_SMART) != 0;
-+  numdelims = scan_delims(subj, c, &can_open, &can_close, options);
-@@ -585 +779 @@
--  if ((can_open || can_close) && (!(c == '\'' || c == '"') || smart)) {
-+  if ((c != '~' || numdelims == 1 || numdelims == 2) && (can_open || can_close) && (!(c == '\'' || c == '"') || smart)) {
-@@ -658 +852 @@
--  bufsize_t openers_bottom[15] = {stack_bottom, stack_bottom, stack_bottom,
-+  bufsize_t openers_bottom[17] = {stack_bottom, stack_bottom, stack_bottom,
-@@ -662 +856 @@
--                                  stack_bottom, stack_bottom, stack_bottom};
-+                                  stack_bottom, stack_bottom, stack_bottom, stack_bottom, stack_bottom};
-@@ -684,0 +879,3 @@
-+      case '~':
-+        openers_bottom_index = 14 + closer->length;
-+        break;
-@@ -701 +898,2 @@
--          if (!(closer->can_open || opener->can_close) ||
-+          if ((closer->delim_char == '~' && opener->length == closer->length) ||
-+              (closer->delim_char != '~' && (!(closer->can_open || opener->can_close) ||
-@@ -703 +901 @@
--              (opener->length + closer->length) % 3 != 0) {
-+              (opener->length + closer->length) % 3 != 0))) {
-@@ -711 +909 @@
--      if (closer->delim_char == '*' || closer->delim_char == '_') {
-+      if (closer->delim_char == '*' || closer->delim_char == '_' || closer->delim_char == '~') {
-@@ -811,0 +1010,5 @@
-+  emph->source_start = opener_inl->source_end - use_delims;
-+  emph->source_end = closer_inl->source_start + use_delims;
-+  opener_inl->source_end -= use_delims;
-+  closer_inl->source_start += use_delims;
-+  if (opener->delim_char == '~') emph->type = CMARK_NODE_STRIKETHROUGH;
-@@ -1083 +1286 @@
--  if (i >= input->len || nb_p != 0)
-+  if (nb_p != 0)
-@@ -1114 +1317 @@
--  if (i >= input->len)
-+  if (i > input->len || input->data[i - 1] != '>')
-@@ -1232,0 +1436,4 @@
-+  inl->source_start = opener->inl_text->source_start;
-+  inl->source_end = subj->pos;
-+  inl->label_start = opener->position;
-+  inl->label_end = initial_pos - 1;
-@@ -1319,0 +1527,2 @@
-+    if ((options & CMARK_OPT_MATH) && subj->input.data[n] == '$') return n;
-+    if ((options & CMARK_OPT_GFM) && subj->input.data[n] == '~') return n;
-@@ -1327,0 +1537,34 @@
-+}
-+
-+static const char *footnote_reference(subject *subj, bufsize_t *closing) {
-+  if (!subj->refmap->lookup_footnote || subj->pos + 2 >= subj->input.len ||
-+      subj->input.data[subj->pos + 1] != '^')
-+    return NULL;
-+  bufsize_t start = subj->pos + 2, end = start;
-+  while (end < subj->input.len && end - start <= MAX_LINK_LABEL_LENGTH) {
-+    unsigned char c = subj->input.data[end];
-+    if (c == ']')
-+      break;
-+    if (c == '[')
-+      return NULL;
-+    end += c == '\\' && end + 1 < subj->input.len && cmark_ispunct(subj->input.data[end + 1]) ? 2 : 1;
-+  }
-+  if (end >= subj->input.len || end == start || end - start > MAX_LINK_LABEL_LENGTH)
-+    return NULL;
-+  const char *identifier = subj->refmap->lookup_footnote(subj->refmap->footnote_context,
-+                              subj->input.data + start, end - start);
-+  *closing = end;
-+  return identifier;
-+}
-+
-+static cmark_node *handle_footnote_reference(subject *subj) {
-+  bufsize_t end = 0;
-+  const char *identifier = footnote_reference(subj, &end);
-+  if (!identifier)
-+    return NULL;
-+  cmark_node *node = make_literal(subj, CMARK_NODE_FOOTNOTE_REFERENCE, subj->pos, end);
-+  node->len = strlen(identifier);
-+  node->data = subj->mem->realloc(NULL, node->len + 1);
-+  memcpy(node->data, identifier, node->len + 1);
-+  subj->pos = end + 1;
-+  return node;
-@@ -1336,0 +1580 @@
-+  bufsize_t source_start = subj->pos;
-@@ -1341,0 +1586,5 @@
-+  case '$':
-+    if (!(options & CMARK_OPT_MATH))
-+      goto text_run;
-+    new_inl = handle_math(subj, parent, options);
-+    break;
-@@ -1357,0 +1607,6 @@
-+  case '~':
-+    if (!(options & CMARK_OPT_GFM)) {
-+      advance(subj);
-+      new_inl = make_str(subj, source_start, source_start, cmark_chunk_literal("~"));
-+      break;
-+    }
-@@ -1362 +1617 @@
--    new_inl = handle_delim(subj, c, (options & CMARK_OPT_SMART) != 0);
-+    new_inl = handle_delim(subj, c, options);
-@@ -1370,0 +1626,4 @@
-+    if (options & CMARK_OPT_FOOTNOTES)
-+      new_inl = handle_footnote_reference(subj);
-+    if (new_inl)
-+      break;
-@@ -1379,0 +1639,5 @@
-+    if (peek_char(subj) == '[' && (options & CMARK_OPT_FOOTNOTES) &&
-+        footnote_reference(subj, &endpos)) {
-+      new_inl = make_str(subj, subj->pos - 1, subj->pos - 1, cmark_chunk_literal("!"));
-+      break;
-+    }
-@@ -1388,0 +1653 @@
-+  text_run:
-@@ -1401,0 +1667,16 @@
-+    new_inl->source_start = source_start;
-+    new_inl->source_end = subj->pos;
-+    if (new_inl->type == CMARK_NODE_LINEBREAK) {
-+      if (c == '\n' || c == '\r') {
-+        while (new_inl->source_start > 0 && subj->input.data[new_inl->source_start - 1] == ' ')
-+          new_inl->source_start--;
-+      }
-+      int e = source_start + 1;
-+      if (c == '\\') e++;
-+      if (e < subj->input.len && subj->input.data[e - 1] == '\r' && subj->input.data[e] == '\n') e++;
-+      new_inl->source_end = e;
-+    }
-+    if (new_inl->type == CMARK_NODE_LINK) {
-+      new_inl->label_start = source_start + 1;
-+      new_inl->label_end = subj->pos - 1;
-+    }
-@@ -1428,0 +1710 @@
-+  mem->free(subj.math_runs);
-@@ -1443,2 +1725,2 @@
--bufsize_t cmark_parse_reference_inline(cmark_mem *mem, cmark_chunk *input,
--                                       cmark_reference_map *refmap) {
-+static bufsize_t parse_reference(cmark_chunk *input, cmark_chunk *lab,
-+                                cmark_chunk *url, cmark_chunk *title, bufsize_t *title_start) {
-@@ -1447,3 +1728,0 @@
--  cmark_chunk lab;
--  cmark_chunk url;
--  cmark_chunk title;
-@@ -1454 +1733 @@
--  subject_from_buf(mem, -1, 0, &subj, input, NULL);
-+  subject_from_buf(NULL, -1, 0, &subj, input, NULL);
-@@ -1457 +1736 @@
--  if (!link_label(&subj, &lab) || lab.len == 0)
-+  if (!link_label(&subj, lab) || lab->len == 0)
-@@ -1469 +1748 @@
--  if ((matchlen = manual_scan_link_url(&subj.input, subj.pos, &url)) > -1) {
-+  if ((matchlen = manual_scan_link_url(&subj.input, subj.pos, url)) > 0) {
-@@ -1477,0 +1757,3 @@
-+  if (title_start && subj.pos > beforetitle &&
-+      (peek_char(&subj) == '\'' || peek_char(&subj) == '"' || peek_char(&subj) == '('))
-+    *title_start = subj.pos;
-@@ -1480 +1762 @@
--    title = cmark_chunk_dup(&subj.input, subj.pos, matchlen);
-+    *title = cmark_chunk_dup(&subj.input, subj.pos, matchlen);
-@@ -1484 +1766 @@
--    title = cmark_chunk_literal("");
-+    *title = cmark_chunk_literal("");
-@@ -1489 +1771 @@
--  if (!skip_line_end(&subj)) {
-+  if (!skip_line_end(&subj) && !is_eof(&subj)) {
-@@ -1493 +1775 @@
--      if (!skip_line_end(&subj)) {
-+      if (!skip_line_end(&subj) && !is_eof(&subj)) {
-@@ -1500,2 +1781,0 @@
--  // insert reference into refmap
--  cmark_reference_create(refmap, &lab, &url, &title);
-@@ -1503,0 +1784,16 @@
-+
-+bufsize_t cmark_reference_definition_length(cmark_chunk *input, bufsize_t *title_start) {
-+  cmark_chunk label, url, title;
-+  *title_start = -1;
-+  return parse_reference(input, &label, &url, &title, title_start);
-+}
-+
-+bufsize_t cmark_parse_reference_inline(cmark_mem *mem, cmark_chunk *input,
-+                                     cmark_reference_map *refmap) {
-+  (void)mem;
-+  cmark_chunk label, url, title;
-+  bufsize_t length = parse_reference(input, &label, &url, &title, NULL);
-+  if (length)
-+    cmark_reference_create(refmap, &label, &url, &title);
-+  return length;
-+}
---- a/src/references.c
-+++ b/src/references.c
-@@ -124 +124 @@
--  if (map == NULL || !map->size)
-+  if (map == NULL)
-@@ -130,0 +131,2 @@
-+  if (map->lookup_label) map->lookup_label(map->lookup_context, (char *)norm);
-+  if (!map->size) { map->mem->free(norm); return NULL; }
---- a/src/references.h
-+++ b/src/references.h
-@@ -22,0 +23,4 @@
-+  void (*lookup_label)(void *, const char *);
-+  void *lookup_context;
-+  const char *(*lookup_footnote)(void *, const unsigned char *, uint32_t);
-+  void *footnote_context;
---- a/src/node.c
-+++ b/src/node.c
-@@ -35,0 +36,2 @@
-+    case CMARK_NODE_INLINE_MATH: return true;
-+    case CMARK_NODE_FOOTNOTE_REFERENCE: return true;
-@@ -77,0 +80 @@
-+  case CMARK_NODE_STRIKETHROUGH:
-@@ -132,0 +136,2 @@
-+    case CMARK_NODE_INLINE_MATH:
-+    case CMARK_NODE_FOOTNOTE_REFERENCE:
-@@ -209,0 +215,4 @@
-+  case CMARK_NODE_INLINE_MATH:
-+    return "inline_math";
-+  case CMARK_NODE_FOOTNOTE_REFERENCE:
-+    return "footnote_reference";
-@@ -217,0 +227,2 @@
-+  case CMARK_NODE_STRIKETHROUGH:
-+    return "strikethrough";
-@@ -312,0 +324,2 @@
-+  case CMARK_NODE_INLINE_MATH:
-+  case CMARK_NODE_FOOTNOTE_REFERENCE:
-@@ -332,0 +346,2 @@
-+  case CMARK_NODE_INLINE_MATH:
-+  case CMARK_NODE_FOOTNOTE_REFERENCE:
---- a/src/node.h
-+++ b/src/node.h
-@@ -69,0 +70,3 @@
-+  int source_start, source_end;
-+  int label_start, label_end;
-+
---- a/src/cmark.h
-+++ b/src/cmark.h
-@@ -63,0 +64,3 @@
-+  CMARK_NODE_STRIKETHROUGH,
-+  CMARK_NODE_INLINE_MATH,
-+  CMARK_NODE_FOOTNOTE_REFERENCE,
-@@ -66 +69 @@
--  CMARK_NODE_LAST_INLINE = CMARK_NODE_IMAGE
-+  CMARK_NODE_LAST_INLINE = CMARK_NODE_FOOTNOTE_REFERENCE
-@@ -704,0 +708,5 @@
-+
-+#define CMARK_OPT_GFM (1 << 20)
-+#define CMARK_OPT_CJK (1 << 21)
-+#define CMARK_OPT_MATH (1 << 22)
-+#define CMARK_OPT_FOOTNOTES (1 << 23)
 --- a/src/buffer.c
 +++ b/src/buffer.c
 @@ -44,3 +43,0 @@
@@ -917,3 +458,833 @@
 +  {0x20000, 0x2fffd, 4096},
 +  {0x30000, 0x3fffd, 4096},
 +  {0xe0100, 0xe01ef, 8192},
+--- a/src/cmark.h
++++ b/src/cmark.h
+@@ -63,0 +64,3 @@
++  CMARK_NODE_STRIKETHROUGH,
++  CMARK_NODE_INLINE_MATH,
++  CMARK_NODE_FOOTNOTE_REFERENCE,
+@@ -66 +69 @@
+-  CMARK_NODE_LAST_INLINE = CMARK_NODE_IMAGE
++  CMARK_NODE_LAST_INLINE = CMARK_NODE_FOOTNOTE_REFERENCE
+@@ -704,0 +708,6 @@
++
++#define CMARK_OPT_GFM (1 << 20)
++#define CMARK_OPT_CJK (1 << 21)
++#define CMARK_OPT_MATH (1 << 22)
++#define CMARK_OPT_FOOTNOTES (1 << 23)
++#define CMARK_OPT_PRESENTATION (1 << 24)
+--- a/src/inlines.c
++++ b/src/inlines.c
+@@ -51,0 +52,5 @@
++typedef struct {
++  bufsize_t start;
++  bufsize_t length;
++} math_run;
++
+@@ -59,0 +65,2 @@
++  bufsize_t received_len;
++  bool temporary_eof;
+@@ -65,0 +73,2 @@
++  cmark_reference_uses *uses;
++  bufsize_t reference_label_start, reference_label_end;
+@@ -70,0 +80,4 @@
++  math_run *math_runs;
++  bufsize_t math_count;
++  bufsize_t math_capacity;
++  bool math_scanned;
+@@ -93,0 +107,2 @@
++  e->source_start = start_column;
++  e->source_end = end_column + 1;
+@@ -199,0 +215,2 @@
++  e->received_len = chunk->len;
++  e->temporary_eof = false;
+@@ -205,0 +223,2 @@
++  e->uses = NULL;
++  e->reference_label_start = e->reference_label_end = -1;
+@@ -212,0 +232,3 @@
++  e->math_runs = NULL;
++  e->math_count = e->math_capacity = 0;
++  e->math_scanned = false;
+@@ -346 +368 @@
+-    if (numticks <= MAXBACKTICKS) {
++    if (numticks <= MAXBACKTICKS && subj->pos - numticks > subj->backticks[numticks]) {
+@@ -394,0 +417,20 @@
++static cmark_node *open_code(subject *subj, bufsize_t initial,
++                             bufsize_t content, int options) {
++  if (content == subj->received_len) {
++    cmark_node *node = make_str(subj, initial, content - 1,
++        cmark_chunk_dup(&subj->input, initial, content - initial));
++    node->presentation = CMARK_PRESENTATION_SUPPRESSED;
++    return node;
++  }
++  cmark_strbuf value = CMARK_BUF_INIT(subj->mem);
++  cmark_strbuf_set(&value, subj->input.data + content, subj->received_len - content);
++  S_normalize_code(&value);
++  cmark_node *node = make_literal(subj, CMARK_NODE_CODE, initial, subj->received_len - 1);
++  node->presentation = CMARK_PRESENTATION_CODE;
++  node->len = value.size;
++  node->data = cmark_strbuf_detach(&value);
++  subj->pos = subj->received_len;
++  adjust_subj_node_newlines(subj, node, subj->pos - content, 0, options);
++  return node;
++}
++
+@@ -404,0 +447,2 @@
++    if (subj->temporary_eof)
++      return open_code(subj, initpos, startpos, options);
+@@ -421,0 +466,190 @@
++static int compare_math_runs(const void *left, const void *right) {
++  const math_run *a = left, *b = right;
++  if (a->length != b->length)
++    return a->length < b->length ? -1 : 1;
++  return a->start < b->start ? -1 : a->start > b->start;
++}
++
++static void index_math_runs(subject *subj) {
++  subj->math_scanned = true;
++  bufsize_t pos = 0;
++  while (pos < subj->input.len) {
++    if (subj->input.data[pos] != '$') {
++      pos++;
++      continue;
++    }
++    bufsize_t start = pos;
++    while (pos < subj->input.len && subj->input.data[pos] == '$')
++      pos++;
++    if (pos - start < 2)
++      continue;
++    if (subj->math_count == subj->math_capacity) {
++      subj->math_capacity = subj->math_capacity ? subj->math_capacity * 2 : 8;
++      subj->math_runs = subj->mem->realloc(subj->math_runs,
++                                         subj->math_capacity * sizeof(math_run));
++    }
++    subj->math_runs[subj->math_count++] = (math_run){start, pos - start};
++  }
++  qsort(subj->math_runs, subj->math_count, sizeof(math_run), compare_math_runs);
++}
++
++static bufsize_t closing_math_run(subject *subj, bufsize_t start, bufsize_t length) {
++  if (!subj->math_scanned)
++    index_math_runs(subj);
++  bufsize_t low = 0, high = subj->math_count;
++  while (low < high) {
++    bufsize_t mid = low + (high - low) / 2;
++    math_run run = subj->math_runs[mid];
++    if (run.length < length || (run.length == length && run.start <= start))
++      low = mid + 1;
++    else
++      high = mid;
++  }
++  if (low == subj->math_count || subj->math_runs[low].length != length)
++    return -1;
++  return subj->math_runs[low].start;
++}
++
++static void trim_math_padding(subject *subj, bufsize_t *start, bufsize_t *end) {
++  if (*end <= *start)
++    return;
++  unsigned char first = subj->input.data[*start], last = subj->input.data[*end - 1];
++  if ((first != ' ' && !S_is_line_end_char(first)) ||
++      (last != ' ' && !S_is_line_end_char(last)))
++    return;
++  bool has_data = false;
++  for (bufsize_t pos = *start; pos < *end; pos++) {
++    unsigned char c = subj->input.data[pos];
++    has_data = has_data || (c != ' ' && !S_is_line_end_char(c));
++  }
++  if (!has_data)
++    return;
++  *start += first == '\r' && subj->input.data[*start + 1] == '\n' ? 2 : 1;
++  *end -= last == '\n' && subj->input.data[*end - 2] == '\r' ? 2 : 1;
++}
++
++static bool escaped_previous_dollar(subject *subj, cmark_node *parent) {
++  cmark_node *previous = parent->last_child;
++  return previous && previous->type == CMARK_NODE_TEXT && previous->len == 1 &&
++         previous->data[0] == '$' && previous->source_end == subj->pos &&
++         previous->source_end - previous->source_start == 2 &&
++         subj->input.data[previous->source_start] == '\\';
++}
++
++static cmark_node *open_math(subject *subj, bufsize_t initial,
++                             bufsize_t content, int options) {
++  cmark_node *node = make_literal(subj, CMARK_NODE_INLINE_MATH, initial, subj->received_len - 1);
++  node->presentation = CMARK_PRESENTATION_MATH;
++  node->len = subj->received_len - content;
++  node->data = subj->mem->realloc(NULL, node->len + 1);
++  memcpy(node->data, subj->input.data + content, node->len);
++  node->data[node->len] = 0;
++  subj->pos = subj->received_len;
++  adjust_subj_node_newlines(subj, node, subj->pos - initial, 0, options);
++  return node;
++}
++
++static cmark_node *handle_math(subject *subj, cmark_node *parent, int options) {
++  bufsize_t initial = subj->pos;
++  bool previous_dollar = initial > 0 && subj->input.data[initial - 1] == '$' &&
++                         !escaped_previous_dollar(subj, parent);
++  while (peek_char(subj) == '$')
++    advance(subj);
++  bufsize_t length = subj->pos - initial, start = subj->pos;
++  bufsize_t close = length >= 2 && !previous_dollar ?
++                    closing_math_run(subj, initial, length) : -1;
++  if (close < 0 && subj->temporary_eof && length >= 2 && !previous_dollar && start < subj->received_len)
++    return open_math(subj, initial, start, options);
++  if (close < 0)
++    return make_str(subj, initial, start - 1, cmark_chunk_dup(&subj->input, initial, length));
++  bufsize_t end = close;
++  trim_math_padding(subj, &start, &end);
++  cmark_node *node = make_literal(subj, CMARK_NODE_INLINE_MATH, initial, close + length - 1);
++  node->len = end - start;
++  node->data = subj->mem->realloc(NULL, node->len + 1);
++  memcpy(node->data, subj->input.data + start, node->len);
++  node->data[node->len] = 0;
++  subj->pos = close + length;
++  adjust_subj_node_newlines(subj, node, subj->pos - initial, 0, options);
++  return node;
++}
++
++enum {
++  CJK_SPACE = 1, CJK_PUNCTUATION = 2, CJK_CHARACTER = 4096,
++  CJK_IVS = 8192, CJK_VARIATION_SELECTOR = 16384
++};
++static const struct { uint32_t start, end, category; } cjk_categories[] = {
++#include "cjk_categories.inc"
++};
++
++static uint32_t cjk_category(int32_t scalar) {
++  size_t low = 0, high = sizeof(cjk_categories) / sizeof(*cjk_categories);
++  while (low < high) {
++    size_t mid = low + (high - low) / 2;
++    if ((uint32_t)scalar > cjk_categories[mid].end)
++      low = mid + 1;
++    else
++      high = mid;
++  }
++  if (low == sizeof(cjk_categories) / sizeof(*cjk_categories) ||
++      (uint32_t)scalar < cjk_categories[low].start)
++    return 0;
++  return cjk_categories[low].category;
++}
++
++static int32_t previous_scalar(subject *subj, bufsize_t end) {
++  if (end <= 0)
++    return '\n';
++  bufsize_t start = end - 1;
++  while (start > 0 && subj->input.data[start] >> 6 == 2)
++    start--;
++  int32_t scalar = '\n';
++  cmark_utf8proc_iterate(subj->input.data + start, end - start, &scalar);
++  return scalar;
++}
++
++static uint32_t preceding_cjk_category(subject *subj, int32_t scalar, bufsize_t before) {
++  uint32_t category = cjk_category(scalar);
++  if (category != CJK_VARIATION_SELECTOR)
++    return category;
++  int32_t previous = previous_scalar(subj, before);
++  uint32_t primary = cjk_category(previous);
++  if (primary & CJK_SPACE)
++    return category;
++  if (scalar == 0xfe01 && (previous == 0x2018 || previous == 0x2019 ||
++                         previous == 0x201c || previous == 0x201d))
++    return CJK_CHARACTER | CJK_PUNCTUATION;
++  return primary & ~CJK_IVS;
++}
++
++static bool non_cjk_punctuation(uint32_t category) {
++  return (category & (CJK_CHARACTER | CJK_PUNCTUATION)) == CJK_PUNCTUATION;
++}
++
++static bool attention_marker(int32_t scalar, int options) {
++  return scalar == '*' || scalar == '_' || ((options & CMARK_OPT_GFM) && scalar == '~');
++}
++
++static void cjk_delims(subject *subj, unsigned char marker, int32_t before, int32_t after,
++                       bufsize_t before_pos, int options, bool *open, bool *close) {
++  uint32_t raw_before = cjk_category(before);
++  uint32_t primary = preceding_cjk_category(subj, before, before_pos);
++  uint32_t following = cjk_category(after);
++  bool before_punct = non_cjk_punctuation(primary), after_punct = non_cjk_punctuation(following);
++  bool before_space = before_punct || (primary & CJK_SPACE);
++  bool after_space = after_punct || (following & CJK_SPACE);
++  bool before_cjk = primary & (CJK_CHARACTER | CJK_IVS);
++  if (marker == '~') {
++    *open = !after_space || (following == CJK_PUNCTUATION &&
++                            (before_space || (primary & CJK_CHARACTER) || raw_before == CJK_IVS));
++    *close = !before_space || (raw_before == CJK_PUNCTUATION &&
++                              (after_space || (following & CJK_CHARACTER)));
++    return;
++  }
++  bool left = !after_space || (after_punct && (before_space || before_cjk)) ||
++              attention_marker(after, options);
++  bool right = !before_space || (before_punct && (after_space || (following & CJK_CHARACTER))) ||
++               attention_marker(before, options);
++  *open = marker == '*' ? left : left && ((primary & (CJK_SPACE | CJK_PUNCTUATION)) || !right);
++  *close = marker == '*' ? right : right && ((following & (CJK_SPACE | CJK_PUNCTUATION)) || !left);
++}
+@@ -426 +660 @@
+-                       bool *can_close) {
++                       bool *can_close, int options) {
+@@ -428 +662 @@
+-  bufsize_t before_char_pos;
++  bufsize_t before_char_pos = 0;
+@@ -462,0 +697,4 @@
++  }
++  if ((options & CMARK_OPT_CJK) && (c == '*' || c == '_' || c == '~')) {
++    cjk_delims(subj, c, before_char, after_char, before_char_pos, options, can_open, can_close);
++    return numdelims;
+@@ -566 +804 @@
+-static cmark_node *handle_delim(subject *subj, unsigned char c, bool smart) {
++static cmark_node *handle_delim(subject *subj, unsigned char c, int options) {
+@@ -572 +810,2 @@
+-  numdelims = scan_delims(subj, c, &can_open, &can_close);
++  bool smart = (options & CMARK_OPT_SMART) != 0;
++  numdelims = scan_delims(subj, c, &can_open, &can_close, options);
+@@ -584,2 +823,5 @@
+-
+-  if ((can_open || can_close) && (!(c == '\'' || c == '"') || smart)) {
++  if (subj->temporary_eof && subj->pos == subj->input.len && !can_open && !can_close &&
++      (c == '*' || c == '_' || (c == '~' && numdelims <= 2)))
++    inl_text->presentation = CMARK_PRESENTATION_SUPPRESSED;
++
++  if ((c != '~' || numdelims == 1 || numdelims == 2) && (can_open || can_close) && (!(c == '\'' || c == '"') || smart)) {
+@@ -651 +893,48 @@
+-static void process_emphasis(subject *subj, bufsize_t stack_bottom) {
++static bool visible_tail(cmark_node *marker) {
++  for (cmark_node *node = marker->next; node; node = node->next) {
++    if (node->presentation == CMARK_PRESENTATION_SUPPRESSED)
++      continue;
++    if (node->type != CMARK_NODE_TEXT || node->len)
++      return true;
++  }
++  return false;
++}
++
++static void move_tail(cmark_node *after, cmark_node *parent) {
++  cmark_node *node = after->next;
++  while (node) {
++    cmark_node *next = node->next;
++    cmark_node_unlink(node);
++    append_child(parent, node);
++    node = next;
++  }
++}
++
++static void open_delimiter(subject *subj, delimiter *opener) {
++  cmark_node *marker = opener->inl_text;
++  if (!opener->can_open || !visible_tail(marker))
++    return;
++  if (opener->delim_char != '*' && opener->delim_char != '_' && opener->delim_char != '~')
++    return;
++  while (marker->len) {
++    bufsize_t used = marker->len >= 2 ? 2 : 1;
++    cmark_node *node = used == 1 ? make_emph(subj->mem) : make_strong(subj->mem);
++    if (opener->delim_char == '~') node->type = CMARK_NODE_STRIKETHROUGH;
++    node->presentation = CMARK_PRESENTATION_DELIMITER;
++    node->source_start = marker->source_end - used;
++    node->source_end = subj->pos;
++    node->start_line = marker->start_line;
++    node->end_line = subj->line;
++    node->start_column = marker->end_column - used + 1;
++    node->end_column = subj->pos + subj->column_offset + subj->block_offset;
++    cmark_node_insert_after(marker, node);
++    move_tail(node, node);
++    marker->len -= used;
++    marker->data[marker->len] = 0;
++    marker->source_end -= used;
++    marker->end_column -= used;
++  }
++  cmark_node_free(marker);
++}
++
++static void process_emphasis(subject *subj, bufsize_t stack_bottom, bool temporary_eof) {
+@@ -658 +947 @@
+-  bufsize_t openers_bottom[15] = {stack_bottom, stack_bottom, stack_bottom,
++  bufsize_t openers_bottom[17] = {stack_bottom, stack_bottom, stack_bottom,
+@@ -662 +951 @@
+-                                  stack_bottom, stack_bottom, stack_bottom};
++                                  stack_bottom, stack_bottom, stack_bottom, stack_bottom, stack_bottom};
+@@ -684,0 +974,3 @@
++      case '~':
++        openers_bottom_index = 14 + closer->length;
++        break;
+@@ -701 +993,2 @@
+-          if (!(closer->can_open || opener->can_close) ||
++          if ((closer->delim_char == '~' && opener->length == closer->length) ||
++              (closer->delim_char != '~' && (!(closer->can_open || opener->can_close) ||
+@@ -703 +996 @@
+-              (opener->length + closer->length) % 3 != 0) {
++              (opener->length + closer->length) % 3 != 0))) {
+@@ -711 +1004 @@
+-      if (closer->delim_char == '*' || closer->delim_char == '_') {
++      if (closer->delim_char == '*' || closer->delim_char == '_' || closer->delim_char == '~') {
+@@ -750,0 +1044,2 @@
++    if (temporary_eof)
++      open_delimiter(subj, subj->last_delim);
+@@ -811,0 +1107,5 @@
++  emph->source_start = opener_inl->source_end - use_delims;
++  emph->source_end = closer_inl->source_start + use_delims;
++  opener_inl->source_end -= use_delims;
++  closer_inl->source_start += use_delims;
++  if (opener->delim_char == '~') emph->type = CMARK_NODE_STRIKETHROUGH;
+@@ -1032 +1332,4 @@
+-      advance(subj);
++      int32_t scalar;
++      int width = cmark_utf8proc_iterate(subj->input.data + subj->pos,
++                                         subj->input.len - subj->pos, &scalar);
++      subj->pos += width > 0 ? width : 1;
+@@ -1054 +1357 @@
+-                                        cmark_chunk *output) {
++                                        cmark_chunk *output, bool *incomplete) {
+@@ -1083 +1386,2 @@
+-  if (i >= input->len || nb_p != 0)
++  if (nb_p != 0) {
++    if (incomplete) *incomplete = i == input->len;
+@@ -1084,0 +1389 @@
++  }
+@@ -1094 +1399 @@
+-                                      cmark_chunk *output) {
++                                      cmark_chunk *output, bool *incomplete) {
+@@ -1095,0 +1401 @@
++  if (incomplete) *incomplete = false;
+@@ -1111,4 +1417,5 @@
+-    return manual_scan_link_url_2(input, offset, output);
+-  }
+-
+-  if (i >= input->len)
++    return manual_scan_link_url_2(input, offset, output, incomplete);
++  }
++
++  if (i > input->len || input->data[i - 1] != '>') {
++    if (incomplete) *incomplete = true;
+@@ -1115,0 +1423 @@
++  }
+@@ -1121,0 +1430,103 @@
++}
++
++static bool unfinished_link_title(subject *subj, bufsize_t from) {
++  unsigned char opening = peek_at(subj, from);
++  if (opening != '\'' && opening != '"' && opening != '(')
++    return false;
++  unsigned char closing = opening == '(' ? ')' : opening;
++  for (bufsize_t at = from + 1; at < subj->input.len; at++) {
++    unsigned char c = subj->input.data[at];
++    if (c == closing || (opening == '(' && c == '('))
++      return false;
++    if (c == '\\' && at + 1 < subj->input.len && cmark_ispunct(subj->input.data[at + 1]))
++      at++;
++  }
++  return true;
++}
++
++static void deactivate_link_openers(subject *subj) {
++  subj->no_link_openers = true;
++  for (bracket *b = subj->last_bracket; b; b = b->previous)
++    if (!b->image) b->active = false;
++}
++
++static cmark_node *pending_bracket(subject *subj, bracket *opener,
++                                   bufsize_t label_end, bufsize_t source_end) {
++  cmark_node *marker = opener->inl_text;
++  cmark_node *node = make_simple(subj->mem, opener->image ? CMARK_NODE_IMAGE : CMARK_NODE_LINK);
++  node->presentation = opener->image ? CMARK_PRESENTATION_IMAGE : CMARK_PRESENTATION_LINK;
++  node->source_start = marker->source_start;
++  node->source_end = source_end;
++  node->label_start = opener->position;
++  node->label_end = label_end;
++  node->start_line = marker->start_line;
++  node->end_line = subj->line;
++  node->start_column = marker->start_column;
++  node->end_column = source_end + subj->column_offset + subj->block_offset;
++  cmark_node_insert_before(marker, node);
++  move_tail(marker, node);
++  cmark_node_free(marker);
++  return node;
++}
++
++static bool open_inline_scope(cmark_node *marker) {
++  for (cmark_node *node = marker->parent; node; node = node->parent) {
++    if (node->type == CMARK_NODE_PARAGRAPH || node->type == CMARK_NODE_HEADING)
++      continue;
++    if (node->presentation == CMARK_PRESENTATION_EXACT)
++      return false;
++  }
++  return true;
++}
++
++static void finish_open_brackets(subject *subj) {
++  while (subj->last_bracket) {
++    bracket *opener = subj->last_bracket;
++    bool active = opener->active && (opener->image || !subj->no_link_openers) &&
++                  open_inline_scope(opener->inl_text);
++    if (active) pending_bracket(subj, opener, subj->pos, subj->pos);
++    bool link = active && !opener->image;
++    pop_bracket(subj);
++    if (link) deactivate_link_openers(subj);
++  }
++}
++
++void cmark_reference_uses_free(cmark_mem *mem, cmark_reference_uses *uses) {
++  if (!uses) return;
++  for (size_t i = 0; i < uses->count; i++) mem->free(uses->items[i].identifier);
++  mem->free(uses->items);
++  memset(uses, 0, sizeof(*uses));
++}
++
++static bool reference_retry(subject *subj, cmark_reference_form form,
++                              bufsize_t start, bufsize_t end) {
++  if (form != CMARK_REFERENCE_SHORTCUT) return false;
++  if (start >= subj->reference_label_start && end <= subj->reference_label_end) return true;
++  cmark_reference_uses *uses = subj->uses;
++  if (!uses->count) return false;
++  const cmark_reference_use *last = &uses->items[uses->count - 1];
++  return last->form == CMARK_REFERENCE_FOOTNOTE && last->start == start;
++}
++
++static void reference_use(subject *subj, cmark_chunk *label, cmark_reference_form form,
++                           bufsize_t start, bufsize_t end, bufsize_t label_start,
++                           bool image, bool resolved) {
++  if (!subj->uses || reference_retry(subj, form, start, end)) return;
++  if (!cmark_reference_label_valid(label)) return;
++  unsigned char *identifier = cmark_normalize_reference(subj->mem, label);
++  if (!identifier) return;
++  cmark_reference_uses *uses = subj->uses;
++  if (form == CMARK_REFERENCE_FULL && uses->count &&
++      uses->items[uses->count - 1].form == CMARK_REFERENCE_FOOTNOTE &&
++      uses->items[uses->count - 1].start == start)
++    subj->mem->free(uses->items[--uses->count].identifier);
++  if (uses->count == uses->capacity) {
++    uses->capacity = uses->capacity ? uses->capacity * 2 : 8;
++    uses->items = subj->mem->realloc(uses->items, uses->capacity * sizeof(*uses->items));
++  }
++  uses->items[uses->count++] = (cmark_reference_use){
++    .start = start, .end = end, .label_start = label_start, .label_end = end,
++    .identifier = identifier, .form = form, .image = image, .resolved = resolved};
++  if (form != CMARK_REFERENCE_FULL) return;
++  subj->reference_label_start = label_start;
++  subj->reference_label_end = end;
+@@ -1135,0 +1547 @@
++  cmark_reference_form form;
+@@ -1137,0 +1550 @@
++  bool incomplete_url = false, pending_destination = false;
+@@ -1153 +1566 @@
+-  if (!is_image && subj->no_link_openers) {
++  if (!opener->active || (!is_image && subj->no_link_openers)) {
+@@ -1165 +1578 @@
+-                                 &url_chunk)) > -1)) {
++                                 &url_chunk, &incomplete_url)) > -1)) {
+@@ -1189,0 +1603,2 @@
++      pending_destination = subj->temporary_eof && (endall == subj->input.len ||
++          (starttitle > endurl && endtitle == starttitle && unfinished_link_title(subj, starttitle)));
+@@ -1193,0 +1609 @@
++  pending_destination = pending_destination || incomplete_url;
+@@ -1198,0 +1615,2 @@
++  form = CMARK_REFERENCE_SHORTCUT;
++  if (found_label) form = raw_label.len ? CMARK_REFERENCE_FULL : CMARK_REFERENCE_COLLAPSED;
+@@ -1213,0 +1632,3 @@
++    if (ref || form != CMARK_REFERENCE_SHORTCUT || peek_at(subj, initial_pos) != '(')
++      reference_use(subj, &raw_label, form, opener->inl_text->source_start,
++                      subj->pos, initial_pos, is_image, ref != NULL);
+@@ -1225,0 +1647,8 @@
++  if (subj->temporary_eof && pending_destination && opener->active) {
++    process_emphasis(subj, opener->position, false);
++    pending_bracket(subj, opener, initial_pos - 1, subj->input.len);
++    pop_bracket(subj);
++    subj->pos = subj->input.len;
++    if (!is_image) deactivate_link_openers(subj);
++    return NULL;
++  }
+@@ -1232,0 +1662,4 @@
++  inl->source_start = opener->inl_text->source_start;
++  inl->source_end = subj->pos;
++  inl->label_start = opener->position;
++  inl->label_end = initial_pos - 1;
+@@ -1251 +1684 @@
+-  process_emphasis(subj, opener->position);
++  process_emphasis(subj, opener->position, false);
+@@ -1258 +1691 @@
+-    subj->no_link_openers = true;
++    deactivate_link_openers(subj);
+@@ -1319,0 +1753,2 @@
++    if ((options & CMARK_OPT_MATH) && subj->input.data[n] == '$') return n;
++    if ((options & CMARK_OPT_GFM) && subj->input.data[n] == '~') return n;
+@@ -1327,0 +1763,39 @@
++}
++
++static const char *footnote_reference(subject *subj, bufsize_t *closing, bool observe) {
++  if (!subj->refmap->lookup_footnote || subj->pos + 2 >= subj->input.len ||
++      subj->input.data[subj->pos + 1] != '^')
++    return NULL;
++  bufsize_t start = subj->pos + 2, end = start;
++  while (end < subj->input.len) {
++    unsigned char c = subj->input.data[end];
++    if (c == ']')
++      break;
++    if (c == '[')
++      return NULL;
++    end += c == '\\' && end + 1 < subj->input.len && cmark_ispunct(subj->input.data[end + 1]) ? 2 : 1;
++  }
++  if (end >= subj->input.len) return NULL;
++  cmark_chunk label = {subj->input.data + start, end - start};
++  if (!cmark_reference_label_valid(&label)) return NULL;
++  const char *identifier = subj->refmap->lookup_footnote(subj->refmap->footnote_context,
++                              subj->input.data + start, end - start);
++  if (observe) {
++    reference_use(subj, &label, CMARK_REFERENCE_FOOTNOTE, subj->pos, end + 1,
++                    subj->pos, false, identifier != NULL);
++  }
++  *closing = end;
++  return identifier;
++}
++
++static cmark_node *handle_footnote_reference(subject *subj) {
++  bufsize_t end = 0;
++  const char *identifier = footnote_reference(subj, &end, true);
++  if (!identifier)
++    return NULL;
++  cmark_node *node = make_literal(subj, CMARK_NODE_FOOTNOTE_REFERENCE, subj->pos, end);
++  node->len = strlen(identifier);
++  node->data = subj->mem->realloc(NULL, node->len + 1);
++  memcpy(node->data, identifier, node->len + 1);
++  subj->pos = end + 1;
++  return node;
+@@ -1336,0 +1811 @@
++  bufsize_t source_start = subj->pos;
+@@ -1341,0 +1817,5 @@
++  case '$':
++    if (!(options & CMARK_OPT_MATH))
++      goto text_run;
++    new_inl = handle_math(subj, parent, options);
++    break;
+@@ -1357,0 +1838,6 @@
++  case '~':
++    if (!(options & CMARK_OPT_GFM)) {
++      advance(subj);
++      new_inl = make_str(subj, source_start, source_start, cmark_chunk_literal("~"));
++      break;
++    }
+@@ -1362 +1848 @@
+-    new_inl = handle_delim(subj, c, (options & CMARK_OPT_SMART) != 0);
++    new_inl = handle_delim(subj, c, options);
+@@ -1370,0 +1857,4 @@
++    if (options & CMARK_OPT_FOOTNOTES)
++      new_inl = handle_footnote_reference(subj);
++    if (new_inl)
++      break;
+@@ -1379,0 +1870,5 @@
++    if (peek_char(subj) == '[' && (options & CMARK_OPT_FOOTNOTES) &&
++        footnote_reference(subj, &endpos, false)) {
++      new_inl = make_str(subj, subj->pos - 1, subj->pos - 1, cmark_chunk_literal("!"));
++      break;
++    }
+@@ -1388,0 +1884 @@
++  text_run:
+@@ -1401,0 +1898,16 @@
++    new_inl->source_start = source_start;
++    new_inl->source_end = subj->pos;
++    if (new_inl->type == CMARK_NODE_LINEBREAK) {
++      if (c == '\n' || c == '\r') {
++        while (new_inl->source_start > 0 && subj->input.data[new_inl->source_start - 1] == ' ')
++          new_inl->source_start--;
++      }
++      int e = source_start + 1;
++      if (c == '\\') e++;
++      if (e < subj->input.len && subj->input.data[e - 1] == '\r' && subj->input.data[e] == '\n') e++;
++      new_inl->source_end = e;
++    }
++    if (new_inl->type == CMARK_NODE_LINK) {
++      new_inl->label_start = source_start + 1;
++      new_inl->label_end = subj->pos - 1;
++    }
+@@ -1410 +1922,2 @@
+-                         cmark_reference_map *refmap, int options) {
++                         cmark_reference_map *refmap, int options,
++                         cmark_reference_uses *uses) {
+@@ -1416,0 +1930,2 @@
++  subj.temporary_eof = (options & CMARK_OPT_PRESENTATION) != 0;
++  subj.uses = uses;
+@@ -1421 +1936,2 @@
+-  process_emphasis(&subj, 0);
++  process_emphasis(&subj, 0, subj.temporary_eof);
++  if (subj.temporary_eof) finish_open_brackets(&subj);
+@@ -1428,0 +1945 @@
++  mem->free(subj.math_runs);
+@@ -1443,2 +1960,2 @@
+-bufsize_t cmark_parse_reference_inline(cmark_mem *mem, cmark_chunk *input,
+-                                       cmark_reference_map *refmap) {
++static bufsize_t parse_reference(cmark_chunk *input, cmark_chunk *lab,
++                                cmark_chunk *url, cmark_chunk *title, bufsize_t *title_start) {
+@@ -1447,3 +1963,0 @@
+-  cmark_chunk lab;
+-  cmark_chunk url;
+-  cmark_chunk title;
+@@ -1454 +1968 @@
+-  subject_from_buf(mem, -1, 0, &subj, input, NULL);
++  subject_from_buf(NULL, -1, 0, &subj, input, NULL);
+@@ -1457 +1971 @@
+-  if (!link_label(&subj, &lab) || lab.len == 0)
++  if (!link_label(&subj, lab) || lab->len == 0)
+@@ -1469 +1983 @@
+-  if ((matchlen = manual_scan_link_url(&subj.input, subj.pos, &url)) > -1) {
++  if ((matchlen = manual_scan_link_url(&subj.input, subj.pos, url, NULL)) > 0) {
+@@ -1477,0 +1992,3 @@
++  if (title_start && subj.pos > beforetitle &&
++      (peek_char(&subj) == '\'' || peek_char(&subj) == '"' || peek_char(&subj) == '('))
++    *title_start = subj.pos;
+@@ -1480 +1997 @@
+-    title = cmark_chunk_dup(&subj.input, subj.pos, matchlen);
++    *title = cmark_chunk_dup(&subj.input, subj.pos, matchlen);
+@@ -1484 +2001 @@
+-    title = cmark_chunk_literal("");
++    *title = cmark_chunk_literal("");
+@@ -1489 +2006 @@
+-  if (!skip_line_end(&subj)) {
++  if (!skip_line_end(&subj) && !is_eof(&subj)) {
+@@ -1493 +2010 @@
+-      if (!skip_line_end(&subj)) {
++      if (!skip_line_end(&subj) && !is_eof(&subj)) {
+@@ -1500,2 +2016,0 @@
+-  // insert reference into refmap
+-  cmark_reference_create(refmap, &lab, &url, &title);
+@@ -1503,0 +2019,16 @@
++
++bufsize_t cmark_reference_definition_length(cmark_chunk *input, bufsize_t *title_start) {
++  cmark_chunk label, url, title;
++  *title_start = -1;
++  return parse_reference(input, &label, &url, &title, title_start);
++}
++
++bufsize_t cmark_parse_reference_inline(cmark_mem *mem, cmark_chunk *input,
++                                     cmark_reference_map *refmap) {
++  (void)mem;
++  cmark_chunk label, url, title;
++  bufsize_t length = parse_reference(input, &label, &url, &title, NULL);
++  if (length)
++    cmark_reference_create(refmap, &label, &url, &title);
++  return length;
++}
+--- a/src/inlines.h
++++ b/src/inlines.h
+@@ -13,0 +14,20 @@
++typedef enum {
++  CMARK_REFERENCE_SHORTCUT,
++  CMARK_REFERENCE_COLLAPSED,
++  CMARK_REFERENCE_FULL,
++  CMARK_REFERENCE_FOOTNOTE
++} cmark_reference_form;
++
++typedef struct {
++  bufsize_t start, end, label_start, label_end;
++  unsigned char *identifier;
++  cmark_reference_form form;
++  bool image, resolved;
++} cmark_reference_use;
++
++typedef struct {
++  cmark_reference_use *items;
++  size_t count, capacity;
++} cmark_reference_uses;
++
++void cmark_reference_uses_free(cmark_mem *, cmark_reference_uses *);
+@@ -15 +35,2 @@
+-                         cmark_reference_map *refmap, int options);
++                         cmark_reference_map *refmap, int options,
++                         cmark_reference_uses *uses);
+--- a/src/node.c
++++ b/src/node.c
+@@ -35,0 +36,2 @@
++    case CMARK_NODE_INLINE_MATH: return true;
++    case CMARK_NODE_FOOTNOTE_REFERENCE: return true;
+@@ -77,0 +80 @@
++  case CMARK_NODE_STRIKETHROUGH:
+@@ -132,0 +136,2 @@
++    case CMARK_NODE_INLINE_MATH:
++    case CMARK_NODE_FOOTNOTE_REFERENCE:
+@@ -209,0 +215,4 @@
++  case CMARK_NODE_INLINE_MATH:
++    return "inline_math";
++  case CMARK_NODE_FOOTNOTE_REFERENCE:
++    return "footnote_reference";
+@@ -217,0 +227,2 @@
++  case CMARK_NODE_STRIKETHROUGH:
++    return "strikethrough";
+@@ -312,0 +324,2 @@
++  case CMARK_NODE_INLINE_MATH:
++  case CMARK_NODE_FOOTNOTE_REFERENCE:
+@@ -332,0 +346,2 @@
++  case CMARK_NODE_INLINE_MATH:
++  case CMARK_NODE_FOOTNOTE_REFERENCE:
+--- a/src/node.h
++++ b/src/node.h
+@@ -55,0 +56,10 @@
++typedef enum {
++  CMARK_PRESENTATION_EXACT = 0,
++  CMARK_PRESENTATION_DELIMITER,
++  CMARK_PRESENTATION_CODE,
++  CMARK_PRESENTATION_LINK,
++  CMARK_PRESENTATION_IMAGE,
++  CMARK_PRESENTATION_MATH,
++  CMARK_PRESENTATION_SUPPRESSED
++} cmark_presentation;
++
+@@ -69,0 +80,3 @@
++  int source_start, source_end;
++  int label_start, label_end;
++
+@@ -75,0 +89 @@
++  cmark_presentation presentation;
+--- a/src/parser.h
++++ b/src/parser.h
+@@ -12,2 +11,0 @@
+-
+-#define MAX_LINK_LABEL_LENGTH 1000
+--- a/src/references.c
++++ b/src/references.c
+@@ -17,0 +18,12 @@
++bool cmark_reference_label_valid(const cmark_chunk *label) {
++  if (!label || label->len < 1) return false;
++  bufsize_t count = 0, at = 0;
++  while (at < label->len) {
++    int32_t scalar;
++    int width = cmark_utf8proc_iterate(label->data + at, label->len - at, &scalar);
++    at += width > 0 ? width : 1;
++    if (++count > MAX_LINK_LABEL_LENGTH) return false;
++  }
++  return true;
++}
++
+@@ -22 +34 @@
+-static unsigned char *normalize_reference(cmark_mem *mem, cmark_chunk *ref) {
++unsigned char *cmark_normalize_reference(cmark_mem *mem, cmark_chunk *ref) {
+@@ -50 +62,2 @@
+-  unsigned char *reflabel = normalize_reference(map->mem, label);
++  if (!cmark_reference_label_valid(label)) return;
++  unsigned char *reflabel = cmark_normalize_reference(map->mem, label);
+@@ -121 +134 @@
+-  if (label->len < 1 || label->len > MAX_LINK_LABEL_LENGTH)
++  if (!cmark_reference_label_valid(label))
+@@ -124 +137 @@
+-  if (map == NULL || !map->size)
++  if (map == NULL)
+@@ -127 +140 @@
+-  norm = normalize_reference(map->mem, label);
++  norm = cmark_normalize_reference(map->mem, label);
+@@ -130,0 +144,2 @@
++  if (map->lookup_label) map->lookup_label(map->lookup_context, (char *)norm);
++  if (!map->size) { map->mem->free(norm); return NULL; }
+--- a/src/references.h
++++ b/src/references.h
+@@ -4,0 +5,2 @@
++
++#define MAX_LINK_LABEL_LENGTH 999
+@@ -22,0 +25,4 @@
++  void (*lookup_label)(void *, const char *);
++  void *lookup_context;
++  const char *(*lookup_footnote)(void *, const unsigned char *, uint32_t);
++  void *footnote_context;
+@@ -30,0 +37,3 @@
++
++bool cmark_reference_label_valid(const cmark_chunk *label);
++unsigned char *cmark_normalize_reference(cmark_mem *mem, cmark_chunk *label);

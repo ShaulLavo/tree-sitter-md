@@ -10,8 +10,6 @@
 extern "C" {
 #endif
 
-#define MAX_LINK_LABEL_LENGTH 1000
-
 struct cmark_parser {
   struct cmark_mem *mem;
   struct cmark_reference_map *refmap;

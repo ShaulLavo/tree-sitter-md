@@ -224,7 +224,8 @@ module.exports = grammar({
             seq(
                 choice($.task_list_marker_checked, $.task_list_marker_unchecked),
                 optional($._whitespace),
-                $._eof,
+                choice($._newline, $._eof),
+                repeat($._block),
             ),
             prec(1, seq(
                 $._blank_line,

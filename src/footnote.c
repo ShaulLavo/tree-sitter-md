@@ -33,12 +33,10 @@ static void clear(Footnotes *notes) {
   notes->count = 0;
 }
 static char *normalize(const unsigned char *label, uint32_t length, uint32_t *size) {
-  cmark_strbuf buffer = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
-  cmark_utf8proc_case_fold(&buffer, label, length);
-  cmark_strbuf_trim(&buffer); cmark_strbuf_normalize_whitespace(&buffer);
-  if (!buffer.size) { cmark_strbuf_free(&buffer); return NULL; }
-  *size = buffer.size;
-  return (char *)cmark_strbuf_detach(&buffer);
+  cmark_chunk chunk = {(unsigned char *)label, length};
+  char *result = (char *)cmark_normalize_reference(cmark_get_default_mem_allocator(), &chunk);
+  if (result) *size = strlen(result);
+  return result;
 }
 static char *identifier(Document *d, uint32_t a, uint32_t b, uint32_t *size) {
   cmark_strbuf utf8 = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
@@ -310,6 +308,16 @@ cmark_reference_map *footnotes_definitions(const Footnotes *notes) {
   if (entries.count) qsort(entries.items, entries.count, sizeof(ReferenceEntry), compare_definitions);
   for (uint32_t i = 0; i < entries.count; i++) clone_definition(result, entries.items[i].ref, i);
   free(entries.items); return result;
+}
+
+bool footnotes_map_source_end(const Footnotes *notes, uint32_t end, uint32_t *mapped_end) {
+  if (!notes || end > notes->document->len) return false;
+  if (!notes->parent) { *mapped_end = end; return true; }
+  if (notes->owner_index >= notes->parent->count) return false;
+  const Footnote *owner = &notes->parent->items[notes->owner_index];
+  if (end >= owner->starts.n) return false;
+  uint32_t parent_end = end == owner->body->len ? owner->consumed_end : owner->starts.v[end];
+  return footnotes_map_source_end(notes->parent, parent_end, mapped_end);
 }
 
 bool footnotes_map_range(const Footnotes *notes, uint32_t start, uint32_t end,

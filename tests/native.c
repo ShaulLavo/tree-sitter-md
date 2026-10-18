@@ -8,6 +8,7 @@ void tsmd_set_text(Document *);
 void tsmd_edit(Document *, uint32_t, uint32_t);
 uint32_t tsmd_decorations(Document *, uint32_t, uint32_t);
 uint32_t tsmd_semantics(Document *);
+uint32_t tsmd_presentation(Document *, uint32_t);
 void tsmd_semantic_release(Document *);
 
 static void set(Document *d, const uint16_t *text, uint32_t length) {
@@ -22,6 +23,14 @@ static void semantic_equal(Document *incremental, Document *fresh) {
   tsmd_semantic_release(incremental);
   tsmd_semantic_release(incremental);
   assert(incremental->semantic == NULL && incremental->semantic_len == 0);
+}
+static void presentation_equal(Document *incremental, Document *fresh) {
+  for (uint32_t ended = 0; ended < 2; ended++) {
+    uint32_t a = tsmd_presentation(incremental, ended), b = tsmd_presentation(fresh, ended);
+    assert(a == b && a > 0);
+    assert(!memcmp(incremental->semantic, fresh->semantic, a));
+    tsmd_semantic_release(incremental);
+  }
 }
 static void source_equal(Document *d, const uint16_t *source, uint32_t length) {
   assert(d->len == length);
@@ -72,6 +81,7 @@ static void semantic_prefixes(Document *incremental, Document *fresh, const char
     tsmd_edit(incremental, i, i);
     set(fresh, text, i + 1);
     semantic_equal(incremental, fresh);
+    presentation_equal(incremental, fresh);
   }
 }
 int main(void) {
@@ -83,7 +93,11 @@ int main(void) {
     "a|b|c\n:-|--:|-\nx|![?](image)\n",
     "[^a]: **?**\n\n    - nested\n\n    [^b]: `?`\n\n[^a] [^b]\n",
     "&#xD83D; ? \x7f `?` ![?](x) ?\x01 \x01\n\n```\n?\n```\n\n<div>?</div>\n\n$$\n?\n$$",
-    "    first\n    "
+    "    first\n    ",
+    "[late][id] ![alt][id] [^n]\n\n[id]: /first\n[id]: /second\n\n[^n]: note",
+    "> - [ ]\n> - x\n> -",
+    "Title\n---\n\n| a | b |\n| --- | --- |\n| c | d |",
+    "$$same *line*\nnext\n$$"
   };
   for (uint32_t i = 0; i < sizeof(fixtures) / sizeof(fixtures[0]); i++)
     semantic_prefixes(incremental, fresh, fixtures[i]);
@@ -118,6 +132,7 @@ int main(void) {
     if (a)
       assert(!memcmp(incremental->out.v, fresh->out.v, a * sizeof(uint32_t)));
     semantic_equal(incremental, fresh);
+    presentation_equal(incremental, fresh);
   }
   tsmd_free(incremental);
   tsmd_free(fresh);

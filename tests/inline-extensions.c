@@ -90,7 +90,7 @@ static cmark_node *parse(const char *source, int flags) {
   if (flags & 1) options |= CMARK_OPT_CJK;
   if (flags & 2) options |= CMARK_OPT_MATH;
   if (flags & 4) options |= CMARK_OPT_FOOTNOTES;
-  cmark_parse_inlines(mem, node, map, options);
+  cmark_parse_inlines(mem, node, map, options, NULL);
   mem->free(node->data);
   node->data = NULL;
   node->len = 0;
