@@ -74,7 +74,7 @@ function table(node, length, presentation = false) {
 }
 function block(node, length, presentation = false) {
   range(node, length)
-  if (presentation && node.type === 'pendingMath') { pending(node, length); return }
+  if (presentation && node.type === 'pendingMath') { pending(node, length); nullable(node, 'meta', 'string'); return }
   switch (node.type) {
     case 'paragraph': children(node, 'children', inline, length, presentation); return
     case 'heading':
@@ -84,7 +84,8 @@ function block(node, length, presentation = false) {
     case 'footnoteDefinition': field(node, 'identifier', 'string'); children(node, 'children', block, length, presentation); return
     case 'list': list(node, length, presentation); return
     case 'code': code(node); return
-    case 'html': case 'math': field(node, 'value', 'string'); return
+    case 'html': field(node, 'value', 'string'); return
+    case 'math': field(node, 'value', 'string'); nullable(node, 'meta', 'string'); return
     case 'definition': field(node, 'identifier', 'string'); link(node); return
     case 'thematicBreak': return
     case 'table': table(node, length, presentation); return

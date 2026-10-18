@@ -27,7 +27,8 @@ export type SemanticBlock = Base & (
   | { readonly type: 'quote'; readonly children: readonly SemanticBlock[] }
   | { readonly type: 'list'; readonly ordered: boolean; readonly start: number | null; readonly spread: boolean; readonly items: readonly SemanticListItem[] }
   | { readonly type: 'code'; readonly value: string; readonly language: string | null; readonly meta: string | null; readonly fence: 'open' | 'closed' | 'indented' }
-  | { readonly type: 'html' | 'math'; readonly value: string }
+  | { readonly type: 'html'; readonly value: string }
+  | { readonly type: 'math'; readonly value: string; readonly meta: string | null }
   | { readonly type: 'thematicBreak' }
   | { readonly type: 'table'; readonly align: readonly Alignment[]; readonly rows: readonly SemanticTableRow[] }
   | { readonly type: 'definition'; readonly identifier: string; readonly url: string; readonly title: string | null }
@@ -79,7 +80,7 @@ export type PresentationListItem = PresentationChildren<SemanticListItem>
 export type PresentationTableCell = PresentationChildren<SemanticTableCell>
 export type PresentationTableRow = PresentationChildren<SemanticTableRow>
 export type PresentationBlock = PresentationChildren<SemanticBlock>
-  | Base & { readonly type: 'pendingMath'; readonly value: string }
+  | Base & { readonly type: 'pendingMath'; readonly value: string; readonly meta: string | null }
 export type PresentationRoot = PresentationChildren<SemanticRoot>
 type PresentationMetadata = Omit<SemanticSnapshot, 'root'> & {
   readonly source: string

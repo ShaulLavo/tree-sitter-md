@@ -675,17 +675,42 @@ static uint32_t math_limit(Document *d, TSNode n) {
     if (is(p, d->ids.list_item) || is(p, d->ids.block_quote)) return end(p);
   return d->len;
 }
-static bool math_block(Semantic *s, TSNode n, bool *first) {
-  Document *d = s->d;
-  if (!d->math) return false;
-  uint32_t at = start(n), limit = math_limit(d, n), opening_end = line_end(d, at, limit), width = 0;
-  while (at < opening_end && at - start(n) < 3 && d->text[at] == ' ') at++;
+typedef struct { uint32_t marker, suffix, opening_end, width, indent; } MathOpening;
+static bool math_opening(Document *d, TSNode n, uint32_t row, MathOpening *opening) {
+  uint32_t stop = line_end(d, row, math_limit(d, n));
+  cmark_strbuf prefix = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
+  uint32_t at = row == start(n) ? row : container_prefix(d, d, ts_node_parent(n), row, stop, &prefix, false);
+  uint32_t indent = prefix.size, column = column_at(d, at);
+  cmark_strbuf_free(&prefix);
+  while (at < stop && (d->text[at] == ' ' || d->text[at] == '\t')) {
+    uint32_t width = d->text[at++] == '\t' ? 4 - column % 4 : 1;
+    column += width; indent += width;
+  }
+  if (indent > 3) return false;
   uint32_t marker = at;
-  while (at < opening_end && d->text[at] == '$') { at++; width++; }
-  if (width < 2) return false;
-  for (uint32_t i = at; i < opening_end; i++) if (d->text[i] == '$') return false;
+  while (at < stop && d->text[at] == '$') at++;
+  if (at - marker < 2) return false;
+  for (uint32_t i = at; i < stop; i++) if (d->text[i] == '$') return false;
+  *opening = (MathOpening){marker, at, stop, at - marker, indent};
+  return true;
+}
+static void paragraph_range(Semantic *s, TSNode n, uint32_t a, uint32_t b, bool *first) {
+  leaf_build(s->d, n, PARAGRAPH); Leaf *l = &s->d->leaf;
+  uint32_t from = leaf_byte(l, a, 0, l->n), limit = leaf_byte(l, b, from, l->n);
+  for (uint32_t i = 0; i < s->footnotes->count; i++) {
+    const Footnote *note = footnotes_at(s->footnotes, i);
+    if (note->start < a || note->start >= b) continue;
+    uint32_t at = leaf_byte(l, note->start, from, limit);
+    paragraph_part(s, l, from, at, first); footnote_definition(s, note, first);
+    from = leaf_byte(l, note->consumed_end, at, limit); s->skip_until = note->consumed_end;
+  }
+  paragraph_part(s, l, from, limit, first);
+}
+static uint32_t flow_math(Semantic *s, TSNode n, MathOpening opening, bool *first) {
+  Document *d = s->d; uint32_t limit = math_limit(d, n);
   cmark_strbuf value = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
-  uint32_t row = next_line(d, opening_end, limit), finish = opening_end, consumed = row, body_start = row;
+  uint32_t row = next_line(d, opening.opening_end, limit), finish = opening.opening_end;
+  uint32_t consumed = row, body_start = row;
   bool closed = false;
   while (row < limit) {
     uint32_t stop = line_end(d, row, limit);
@@ -693,34 +718,41 @@ static bool math_block(Semantic *s, TSNode n, bool *first) {
     uint32_t from = container_prefix(d, d, ts_node_parent(n), row, stop, &line, false);
     append_utf16(&line, d, from, stop);
     consumed = next_line(d, stop, limit); finish = stop;
-    if (math_closer(&line, width)) { closed = true; cmark_strbuf_free(&line); break; }
+    if (math_closer(&line, opening.width)) { closed = true; cmark_strbuf_free(&line); break; }
     cmark_strbuf_put(&value, line.ptr, line.size); cmark_strbuf_free(&line);
     if (stop < limit) cmark_strbuf_putc(&value, '\n');
     row = consumed;
   }
-  bool pending = !closed && open_source_end(s, consumed);
-  if (at < opening_end) {
-    cmark_strbuf received = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
-    append_utf16(&received, d, at, opening_end);
-    if (opening_end < limit) cmark_strbuf_putc(&received, '\n');
-    cmark_strbuf_put(&received, value.ptr, value.size);
-    cmark_strbuf_free(&value); value = received; body_start = at;
-  }
+  normalize_indent(&value, opening.indent, false);
   if (value.size && value.ptr[value.size - 1] == '\n') cmark_strbuf_truncate(&value, value.size - 1);
-  separator(s, first); begin(s, pending ? "pendingMath" : "math", marker, finish);
+  bool pending = !closed && open_source_end(s, consumed);
+  separator(s, first); begin(s, pending ? "pendingMath" : "math", opening.marker, finish);
   if (pending) provisional(s, "unclosed-math");
+  put(s, ",\"meta\":");
+  uint32_t a = opening.suffix, b = opening.opening_end;
+  while (a < b && (d->text[a] == ' ' || d->text[a] == '\t')) a++;
+  while (b > a && (d->text[b - 1] == ' ' || d->text[b - 1] == '\t')) b--;
+  cmark_strbuf meta = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
+  append_utf16(&meta, d, a, b);
+  if (meta.size) literal_string(s, meta.ptr, meta.size, a, b); else put(s, "null");
+  cmark_strbuf_free(&meta);
   put(s, ",\"value\":"); literal_string(s, value.ptr, value.size, body_start, finish); put(s, "}");
   cmark_strbuf_free(&value); s->skip_until = consumed;
-  if (consumed < end(n)) {
-    leaf_build(d, n, PARAGRAPH); Leaf *l = &d->leaf;
-    uint32_t body = leaf_byte(l, consumed, 0, l->n), b = l->n;
-    while (body < b && ws(l->text[body])) body++;
-    if (body < b) {
-      separator(s, first); begin(s, "paragraph", mapped_start(l, body), mapped_end(l, b));
-      child_array(s, "children"); parse_inlines(s, l, body); child_array_end(s);
-    }
+  return consumed;
+}
+static bool math_block(Semantic *s, TSNode n, bool *first) {
+  Document *d = s->d;
+  if (!d->math) return false;
+  uint32_t from = start(n) > s->skip_until ? start(n) : s->skip_until, row = from;
+  bool found = false;
+  while (row < end(n)) {
+    MathOpening opening;
+    if (!math_opening(d, n, row, &opening)) { row = next_line(d, line_end(d, row, end(n)), end(n)); continue; }
+    paragraph_range(s, n, from, row, first);
+    row = flow_math(s, n, opening, first); from = row; found = true;
   }
-  return true;
+  if (found && from < end(n)) paragraph_range(s, n, from, end(n), first);
+  return found;
 }
 static uint32_t fence_end(Document *d, TSNode n, bool closed) {
   uint32_t finish = end(n);
