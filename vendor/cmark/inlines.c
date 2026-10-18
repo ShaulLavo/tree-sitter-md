@@ -1063,6 +1063,8 @@ static delimiter *S_insert_emph(subject *subj, delimiter *opener,
   // remove used characters from associated inlines.
   opener_num_chars -= use_delims;
   closer_num_chars -= use_delims;
+  opener->length = opener_num_chars;
+  closer->length = closer_num_chars;
   opener_inl->len = opener_num_chars;
   opener_inl->data[opener_num_chars] = 0;
   opener_inl->end_column -= use_delims;
