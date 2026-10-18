@@ -823,33 +823,36 @@
 @@ -750,0 +1044,2 @@
 +    if (temporary_eof)
 +      open_delimiter(subj, subj->last_delim);
-@@ -811,0 +1107,5 @@
+@@ -770,0 +1066,2 @@
++  opener->length = opener_num_chars;
++  closer->length = closer_num_chars;
+@@ -811,0 +1109,5 @@
 +  emph->source_start = opener_inl->source_end - use_delims;
 +  emph->source_end = closer_inl->source_start + use_delims;
 +  opener_inl->source_end -= use_delims;
 +  closer_inl->source_start += use_delims;
 +  if (opener->delim_char == '~') emph->type = CMARK_NODE_STRIKETHROUGH;
-@@ -1032 +1332,4 @@
+@@ -1032 +1334,4 @@
 -      advance(subj);
 +      int32_t scalar;
 +      int width = cmark_utf8proc_iterate(subj->input.data + subj->pos,
 +                                         subj->input.len - subj->pos, &scalar);
 +      subj->pos += width > 0 ? width : 1;
-@@ -1054 +1357 @@
+@@ -1054 +1359 @@
 -                                        cmark_chunk *output) {
 +                                        cmark_chunk *output, bool *incomplete) {
-@@ -1083 +1386,2 @@
+@@ -1083 +1388,2 @@
 -  if (i >= input->len || nb_p != 0)
 +  if (nb_p != 0) {
 +    if (incomplete) *incomplete = i == input->len;
-@@ -1084,0 +1389 @@
+@@ -1084,0 +1391 @@
 +  }
-@@ -1094 +1399 @@
+@@ -1094 +1401 @@
 -                                      cmark_chunk *output) {
 +                                      cmark_chunk *output, bool *incomplete) {
-@@ -1095,0 +1401 @@
+@@ -1095,0 +1403 @@
 +  if (incomplete) *incomplete = false;
-@@ -1111,4 +1417,5 @@
+@@ -1111,4 +1419,5 @@
 -    return manual_scan_link_url_2(input, offset, output);
 -  }
 -
@@ -859,9 +862,9 @@
 +
 +  if (i > input->len || input->data[i - 1] != '>') {
 +    if (incomplete) *incomplete = true;
-@@ -1115,0 +1423 @@
+@@ -1115,0 +1425 @@
 +  }
-@@ -1121,0 +1430,103 @@
+@@ -1121,0 +1432,103 @@
 +}
 +
 +static bool unfinished_link_title(subject *subj, bufsize_t from) {
@@ -965,29 +968,29 @@
 +  if (form != CMARK_REFERENCE_FULL) return;
 +  subj->reference_label_start = label_start;
 +  subj->reference_label_end = end;
-@@ -1135,0 +1547 @@
+@@ -1135,0 +1549 @@
 +  cmark_reference_form form;
-@@ -1137,0 +1550 @@
+@@ -1137,0 +1552 @@
 +  bool incomplete_url = false, pending_destination = false;
-@@ -1153 +1566 @@
+@@ -1153 +1568 @@
 -  if (!is_image && subj->no_link_openers) {
 +  if (!opener->active || (!is_image && subj->no_link_openers)) {
-@@ -1165 +1578 @@
+@@ -1165 +1580 @@
 -                                 &url_chunk)) > -1)) {
 +                                 &url_chunk, &incomplete_url)) > -1)) {
-@@ -1189,0 +1603,2 @@
+@@ -1189,0 +1605,2 @@
 +      pending_destination = subj->temporary_eof && (endall == subj->input.len ||
 +          (starttitle > endurl && endtitle == starttitle && unfinished_link_title(subj, starttitle)));
-@@ -1193,0 +1609 @@
+@@ -1193,0 +1611 @@
 +  pending_destination = pending_destination || incomplete_url;
-@@ -1198,0 +1615,2 @@
+@@ -1198,0 +1617,2 @@
 +  form = CMARK_REFERENCE_SHORTCUT;
 +  if (found_label) form = raw_label.len ? CMARK_REFERENCE_FULL : CMARK_REFERENCE_COLLAPSED;
-@@ -1213,0 +1632,3 @@
+@@ -1213,0 +1634,3 @@
 +    if (ref || form != CMARK_REFERENCE_SHORTCUT || peek_at(subj, initial_pos) != '(')
 +      reference_use(subj, &raw_label, form, opener->inl_text->source_start,
 +                      subj->pos, initial_pos, is_image, ref != NULL);
-@@ -1225,0 +1647,8 @@
+@@ -1225,0 +1649,8 @@
 +  if (subj->temporary_eof && pending_destination && opener->active) {
 +    process_emphasis(subj, opener->position, false);
 +    pending_bracket(subj, opener, initial_pos - 1, subj->input.len);
@@ -996,21 +999,21 @@
 +    if (!is_image) deactivate_link_openers(subj);
 +    return NULL;
 +  }
-@@ -1232,0 +1662,4 @@
+@@ -1232,0 +1664,4 @@
 +  inl->source_start = opener->inl_text->source_start;
 +  inl->source_end = subj->pos;
 +  inl->label_start = opener->position;
 +  inl->label_end = initial_pos - 1;
-@@ -1251 +1684 @@
+@@ -1251 +1686 @@
 -  process_emphasis(subj, opener->position);
 +  process_emphasis(subj, opener->position, false);
-@@ -1258 +1691 @@
+@@ -1258 +1693 @@
 -    subj->no_link_openers = true;
 +    deactivate_link_openers(subj);
-@@ -1319,0 +1753,2 @@
+@@ -1319,0 +1755,2 @@
 +    if ((options & CMARK_OPT_MATH) && subj->input.data[n] == '$') return n;
 +    if ((options & CMARK_OPT_GFM) && subj->input.data[n] == '~') return n;
-@@ -1327,0 +1763,39 @@
+@@ -1327,0 +1765,39 @@
 +}
 +
 +static const char *footnote_reference(subject *subj, bufsize_t *closing, bool observe) {
@@ -1050,38 +1053,38 @@
 +  memcpy(node->data, identifier, node->len + 1);
 +  subj->pos = end + 1;
 +  return node;
-@@ -1336,0 +1811 @@
+@@ -1336,0 +1813 @@
 +  bufsize_t source_start = subj->pos;
-@@ -1341,0 +1817,5 @@
+@@ -1341,0 +1819,5 @@
 +  case '$':
 +    if (!(options & CMARK_OPT_MATH))
 +      goto text_run;
 +    new_inl = handle_math(subj, parent, options);
 +    break;
-@@ -1357,0 +1838,6 @@
+@@ -1357,0 +1840,6 @@
 +  case '~':
 +    if (!(options & CMARK_OPT_GFM)) {
 +      advance(subj);
 +      new_inl = make_str(subj, source_start, source_start, cmark_chunk_literal("~"));
 +      break;
 +    }
-@@ -1362 +1848 @@
+@@ -1362 +1850 @@
 -    new_inl = handle_delim(subj, c, (options & CMARK_OPT_SMART) != 0);
 +    new_inl = handle_delim(subj, c, options);
-@@ -1370,0 +1857,4 @@
+@@ -1370,0 +1859,4 @@
 +    if (options & CMARK_OPT_FOOTNOTES)
 +      new_inl = handle_footnote_reference(subj);
 +    if (new_inl)
 +      break;
-@@ -1379,0 +1870,5 @@
+@@ -1379,0 +1872,5 @@
 +    if (peek_char(subj) == '[' && (options & CMARK_OPT_FOOTNOTES) &&
 +        footnote_reference(subj, &endpos, false)) {
 +      new_inl = make_str(subj, subj->pos - 1, subj->pos - 1, cmark_chunk_literal("!"));
 +      break;
 +    }
-@@ -1388,0 +1884 @@
+@@ -1388,0 +1886 @@
 +  text_run:
-@@ -1401,0 +1898,16 @@
+@@ -1401,0 +1900,16 @@
 +    new_inl->source_start = source_start;
 +    new_inl->source_end = subj->pos;
 +    if (new_inl->type == CMARK_NODE_LINEBREAK) {
@@ -1098,57 +1101,57 @@
 +      new_inl->label_start = source_start + 1;
 +      new_inl->label_end = subj->pos - 1;
 +    }
-@@ -1410 +1922,2 @@
+@@ -1410 +1924,2 @@
 -                         cmark_reference_map *refmap, int options) {
 +                         cmark_reference_map *refmap, int options,
 +                         cmark_reference_uses *uses) {
-@@ -1416,0 +1930,2 @@
+@@ -1416,0 +1932,2 @@
 +  subj.temporary_eof = (options & CMARK_OPT_PRESENTATION) != 0;
 +  subj.uses = uses;
-@@ -1421 +1936,2 @@
+@@ -1421 +1938,2 @@
 -  process_emphasis(&subj, 0);
 +  process_emphasis(&subj, 0, subj.temporary_eof);
 +  if (subj.temporary_eof) finish_open_brackets(&subj);
-@@ -1428,0 +1945 @@
+@@ -1428,0 +1947 @@
 +  mem->free(subj.math_runs);
-@@ -1443,2 +1960,2 @@
+@@ -1443,2 +1962,2 @@
 -bufsize_t cmark_parse_reference_inline(cmark_mem *mem, cmark_chunk *input,
 -                                       cmark_reference_map *refmap) {
 +static bufsize_t parse_reference(cmark_chunk *input, cmark_chunk *lab,
 +                                cmark_chunk *url, cmark_chunk *title, bufsize_t *title_start) {
-@@ -1447,3 +1963,0 @@
+@@ -1447,3 +1965,0 @@
 -  cmark_chunk lab;
 -  cmark_chunk url;
 -  cmark_chunk title;
-@@ -1454 +1968 @@
+@@ -1454 +1970 @@
 -  subject_from_buf(mem, -1, 0, &subj, input, NULL);
 +  subject_from_buf(NULL, -1, 0, &subj, input, NULL);
-@@ -1457 +1971 @@
+@@ -1457 +1973 @@
 -  if (!link_label(&subj, &lab) || lab.len == 0)
 +  if (!link_label(&subj, lab) || lab->len == 0)
-@@ -1469 +1983 @@
+@@ -1469 +1985 @@
 -  if ((matchlen = manual_scan_link_url(&subj.input, subj.pos, &url)) > -1) {
 +  if ((matchlen = manual_scan_link_url(&subj.input, subj.pos, url, NULL)) > 0) {
-@@ -1477,0 +1992,3 @@
+@@ -1477,0 +1994,3 @@
 +  if (title_start && subj.pos > beforetitle &&
 +      (peek_char(&subj) == '\'' || peek_char(&subj) == '"' || peek_char(&subj) == '('))
 +    *title_start = subj.pos;
-@@ -1480 +1997 @@
+@@ -1480 +1999 @@
 -    title = cmark_chunk_dup(&subj.input, subj.pos, matchlen);
 +    *title = cmark_chunk_dup(&subj.input, subj.pos, matchlen);
-@@ -1484 +2001 @@
+@@ -1484 +2003 @@
 -    title = cmark_chunk_literal("");
 +    *title = cmark_chunk_literal("");
-@@ -1489 +2006 @@
+@@ -1489 +2008 @@
 -  if (!skip_line_end(&subj)) {
 +  if (!skip_line_end(&subj) && !is_eof(&subj)) {
-@@ -1493 +2010 @@
+@@ -1493 +2012 @@
 -      if (!skip_line_end(&subj)) {
 +      if (!skip_line_end(&subj) && !is_eof(&subj)) {
-@@ -1500,2 +2016,0 @@
+@@ -1500,2 +2018,0 @@
 -  // insert reference into refmap
 -  cmark_reference_create(refmap, &lab, &url, &title);
-@@ -1503,0 +2019,16 @@
+@@ -1503,0 +2021,16 @@
 +
 +bufsize_t cmark_reference_definition_length(cmark_chunk *input, bufsize_t *title_start) {
 +  cmark_chunk label, url, title;
