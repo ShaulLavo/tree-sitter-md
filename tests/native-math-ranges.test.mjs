@@ -128,8 +128,8 @@ test('CHAT flow math separates line-start openings from paragraph text', () => {
     node('paragraph', 0, 7, { children: [text('A $$x', 0, 5), node('break', 5, 6, { hard: false }), text('y', 6, 7)] }),
     node('math', 8, 10, { value: '', meta: null }),
   ])
-  assert.deepEqual(open.root.children, semantic.root.children)
-  assert.deepEqual(open.provisional, [])
+  assert.deepEqual(open.root.children, [semantic.root.children[0], node('pendingMath', 8, 10, { value: '', meta: null })])
+  assert.deepEqual(open.provisional, [{ path: ['children', 1], reason: 'unclosed-math' }])
 })
 
 test('CHAT flow math preserves opening metadata and body text across line endings', () => {
@@ -193,4 +193,31 @@ test('CHAT flow metadata decodes string escapes and keeps trailing metadata spac
 test('CHAT flow math strips authored opener indentation from body lines', () => {
   const source = '  $$x\n  y\n  $$'
   assertBlockMath(snapshot(source).semantic.root.children[0], 2, source.length, 'y', 'x')
+})
+
+
+test('exact healed row54 preserves its original UTF16 source and splits final flow opener', () => {
+  const source = 'A $$```\nx$x$**[x\uddd1(>xamest/a)\n$$'
+  assert.equal(sourceHash(source), '531046c098e4b41991f5f6055b81aadb4f6c3827062fdc17ed7b114d65cba59f')
+  const {semantic, open} = snapshot(source)
+  assert.equal(open.source, source)
+  assert.deepEqual(semantic.root.children.map(child => child.type), ['paragraph', 'math'])
+  assert.deepEqual(semantic.root.children[0].range, range(0, 28))
+  assertBlockMath(semantic.root.children[1], 29, 31, '', null)
+  assertOwnership(semantic.root)
+})
+
+test('CHAT flow container continuation is not a lazy paragraph continuation', () => {
+  for (const [source, mathStart, containerEnd] of [
+    ['> $$x\ny\n$$', 2, 5],
+    ['- $$x\ny\n$$', 2, 5],
+    ['- > $$x\ny\n$$', 4, 7],
+  ]) {
+    const {semantic} = snapshot(source)
+    assert.deepEqual(semantic.root.children.map(child => child.type), [source[0] === '>' ? 'quote' : 'list', 'paragraph', 'math'])
+    assert.equal(semantic.root.children[0].range.end, containerEnd)
+    const math = descendants(semantic.root.children[0], 'math')[0]
+    assertBlockMath(math, mathStart, containerEnd, '', 'x')
+    assertOwnership(semantic.root)
+  }
 })
