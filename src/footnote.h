@@ -14,7 +14,7 @@ typedef struct {
   char *identifier;
   uint32_t identifier_len;
   Document *body;
-  Words starts, ends;
+  Words starts, ends, containers;
   Footnotes *nested;
 } Footnote;
 
@@ -28,6 +28,10 @@ struct Footnotes {
   uint32_t owner_index;
 };
 
+typedef struct { uint16_t *text; uint32_t len, cap; } FootnoteSource;
+
+bool footnotes_source_range(const Footnotes *notes, uint32_t start, uint32_t end,
+                            FootnoteSource *source);
 Footnotes *footnotes_new(Document *document);
 void footnotes_free(Footnotes *footnotes);
 void footnotes_scan(Footnotes *footnotes);

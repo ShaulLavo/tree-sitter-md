@@ -61,7 +61,7 @@ test('presentation comparator rejects a stale resolved destination', () => {
   const expected = {
     root: { type: 'root', range: { start: 0, end: 7 }, children: [
       { type: 'paragraph', range: { start: 0, end: 7 }, children: [
-        { type: 'link', range: { start: 0, end: 7 }, url: '/a', title: null, children: [
+        { type: 'link', origin: 'markdown', range: { start: 0, end: 7 }, url: '/a', title: null, children: [
           { type: 'text', range: { start: 1, end: 2 }, value: 'x' },
         ] },
       ] },

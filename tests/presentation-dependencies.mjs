@@ -232,9 +232,9 @@ test('a later bracket cannot reactivate an outer link opener after an inner link
     ])
     assert.deepEqual(result.root.children[0], node('paragraph', 0, 18, { children: [
       text('[a ', 0, 3),
-      node('link', 3, 10, { url: '/u', title: null, children: [text('b', 4, 5)] }),
+      node('link', 3, 10, { origin: 'markdown', url: '/u', title: null, children: [text('b', 4, 5)] }),
       text(' [c]]', 10, 15),
-      node('link', 15, 18, { url: '/d', title: null, children: [text('d', 16, 17)] }),
+      node('link', 15, 18, { origin: 'markdown', url: '/d', title: null, children: [text('d', 16, 17)] }),
     ] }))
     assert.deepEqual(result.root, document.semantics().root)
     assert.deepEqual(document.presentation({ input: 'open' }).root, result.root)
@@ -266,7 +266,7 @@ test('latent nested reference dependencies reclassify an earlier outer inline li
     const after = verify(document, prefix + suffix, [reference('link', 'missing', 7, 23, 'resolved')])
     assert.deepEqual(after.root.children[0], node('paragraph', 0, 30, { children: [
       text('[outer ', 0, 7),
-      node('link', 7, 23, { url: '/m', title: null, children: [text('inner', 8, 13)] }),
+      node('link', 7, 23, { origin: 'markdown', url: '/m', title: null, children: [text('inner', 8, 13)] }),
       text('](/url)', 23, 30),
     ] }))
     compareFresh(document, prefix + suffix)
@@ -323,7 +323,7 @@ test('a full-reference fallback can own a later overlapping full reference', () 
       reference('link', 'c', 3, 9, 'resolved'),
     ])
     assert.deepEqual(descendants(result.root, 'link'), [node('link', 3, 9, {
-      url: '/go', title: null, children: [text('b', 4, 5)],
+      origin: 'markdown', url: '/go', title: null, children: [text('b', 4, 5)],
     })])
     compareFresh(document, source)
   } finally {
@@ -341,7 +341,7 @@ test('a completed reference in an empty-task-shaped item remains visible', () =>
     assert.deepEqual(result.suppressed, [])
     assert.deepEqual(result.root, document.semantics().root)
     assert.deepEqual(descendants(result.root, 'link'), [node('link', at, at + 3, {
-      url: '/go', title: null, children: [text('x', at + 1, at + 2)],
+      origin: 'markdown', url: '/go', title: null, children: [text('x', at + 1, at + 2)],
     })])
   } finally {
     document.dispose()

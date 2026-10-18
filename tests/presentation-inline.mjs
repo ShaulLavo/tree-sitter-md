@@ -81,19 +81,19 @@ const cases = [
     paragraph(0, 5, [text('和', 0, 1), strong(1, 5, [text('「字', 3, 5)])]),
   ], [provisional(['children', 0, 'children', 1])]],
   ['code normalization trims one matching pair of spaces', '` a ', [
-    paragraph(0, 4, [node('code', 0, 4, { value: 'a' })]),
+    paragraph(0, 4, [node('code', 0, 4, { value: 'a', sourceValue: 'a' })]),
   ], [provisional(path, 'unclosed-code')]],
   ['all-space code content is received content', '`   ', [
-    paragraph(0, 4, [node('code', 0, 4, { value: '   ' })]),
+    paragraph(0, 4, [node('code', 0, 4, { value: '   ', sourceValue: '   ' })]),
   ], [provisional(path, 'unclosed-code')]],
   ['code normalization replaces received newlines', '` a\nb ', [
-    paragraph(0, 6, [node('code', 0, 6, { value: 'a b' })]),
+    paragraph(0, 6, [node('code', 0, 6, { value: 'a b', sourceValue: 'a\nb' })]),
   ], [provisional(path, 'unclosed-code')]],
   ['a trailing code newline remains received code content', '`a\n', [
-    paragraph(0, 3, [node('code', 0, 3, { value: 'a ' })]),
+    paragraph(0, 3, [node('code', 0, 3, { value: 'a ', sourceValue: 'a\n' })]),
   ], [provisional(path, 'unclosed-code')]],
   ['a mismatched backtick run stays inside received code', '``a`b', [
-    paragraph(0, 5, [node('code', 0, 5, { value: 'a`b' })]),
+    paragraph(0, 5, [node('code', 0, 5, { value: 'a`b', sourceValue: 'a`b' })]),
   ], [provisional(path, 'unclosed-code')]],
   ['a pending label retains nested formatting', '[**label', [
     paragraph(0, 8, [node('pendingLink', 0, 8, { children: [strong(1, 8, [text('label', 3, 8)])] })]),
@@ -130,7 +130,7 @@ const cases = [
   ], [provisional(['children', 0, 'children', 1], 'unclosed-math')]],
   ['provisional paths count autolink and trailing text as separate siblings', 'www.example.org **bold', [
     paragraph(0, 22, [
-      node('link', 0, 15, { url: 'http://www.example.org', title: null, children: [text('www.example.org', 0, 15)] }),
+      node('link', 0, 15, { origin: 'gfm-autolink', sourceUrl: 'http://www.example.org', sourceValue: 'www.example.org', url: 'http://www.example.org', title: null, children: [text('www.example.org', 0, 15)] }),
       text(' ', 15, 16), strong(16, 22, [text('bold', 18, 22)]),
     ]),
   ], [provisional(['children', 0, 'children', 2])]],

@@ -174,6 +174,7 @@ static uint32_t content_end(Document *d, TSNode n) {
   return b;
 }
 static void inline_children(Semantic *, Leaf *, cmark_node *, uint32_t, bool);
+static void code_source_value(Semantic *, cmark_node *, uint32_t, uint32_t);
 
 static void inline_range(Leaf *l, cmark_node *n, uint32_t offset, uint32_t *a, uint32_t *b) {
   *a = mapped_start(l, offset + n->source_start);
@@ -261,6 +262,7 @@ static void inline_node(Semantic *s, Leaf *l, cmark_node *n, uint32_t offset, bo
         l->starts.v + offset + n->source_start : NULL;
       mapped_string(s, n->data, n->len, positions);
     }
+    if (n->type == CMARK_NODE_CODE) code_source_value(s, n, a, b);
     put(s, "}");
     return;
   }
@@ -268,6 +270,8 @@ static void inline_node(Semantic *s, Leaf *l, cmark_node *n, uint32_t offset, bo
       n->presentation != CMARK_PRESENTATION_LINK && n->presentation != CMARK_PRESENTATION_IMAGE) {
     put(s, ",\"url\":"); string(s, n->as.link.url, strlen((char *)n->as.link.url));
     put(s, ",\"title\":"); nullable_string(s, n->as.link.title);
+    if (n->type == CMARK_NODE_LINK)
+      put(s, l->text[offset + n->source_start] == '<' ? ",\"origin\":\"autolink\"" : ",\"origin\":\"markdown\"");
   }
   if (n->type == CMARK_NODE_IMAGE) {
     cmark_strbuf alt = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
@@ -340,6 +344,14 @@ static void text_part(Semantic *s, Leaf *l, cmark_node *first, cmark_node *last,
   if (value.size >= 4 && !strncasecmp((char *)value.ptr, "www.", 4)) cmark_strbuf_puts(&url, "http://");
   if (memchr(value.ptr, '@', value.size) && !memchr(value.ptr, ':', value.size)) cmark_strbuf_puts(&url, "mailto:");
   cmark_strbuf_put(&url, value.ptr, value.size); string(s, url.ptr, url.size);
+  put(s, ",\"origin\":\"gfm-autolink\",\"sourceValue\":");
+  literal_string(s, (unsigned char *)l->text + offset + a, b - a, start_pos, end_pos);
+  cmark_strbuf_clear(&url);
+  const unsigned char *source = (unsigned char *)l->text + offset + a;
+  if (b - a >= 4 && !strncasecmp((char *)source, "www.", 4)) cmark_strbuf_puts(&url, "http://");
+  else if (memchr(source, '@', b - a) && !memchr(source, ':', b - a)) cmark_strbuf_puts(&url, "mailto:");
+  cmark_strbuf_put(&url, source, b - a);
+  put(s, ",\"sourceUrl\":"); literal_string(s, url.ptr, url.size, start_pos, end_pos);
   put(s, ",\"title\":null,\"children\":["); text_value(s, start_pos, end_pos, value.ptr, value.size, positions.v); put(s, "]}");
   cmark_strbuf_free(&url); cmark_strbuf_free(&value); free(positions.v);
 }
@@ -531,22 +543,27 @@ static void append_line(cmark_strbuf *out, Document *d, uint32_t a, uint32_t b) 
   }
   append_utf16(out, d, a, b);
 }
-static uint32_t container_prefix(Document *d, TSNode parent, uint32_t a, uint32_t b, cmark_strbuf *out) {
+static uint32_t container_prefix(Document *d, Document *context, TSNode parent, uint32_t a, uint32_t b, cmark_strbuf *out, bool literal) {
   TSNode path[200]; uint32_t count = 0;
   for (; !ts_node_is_null(parent); parent = ts_node_parent(parent)) {
     if (count == 200) break;
-    if (is(parent, d->ids.block_quote) || is(parent, d->ids.list_item)) path[count++] = parent;
+    if (is(parent, context->ids.block_quote) || is(parent, context->ids.list_item)) path[count++] = parent;
   }
   uint32_t virtual_spaces = 0;
   while (count) {
     TSNode n = path[--count]; uint32_t column = column_at(d, a), width = 0;
-    uint32_t required = is(n, d->ids.list_item) ? item_indent(d, n) : 3;
+    uint32_t saved = a, saved_virtual = virtual_spaces;
+    bool list = is(n, context->ids.list_item);
+    uint32_t required = list ? item_indent(context, n) : (literal ? UINT32_MAX : 3);
+    if (literal) { width = virtual_spaces < required ? virtual_spaces : required; virtual_spaces -= width; }
     while (a < b && width < required && (d->text[a] == ' ' || d->text[a] == '\t')) {
       uint32_t added = d->text[a] == '\t' ? 4 - column % 4 : 1;
       column += added; width += added; a++;
     }
-    if (is(n, d->ids.list_item)) { virtual_spaces = width > required ? width - required : 0; continue; }
-    if (a >= b || d->text[a] != '>') break;
+    bool matched = list ? width >= required : a < b && d->text[a] == '>';
+    if (literal && !matched) { a = saved; virtual_spaces = saved_virtual; break; }
+    if (list) { virtual_spaces = (literal ? virtual_spaces : 0) + (width > required ? width - required : 0); continue; }
+    if (!matched) break;
     column++; a++;
     if (a < b && d->text[a] == ' ') a++;
     else if (a < b && d->text[a] == '\t') { virtual_spaces = 3 - column % 4; a++; }
@@ -554,13 +571,66 @@ static uint32_t container_prefix(Document *d, TSNode parent, uint32_t a, uint32_
   while (virtual_spaces) { cmark_strbuf_putc(out, ' '); virtual_spaces--; }
   return a;
 }
+static bool source_padding(unsigned char c) { return c == ' ' || c == '\r' || c == '\n'; }
+static void trim_source_padding(cmark_strbuf *value) {
+  uint32_t a = 0, b = value->size;
+  if (b < 2 || !source_padding(value->ptr[0]) || !source_padding(value->ptr[b - 1])) return;
+  bool content = false;
+  for (uint32_t i = 0; i < b; i++) if (!source_padding(value->ptr[i])) content = true;
+  if (!content) return;
+  a += value->ptr[0] == '\r' && value->ptr[1] == '\n' ? 2 : 1;
+  b -= value->ptr[b - 1] == '\n' && value->ptr[b - 2] == '\r' ? 2 : 1;
+  cmark_strbuf_drop(value, a); cmark_strbuf_truncate(value, b - a);
+}
+static void append_source(cmark_strbuf *out, Document *d, uint32_t a, uint32_t b) {
+  for (; a < b; a++) {
+    uint32_t c = d->text[a];
+    if (c >= 0xd800 && c < 0xdc00 && a + 1 < b && d->text[a + 1] >= 0xdc00 && d->text[a + 1] < 0xe000)
+      c = 0x10000 + ((c - 0xd800) << 10) + (d->text[++a] - 0xdc00);
+    if (!c || (c >= 0xd800 && c < 0xe000)) c = 0xfffd;
+    cmark_utf8proc_encode_char(c, out);
+  }
+}
+static void code_source_value(Semantic *s, cmark_node *node, uint32_t a, uint32_t b) {
+  Document *d = s->d;
+  uint32_t line = a;
+  while (line < b && d->text[line] != '\r' && d->text[line] != '\n') line++;
+  if (line == b) {
+    put(s, ",\"sourceValue\":"); literal_string(s, node->data, node->len, a, b); return;
+  }
+  TSNode context = ts_node_descendant_for_byte_range(ts_tree_root_node(d->tree), a * 2, a * 2);
+  FootnoteSource source = {0};
+  if (!footnotes_source_range(s->footnotes, a, b, &source)) abort();
+  Document authored = {.text = source.text, .len = source.len};
+  uint32_t source_a = a, source_b = b;
+  d = &authored; a = 0; b = source.len;
+  uint32_t ticks = 0;
+  while (a + ticks < b && d->text[a + ticks] == '`') ticks++;
+  a += ticks;
+  if (node->presentation != CMARK_PRESENTATION_CODE) b -= ticks;
+  uint32_t from = a;
+  cmark_strbuf value = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
+  while (from < b) {
+    uint32_t stop = from;
+    while (stop < b && d->text[stop] != '\r' && d->text[stop] != '\n') stop++;
+    append_source(&value, d, from, stop);
+    if (stop == b) break;
+    uint32_t next = stop + 1;
+    if (d->text[stop] == '\r' && next < b && d->text[next] == '\n') next++;
+    append_source(&value, d, stop, next);
+    from = container_prefix(d, s->d, context, next, b, &value, true);
+  }
+  trim_source_padding(&value);
+  put(s, ",\"sourceValue\":"); literal_string(s, value.ptr, value.size, source_a, source_b);
+  cmark_strbuf_free(&value); free(source.text);
+}
 static void block_value(Document *d, TSNode n, uint32_t a, uint32_t b, cmark_strbuf *out,
                         bool preserve_whitespace) {
   bool first = true;
   while (a < b) {
     uint32_t stop = a;
     while (stop < b && d->text[stop] != '\r' && d->text[stop] != '\n') stop++;
-    uint32_t from = first ? a : container_prefix(d, ts_node_parent(n), a, stop, out);
+    uint32_t from = first ? a : container_prefix(d, d, ts_node_parent(n), a, stop, out, false);
     if (preserve_whitespace) append_utf16(out, d, from, stop);
     else append_line(out, d, from, stop);
     first = false;
@@ -620,7 +690,7 @@ static bool math_block(Semantic *s, TSNode n, bool *first) {
   while (row < limit) {
     uint32_t stop = line_end(d, row, limit);
     cmark_strbuf line = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
-    uint32_t from = container_prefix(d, ts_node_parent(n), row, stop, &line);
+    uint32_t from = container_prefix(d, d, ts_node_parent(n), row, stop, &line, false);
     append_utf16(&line, d, from, stop);
     consumed = next_line(d, stop, limit); finish = stop;
     if (math_closer(&line, width)) { closed = true; cmark_strbuf_free(&line); break; }
