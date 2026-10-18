@@ -583,14 +583,19 @@ static bool parse_reference(Scanner *s, TSLexer *lexer) {
     return lines > 0;
 }
 
+static bool parse_pipe_table(Scanner *s, TSLexer *lexer, bool header_prefix);
+
 static bool parse_fenced_code_block(Scanner *s, const char delimiter,
                                     TSLexer *lexer, const bool *valid_symbols) {
-    // count the number of backticks
+    // Keep a zero-width table start until a real fence delimiter is known.
+    mark_end(s, lexer);
     uint8_t level = 0;
     while (lexer->lookahead == delimiter) {
         advance(s, lexer);
         level++;
     }
+    if (level < 3 && valid_symbols[PIPE_TABLE_START])
+        return parse_pipe_table(s, lexer, true);
     mark_end(s, lexer);
     // If this is able to close a fenced code block then that is the only valid
     // interpretation. It can only close a fenced code block if the number of
@@ -1371,14 +1376,7 @@ static bool parse_html_block(Scanner *s, TSLexer *lexer,
     return false;
 }
 
-static bool parse_pipe_table(Scanner *s, TSLexer *lexer,
-                             const bool *valid_symbols) {
-
-    // unused
-    (void)(valid_symbols);
-
-    // PIPE_TABLE_START is zero width
-    mark_end(s, lexer);
+static bool parse_pipe_table(Scanner *s, TSLexer *lexer, bool header_prefix) {
     // count number of cells
     size_t cell_count = 0;
     // also remember if we see starting and ending pipes, as empty headers have
@@ -1386,7 +1384,7 @@ static bool parse_pipe_table(Scanner *s, TSLexer *lexer,
     bool starting_pipe = false;
     bool ending_pipe = false;
     bool empty = true;
-    if (lexer->lookahead == '|') {
+    if (!header_prefix && lexer->lookahead == '|') {
         starting_pipe = true;
         advance(s, lexer);
     }
@@ -1512,6 +1510,7 @@ static bool scan_continuation_interrupt(Scanner *s, TSLexer *lexer, bool table) 
         return scan(s, lexer, paragraph_interrupt_symbols);
     bool symbols[sizeof(paragraph_interrupt_symbols) / sizeof(bool)];
     memcpy(symbols, paragraph_interrupt_symbols, sizeof(symbols));
+    symbols[PIPE_TABLE_START] = false;
     symbols[INDENTED_CHUNK_START] = true;
     symbols[LIST_MARKER_MINUS_DONT_INTERRUPT] = true;
     symbols[LIST_MARKER_PLUS_DONT_INTERRUPT] = true;
@@ -1665,7 +1664,8 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
         }
         if (lexer->lookahead != '\r' && lexer->lookahead != '\n' &&
             valid_symbols[PIPE_TABLE_START]) {
-            return parse_pipe_table(s, lexer, valid_symbols);
+            mark_end(s, lexer);
+            return parse_pipe_table(s, lexer, false);
         }
     } else { // we are in the state of trying to match all currently open blocks
         bool partial_success = false;
