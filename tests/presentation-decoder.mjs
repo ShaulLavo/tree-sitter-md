@@ -79,3 +79,16 @@ test('pending display math is a presentation block', () => {
   assert.deepEqual(decode(value), value)
   assert.throws(() => decode(value, 'ended'), TypeError)
 })
+
+test('block math metadata is required without changing inline math payloads', () => {
+  for (const type of ['math', 'pendingMath']) {
+    const value = payload()
+    value.root.children = [{ type, range, value: 'x', meta: null }]
+    assert.deepEqual(decode(value), value)
+    delete value.root.children[0].meta
+    assert.throws(() => decode(value), TypeError)
+    value.root.children[0].meta = 1
+    assert.throws(() => decode(value), TypeError)
+  }
+  assert.deepEqual(decode(payload({ type: 'math', range, value: 'x' })), payload({ type: 'math', range, value: 'x' }))
+})
