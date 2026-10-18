@@ -7,6 +7,8 @@ await init()
 
 const options = { gfm: true, cjk: true, math: true }
 const range = (start, end) => ({ start, end })
+const node = (type, start, end, fields = {}) => ({ type, range: range(start, end), ...fields })
+const text = (value, start, end) => node('text', start, end, { value })
 const sourceHash = source => createHash('sha256').update(Buffer.from(source, 'utf16le')).digest('hex')
 
 function snapshot(source) {
@@ -110,4 +112,74 @@ test('inline multiline math and same-line controls remain unchanged', () => {
   assert.equal(inline.children[1].value, 'x\ny')
   assert.deepEqual(snapshot('p $x$ q').semantic.root.children[0].children.map(node => node.type), ['text'])
   assert.deepEqual(snapshot('p $$x q').semantic.root.children[0].children.map(node => node.type), ['text'])
+})
+
+
+function assertBlockMath(node, start, end, value, meta) {
+  assert.deepEqual(node.range, range(start, end))
+  assert.equal(node.type, 'math')
+  assert.equal(node.value, value)
+  assert.equal(node.meta, meta)
+}
+
+test('CHAT flow math separates line-start openings from paragraph text', () => {
+  const { semantic, open } = snapshot('A $$x\ny\n$$')
+  assert.deepEqual(semantic.root.children, [
+    node('paragraph', 0, 7, { children: [text('A $$x\ny', 0, 7)] }),
+    node('math', 8, 10, { value: '', meta: null }),
+  ])
+  assert.deepEqual(open.root.children, semantic.root.children)
+  assert.deepEqual(open.provisional, [])
+})
+
+test('CHAT flow math preserves opening metadata and body text across line endings', () => {
+  for (const [source, mathRange] of [
+    ['$$x\ny\n$$', range(0, 8)],
+    ['$$x\r\ny\r\n$$', range(0, 10)],
+    ['$$x\ry\r$$', range(0, 8)],
+  ]) {
+    const { semantic, open } = snapshot(source)
+    const math = semantic.root.children[0]
+    assertBlockMath(math, mathRange.start, mathRange.end, 'y', 'x')
+    assert.deepEqual(open.root.children, semantic.root.children)
+    assert.deepEqual(open.provisional, [])
+  }
+})
+
+test('CHAT flow math keeps nested container ownership and partial-tab prefixes', () => {
+  for (const source of ['> $$x\n> y\n> $$', '- > $$x\n  > y\n  > $$', '> \t$$x\n> \ty\n> \t$$']) {
+    const { semantic, open } = snapshot(source)
+    assert.equal(open.source, source)
+    assertOwnership(semantic.root)
+    const math = descendants(semantic.root, 'math').find(node => node.meta === 'x')
+    assert.ok(math)
+    assert.equal(math.value, 'y')
+    assert.equal(math.meta, 'x')
+  }
+})
+
+test('CHAT flow math leaves same-line inline math and literal controls unchanged', () => {
+  const inline = snapshot('p $$x\ny$$ q').semantic.root.children[0]
+  assert.deepEqual(inline.children.map(node => node.type), ['text', 'math', 'text'])
+  assert.deepEqual(inline.children[1], node('math', 2, 9, { value: 'x\ny' }))
+  for (const source of ['p $x$ q', 'p $$x q']) {
+    const paragraph = snapshot(source).semantic.root.children[0]
+    assert.deepEqual(paragraph.children, [text(source, 0, source.length)])
+  }
+})
+
+test('CHAT flow math exposes empty body metadata for an unclosed opening', () => {
+  const { semantic, open } = snapshot('$$x *a*')
+  assert.deepEqual(semantic.root.children, [node('math', 0, 7, { value: '', meta: 'x *a*' })])
+  assert.deepEqual(open.root.children, [node('pendingMath', 0, 7, { value: '', meta: 'x *a*' })])
+  assert.deepEqual(open.provisional, [{ path: ['children', 0], reason: 'unclosed-math' }])
+})
+
+test('CHAT math retains exact source with a lone surrogate before a flow block', () => {
+  const source = '\ud83d\n$$x\ny\n$$'
+  const { semantic, open } = snapshot(source)
+  assert.equal(sourceHash(source), '57d58ea1978f1744ccc09560e6af116cb08b07ad5c87960f61c0c87650a123be')
+  assert.equal(open.source, source)
+  const math = semantic.root.children[1]
+  assertBlockMath(math, 2, 10, 'y', 'x')
 })

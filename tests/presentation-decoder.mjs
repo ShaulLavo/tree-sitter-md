@@ -75,7 +75,7 @@ test('presentation decoder verifies the native input mode', () => {
 
 test('pending display math is a presentation block', () => {
   const value = payload()
-  value.root.children = [{ type: 'pendingMath', range, value: 'hello' }]
+  value.root.children = [{ type: 'pendingMath', range, value: 'hello', meta: null }]
   assert.deepEqual(decode(value), value)
   assert.throws(() => decode(value, 'ended'), TypeError)
 })
