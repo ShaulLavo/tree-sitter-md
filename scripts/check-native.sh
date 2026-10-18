@@ -22,4 +22,7 @@ printf 'ASan + UBSan: footnote definitions, references and mapped bodies passed\
 # The leaf test includes src/leaf.c to reach its static helpers.
 clang $flags tests/leaf-map.c $(ls src/*.c | grep -v '^src/leaf\.c$') vendor/cmark/*.c $runtime -o target/c/check-leaf-map
 ASAN_OPTIONS=detect_leaks=1 target/c/check-leaf-map
+clang $flags tests/allocation.c $(ls src/*.c | grep -v '^src/leaf\.c$') vendor/cmark/*.c $runtime -o target/c/check-allocation
+ASAN_OPTIONS=detect_leaks=1 target/c/check-allocation
+printf 'ASan + UBSan: supported reserve allocation-abort contract passed\n'
 sh scripts/check-cursor.sh

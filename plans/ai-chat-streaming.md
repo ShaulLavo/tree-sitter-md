@@ -274,21 +274,41 @@ or code whitespace, and no append-only correctness concessions.
 
 ### P4. Prove chunk, lifecycle, and lifetime correctness
 
-- [ ] Run every UTF-16 prefix and every two-chunk split for at least 32 short fixtures
+Local proof, 2026-10-18: the [recorded results](../docs/streaming-qualification.md)
+report `READY`: 467 prefixes, 467 two-chunk boundaries, 2,312 corpus checkpoints,
+4,180 exact comparisons, and 8,360 presentation comparisons. The independent
+authored matrix adds 1,147 exact and 364 presentation checks. All have zero
+failures or missing checks. `qualification-tests.log` records 21 passing tests,
+including lifecycle and corruption controls. `native.log` records passing native
+ASan/UBSan and cursor checks. All nine packed runtime/initialization combinations
+and the dedicated Chromium 153 resizable-memory suite passed. Local release gates
+passed 1,791 Node tests, public type checks, 676 spec cases, 183 chat fixtures,
+the 497-document pinned repository corpus, and 11,300 fuzz edits. All ten negative
+controls failed as expected. The [complete baseline](../docs/measurements/presentation-0.1.10.json)
+records all eight workloads with five samples and one warmup per case. The
+measurement workspace and host lock were removed. CI and publication remain pending.
+
+- [x] Run every UTF-16 prefix and every two-chunk split for at least 32 short fixtures
   spanning the behavior families. Use eight fixed-seed multichunk schedules for every
   selected development message and bounded schedules for larger corpus documents.
-- [ ] Compare identical source, options, and input state through fresh loading and
+- [x] Compare identical source, options, and input state through fresh loading and
   every incremental schedule. Compare full nested values, per-node ranges,
   provisional states, and resolved destinations, not only total text or event counts.
-- [ ] Cross representative prefixes with repeated open/ended queries, pause,
-  cancellation, failed delivery, resume, source replacement, and multiple documents.
-  Metadata-only transitions must work when source revision is unchanged.
-- [ ] Assert ended output agrees with exact semantics, and raw-source reads always
+- [x] Cross representative prefixes with repeated open/ended queries, caller-mode
+  mappings for pause, cancellation, and failed delivery, resume, source replacement,
+  and multiple documents. Metadata-only transitions must work when source revision
+  is unchanged. The parser has no delivery-state API, so transport state is outside
+  this check.
+- [x] Assert ended output agrees with exact semantics, and raw-source reads always
   preserve supplied source. Keep exact official CommonMark/GFM expectations and
   existing explicit profile differences independent of presentation expectations.
-- [ ] Exercise allocation failure paths already supported, memory growth, repeated
+- [x] Exercise allocation failure paths already supported, memory growth, repeated
   disposal, retained snapshots, deep nesting, and many documents under native
-  ASan/UBSan and real WASM tests. No stale native views or cross-document state.
+  ASan/UBSan and real WASM tests. The native reserve abort contract passes in an
+  owned child. The public build has no allocator injection hook for the default
+  cmark/tree-sitter allocators, so those branches remain outside this proof.
+  Memory growth, disposal, retained snapshots, deep nesting, many documents, and
+  stale view checks pass. No cross-document state was observed.
 
 Exit: no unexplained differences, missing required cases, silent skips, or source
 loss in the selected profile. UTF-8 decoder splits are outside this string API;
@@ -299,14 +319,23 @@ only a future byte API would own byte-decoder behavior.
 - [x] Require all presentation fixtures in `tests/streaming.mjs` and existing CI.
   Reuse the fixture driver for a small report command recording pins, case counts,
   failures, and capability gaps. A missing capability must make qualification fail.
-- [ ] Extend native tests and packed Node, Bun, and production Vite/Chromium consumers
+  `npm test` also selects `tests/streaming-qualification.mjs` and
+  `tests/presentation-lifetime.mjs`; `bun run streaming:qualification` records the
+  exhaustive JSON report as a CI artifact.
+- [x] Extend native tests and packed Node, Bun, and production Vite/Chromium consumers
   to exercise exact and presentation APIs, EOF transitions, source replacement,
   independent documents, source fidelity, memory growth, and retained results.
 - [ ] Run existing release gates without weakening them. Publish the next patch
   version with types, generated grammar/resolver artifacts, notices, and API examples.
-- [ ] Record complete-document parse/extraction time and retained memory for bounded
+  All local gates passed. CI and publication remain pending; npm authentication
+  returned `E401`. Version 0.1.10 is prepared but unpublished.
+- [x] Record complete-document parse/extraction time and retained memory for bounded
   representative and pathological workloads. Measurements characterize this correct
   baseline; they are not a speedup claim or an optimization competition.
+  `bench/presentation.mjs` and `bun run bench:presentation` provide the bounded
+  baseline. The committed measurement report records all eight cases with five
+  measured samples and one warmup. It retains artifact hashes and background load
+  observations and makes no speedup claim.
 
 Exit: merged implementation, passing package checks, and an exact tested artifact.
 Record any publishing delay separately from code/package readiness. This completes
@@ -322,13 +351,17 @@ bun install --frozen-lockfile
 (cd bench && bun install --frozen-lockfile)
 bun run build
 npm test
+bun run test:types
+bun run streaming:qualification
 bun run check
 bun run test:native
+bun run test:browser
 bun run test:package
 ```
 
-`WASI_SDK` and `TREE_SITTER_LIB` follow README setup. `node --test tests/streaming.mjs`
-is the planned focused entry point, available after P0 adds it. Package/browser
+`WASI_SDK` and `TREE_SITTER_LIB` follow the [development guide](../docs/development.md#build).
+`node --test tests/streaming.mjs` runs the authored matrix.
+The exhaustive report uses `bun run streaming:qualification`. Package/browser
 prerequisites and host scheduling remain execution-environment concerns; committed
 tests must not require local reference clones, private routes, account access, or
 machine-specific absolute paths. Keep builds, probes, and teardown portable.

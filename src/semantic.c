@@ -1015,15 +1015,13 @@ static void html(Semantic *s, TSNode n) {
   begin(s, "html", start(n), finish); put(s, ",\"value\":");
   literal_string(s, value.ptr, value.size, start(n), end(n)); put(s, "}"); cmark_strbuf_free(&value);
 }
-static void block(Semantic *s, TSNode n, bool *first) {
+// Keep leaf-only temporaries off the recursive container traversal's Wasm stack.
+static __attribute__((noinline)) void block_leaf(Semantic *s, TSNode n, bool *first) {
   Document *d = s->d; uint16_t id = ts_node_symbol(n); Ids *i = &d->ids;
-  if (end(n) <= s->skip_until) return;
-  if (suppress_empty_block(s, n)) return;
   if (id == i->paragraph || id == i->reference_definition) {
     if (!math_block(s, n, first)) paragraph(s, n, first);
     return;
   }
-  if (!block_kind(d, n)) { block_children(s, n, first); return; }
   if (id == i->indented_code_block) {
     bool content = false;
     for (uint32_t at = start(n); at < end(n); at++) if (!ws(d->text[at])) content = true;
@@ -1031,11 +1029,19 @@ static void block(Semantic *s, TSNode n, bool *first) {
   }
   separator(s, first);
   if (id == i->atx_heading || id == i->setext_heading) { heading(s, n, id == i->setext_heading); return; }
-  if (id == i->list) { list(s, n); return; }
   if (id == i->fenced_code_block || id == i->indented_code_block) { code(s, n, id == i->fenced_code_block); return; }
   if (id == i->html_block) { html(s, n); return; }
   if (id == i->pipe_table) { if (d->gfm) table(s, n); else plain_table(s, n); return; }
-  if (id == i->thematic_break) { begin(s, "thematicBreak", start(n), content_end(d, n)); put(s, "}"); return; }
+  begin(s, "thematicBreak", start(n), content_end(d, n)); put(s, "}");
+}
+static void block(Semantic *s, TSNode n, bool *first) {
+  Document *d = s->d; uint16_t id = ts_node_symbol(n); Ids *i = &d->ids;
+  if (end(n) <= s->skip_until) return;
+  if (suppress_empty_block(s, n)) return;
+  if (!block_kind(d, n)) { block_children(s, n, first); return; }
+  if (id != i->block_quote && id != i->list) { block_leaf(s, n, first); return; }
+  separator(s, first);
+  if (id == i->list) { list(s, n); return; }
   uint32_t quote_end = end(n);
   while (quote_end > start(n) && ws(d->text[quote_end - 1])) quote_end--;
   begin(s, "quote", start(n), quote_end); child_array(s, "children");
