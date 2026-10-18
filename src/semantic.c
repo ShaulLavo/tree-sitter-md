@@ -552,14 +552,18 @@ static uint32_t container_prefix(Document *d, TSNode parent, uint32_t a, uint32_
   uint32_t virtual_spaces = 0;
   while (count) {
     TSNode n = path[--count]; uint32_t column = column_at(d, a), width = 0;
-    uint32_t required = is(n, d->ids.list_item) ? item_indent(d, n) : 3;
+    uint32_t saved = a, saved_virtual = virtual_spaces;
+    bool list = is(n, d->ids.list_item);
+    uint32_t required = list ? item_indent(d, n) : (literal ? UINT32_MAX : 3);
     if (literal) { width = virtual_spaces < required ? virtual_spaces : required; virtual_spaces -= width; }
     while (a < b && width < required && (d->text[a] == ' ' || d->text[a] == '\t')) {
       uint32_t added = d->text[a] == '\t' ? 4 - column % 4 : 1;
       column += added; width += added; a++;
     }
-    if (is(n, d->ids.list_item)) { virtual_spaces = (literal ? virtual_spaces : 0) + (width > required ? width - required : 0); continue; }
-    if (a >= b || d->text[a] != '>') break;
+    bool matched = list ? width >= required : a < b && d->text[a] == '>';
+    if (literal && !matched) { a = saved; virtual_spaces = saved_virtual; break; }
+    if (list) { virtual_spaces = (literal ? virtual_spaces : 0) + (width > required ? width - required : 0); continue; }
+    if (!matched) break;
     column++; a++;
     if (a < b && d->text[a] == ' ') a++;
     else if (a < b && d->text[a] == '\t') { virtual_spaces = 3 - column % 4; a++; }
