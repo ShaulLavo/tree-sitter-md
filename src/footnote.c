@@ -184,23 +184,52 @@ static void scan_leaf(Footnotes *notes, TSNode node, Container container) {
     beginning = l->text[i] == '\n';
   }
 }
-static void walk(Footnotes *notes, TSNode node, Container container) {
+typedef struct {
+  TSNode node;
+  Container container;
+  uint32_t next_child;
+  bool entered;
+} WalkEntry;
+
+static bool enter(Footnotes *notes, WalkEntry *entry) {
   Document *d = notes->document;
-  if (is(node, d->ids.fenced_code_block) || is(node, d->ids.indented_code_block) || is(node, d->ids.html_block)) return;
-  if (is(node, d->ids.block_quote)) {
-    if (container.count == 200) return;
-    container.steps[container.count++] = 0; container.limit = end(node);
-  }
-  if (is(node, d->ids.list_item)) {
+  TSNode node = entry->node;
+  entry->entered = true;
+  if (is(node, d->ids.fenced_code_block) || is(node, d->ids.indented_code_block) || is(node, d->ids.html_block)) return false;
+  if (is(node, d->ids.block_quote) || is(node, d->ids.list_item)) {
+    if (entry->container.count == 200) return false;
     TSNode marker = ts_node_named_child(node, 0);
-    if (container.count == 200) return;
-    container.steps[container.count++] = end(marker) - start(marker); container.limit = end(node);
+    uint32_t width = is(node, d->ids.list_item) ? end(marker) - start(marker) : 0;
+    entry->container.steps[entry->container.count++] = width;
+    entry->container.limit = end(node);
   }
-  if (is(node, d->ids.reference_definition) || is(node, d->ids.paragraph)) {
-    scan_leaf(notes, node, container); return;
+  if (!is(node, d->ids.reference_definition) && !is(node, d->ids.paragraph)) return true;
+  scan_leaf(notes, node, entry->container);
+  return false;
+}
+
+static void walk(Footnotes *notes, TSNode root, Container initial) {
+  WalkEntry *stack = NULL;
+  uint32_t count = 0, capacity = 0;
+  reserve((void **)&stack, &capacity, 1, sizeof(*stack));
+  stack[count++] = (WalkEntry){root, initial, 0, false};
+  while (count) {
+    WalkEntry *entry = &stack[count - 1];
+    if (!entry->entered && !enter(notes, entry)) {
+      count--;
+      continue;
+    }
+    uint32_t children = ts_node_named_child_count(entry->node);
+    if (entry->next_child == children) {
+      count--;
+      continue;
+    }
+    TSNode child = ts_node_named_child(entry->node, entry->next_child++);
+    Container container = entry->container;
+    reserve((void **)&stack, &capacity, count + 1, sizeof(*stack));
+    stack[count++] = (WalkEntry){child, container, 0, false};
   }
-  for (uint32_t i = 0; i < ts_node_named_child_count(node); i++)
-    walk(notes, ts_node_named_child(node, i), container);
+  free(stack);
 }
 Footnotes *footnotes_new(Document *document) {
   Footnotes *notes = calloc(1, sizeof(*notes));

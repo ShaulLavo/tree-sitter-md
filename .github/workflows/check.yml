@@ -23,6 +23,14 @@ jobs:
         run: bun run build
       - name: Check JavaScript and incremental regressions
         run: npm test
+      - name: Record exhaustive streaming qualification
+        run: bun run streaming:qualification > streaming-qualification.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: streaming-qualification
+          path: streaming-qualification.json
+          if-no-files-found: error
       - name: Check public presentation types
         run: bun run test:types
       - name: Check spec, pinned repository and chat corpora, and fuzz controls

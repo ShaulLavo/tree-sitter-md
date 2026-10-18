@@ -1,0 +1,2478 @@
+{
+  "schemaVersion": 1,
+  "kind": "complete-document-presentation-baseline",
+  "started": {
+    "at": "2026-10-18T08:21:15.466Z",
+    "loadAverage": [
+      3.083984375,
+      2.7099609375,
+      2.52587890625
+    ],
+    "freeMemoryBytes": 653934592
+  },
+  "environment": {
+    "os": {
+      "type": "Darwin",
+      "release": "25.4.0",
+      "version": "Darwin Kernel Version 25.4.0: Thu Mar 19 19:32:36 PDT 2026; root:xnu-12377.101.15~1/RELEASE_ARM64_T8103",
+      "architecture": "arm64",
+      "platform": "darwin"
+    },
+    "hardware": {
+      "cpuModels": [
+        "Apple M1"
+      ],
+      "logicalCpuCount": 8,
+      "availableParallelism": 8,
+      "totalMemoryBytes": 17179869184
+    },
+    "runtime": {
+      "node": "v26.7.0",
+      "versions": {
+        "node": "26.7.0",
+        "acorn": "8.18.0",
+        "ada": "4.0.0",
+        "amaro": "1.1.11",
+        "ares": "1.34.8",
+        "brotli": "1.2.0",
+        "cldr": "48.0",
+        "icu": "78.3",
+        "libffi": "3.7.1",
+        "lief": "0.17.0",
+        "llhttp": "9.4.3",
+        "merve": "1.2.2",
+        "modules": "147",
+        "napi": "10",
+        "nbytes": "0.1.4",
+        "ncrypto": "0.0.1",
+        "nghttp2": "1.70.0",
+        "nghttp3": "",
+        "ngtcp2": "",
+        "openssl": "3.5.7",
+        "simdjson": "4.6.6",
+        "simdutf": "7.7.0",
+        "sqlite": "3.53.4",
+        "tz": "2026c",
+        "undici": "8.9.0",
+        "unicode": "17.0",
+        "uv": "1.52.1",
+        "uvwasi": "0.0.23",
+        "v8": "14.6.202.34-node.28",
+        "zlib": "1.3.2.1-motley-42c2f19",
+        "zstd": "1.5.7"
+      },
+      "executable": "node",
+      "execArgv": [],
+      "executablePathOmitted": true
+    }
+  },
+  "repository": {
+    "commit": null,
+    "changes": null,
+    "reason": "Git metadata is unavailable; artifact hashes identify the measured files"
+  },
+  "configuration": {
+    "caseIds": [
+      "chat-median",
+      "chat-p90",
+      "chat-longest",
+      "normal32k",
+      "structured256k",
+      "giant-paragraph256k",
+      "references2048",
+      "nested64"
+    ],
+    "samplesPerCase": 5,
+    "warmupPerCase": 1,
+    "timeoutMsPerCase": 120000
+  },
+  "method": {
+    "isolation": "One fresh Node process and shared Wasm runtime per case; cases run sequentially",
+    "coldInit": "One init call per case, after module import; filesystem caches are uncontrolled",
+    "timing": "Fresh document per sample; full setText, semantics, open presentation, ended presentation in that order; complete native copy and strict JavaScript decoding included",
+    "firstCalls": "Before timing warmup; explicit GC separates each retained-state measurement",
+    "samples": "Explicit GC before each sample, outside timing; document construction, validation, summaries and disposal are outside timing",
+    "memory": "Process-wide post-GC JavaScript heap and process memory counters; shared Wasm linear-memory capacity is a high-water capacity and includes free allocator space",
+    "retention": "Source, document and then exact/open/ended snapshots accumulate; snapshots, document and source are subsequently released",
+    "serializedSize": "UTF-8 bytes of JSON.stringify(snapshot); this includes presentation source fields and is not JavaScript heap usage",
+    "statistics": "Median averages the middle pair for even sample counts; p95 uses nearest rank ceil(n * 0.95); raw millisecond samples are retained",
+    "limits": "No viewport/render timing, allocation census, peak resident memory, performance threshold or speedup claim"
+  },
+  "cases": [
+    {
+      "caseIdentity": {
+        "id": "chat-median",
+        "description": "Median-length committed assistant message",
+        "options": {
+          "gfm": true,
+          "frontmatter": false,
+          "cjk": true,
+          "math": true
+        },
+        "provenance": {
+          "file": "bench/corpus/chat.json",
+          "corpusMessages": 183,
+          "zeroBasedIndex": 64,
+          "lengthRank": 91,
+          "percentile": 0.5
+        },
+        "source": {
+          "utf16CodeUnits": 73,
+          "utf8Bytes": 75,
+          "utf16leSha256": "b9a53bec13b16f209ea7d28b0a0f74fd8ed7c09811b24620545b9c8f9df71e26",
+          "utf8Sha256": "439dcb42b5ff778a4c136358d1998d2b4c44a88b751f0e6b498bdf653a76929b"
+        },
+        "caseSha256": "6c16a858000dc6868e5b93296e98bf1fda638988825486099b7a6d4753324dc1"
+      },
+      "firstCallMs": {
+        "setText": 2.4562500000000114,
+        "exact": 2.149124999999998,
+        "open": 0.3425419999999946,
+        "ended": 0.11933399999999494
+      },
+      "snapshots": {
+        "exact": {
+          "serializedUtf8Bytes": 382,
+          "serializedUtf16CodeUnits": 380,
+          "serializedSha256": "afba11f858bb453bb47c2a051f495f91e25f5e44c7d28da3ef7b18a49fc00b9d",
+          "nodes": {
+            "total": 3,
+            "types": {
+              "root": 1,
+              "paragraph": 1,
+              "text": 1
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "open": {
+          "serializedUtf8Bytes": 534,
+          "serializedUtf16CodeUnits": 530,
+          "serializedSha256": "477a5862360f0f7e58703d66405cbb32788959eb5ffa81452d0ef02a87fc9ff7",
+          "nodes": {
+            "total": 3,
+            "types": {
+              "root": 1,
+              "paragraph": 1,
+              "text": 1
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "ended": {
+          "serializedUtf8Bytes": 535,
+          "serializedUtf16CodeUnits": 531,
+          "serializedSha256": "583cea1f3eb2d9f2a7aa038b2204115e932fb564627fb3a1d7f71dbdb347f31f",
+          "nodes": {
+            "total": 3,
+            "types": {
+              "root": 1,
+              "paragraph": 1,
+              "text": 1
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        }
+      },
+      "importMs": 1.8192500000000038,
+      "coldInitMs": 24.745374999999996,
+      "timingMs": {
+        "setText": {
+          "samples": [
+            0.05758399999999142,
+            0.04449999999999932,
+            0.054707999999976664,
+            0.05174999999999841,
+            0.040916000000009944
+          ],
+          "minimum": 0.040916000000009944,
+          "median": 0.05174999999999841,
+          "p95": 0.05758399999999142,
+          "maximum": 0.05758399999999142
+        },
+        "exact": {
+          "samples": [
+            0.06329200000000412,
+            0.06049999999999045,
+            0.06354100000001495,
+            0.056000000000011596,
+            0.040208000000006905
+          ],
+          "minimum": 0.040208000000006905,
+          "median": 0.06049999999999045,
+          "p95": 0.06354100000001495,
+          "maximum": 0.06354100000001495
+        },
+        "open": {
+          "samples": [
+            0.04033300000000395,
+            0.04345800000001532,
+            0.04454100000000949,
+            0.0387500000000216,
+            0.04220799999998803
+          ],
+          "minimum": 0.0387500000000216,
+          "median": 0.04220799999998803,
+          "p95": 0.04454100000000949,
+          "maximum": 0.04454100000000949
+        },
+        "ended": {
+          "samples": [
+            0.032166999999986956,
+            0.02720899999999915,
+            0.03274999999999295,
+            0.025249999999999773,
+            0.02445799999998144
+          ],
+          "minimum": 0.02445799999998144,
+          "median": 0.02720899999999915,
+          "p95": 0.03274999999999295,
+          "maximum": 0.03274999999999295
+        }
+      },
+      "memory": {
+        "explicitGc": true,
+        "gcPassesPerStage": 3,
+        "stages": {
+          "beforeImport": {
+            "rss": 63143936,
+            "heapTotal": 8011776,
+            "heapUsed": 5111408,
+            "external": 2629958,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterImport": {
+            "rss": 63717376,
+            "heapTotal": 8273920,
+            "heapUsed": 5474296,
+            "external": 2669123,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterInit": {
+            "rss": 74465280,
+            "heapTotal": 11419648,
+            "heapUsed": 7607624,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "withSource": {
+            "rss": 74809344,
+            "heapTotal": 11419648,
+            "heapUsed": 7620520,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "afterParse": {
+            "rss": 76546048,
+            "heapTotal": 11419648,
+            "heapUsed": 7636944,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          },
+          "withExactSnapshot": {
+            "rss": 76808192,
+            "heapTotal": 11681792,
+            "heapUsed": 7663120,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          },
+          "withExactAndOpenSnapshots": {
+            "rss": 76840960,
+            "heapTotal": 11681792,
+            "heapUsed": 7670448,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          },
+          "withAllSnapshots": {
+            "rss": 76857344,
+            "heapTotal": 11681792,
+            "heapUsed": 7684816,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          },
+          "afterSnapshotRelease": {
+            "rss": 77037568,
+            "heapTotal": 11681792,
+            "heapUsed": 7735664,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          },
+          "afterDisposeWithSource": {
+            "rss": 77037568,
+            "heapTotal": 11681792,
+            "heapUsed": 7736648,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          },
+          "afterSourceRelease": {
+            "rss": 77037568,
+            "heapTotal": 11681792,
+            "heapUsed": 7736360,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          }
+        }
+      },
+      "artifacts": {
+        "packageVersion": "0.1.10",
+        "runtimeVersion": "0.28.4",
+        "runtimePin": "github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385",
+        "wasm": {
+          "tree-sitter-md.wasm": "d798486387db54277fef9b982b3ea7874aa921245469ab3e86f2d4380c03a4cd",
+          "tree-sitter-markdown.wasm": "0c7a3f7ee38196389a4061830ed227ccf4392852abf768d94f5cd3a2608efdb7"
+        },
+        "files": {
+          "js/index.js": {
+            "bytes": 7947,
+            "sha256": "3f38aba91fff4a45f714b36b79ea2d15ab5bdbbbce6effec5756bbc43d92d274"
+          },
+          "js/semantic.js": {
+            "bytes": 7202,
+            "sha256": "0a613af9c1173ce88be4315bda8707855b7ed634cf9d97a313684b68838c24ef"
+          },
+          "js/constants.js": {
+            "bytes": 1194,
+            "sha256": "f30c241601d02b173aef00ef53b1c83b83584c0270d0fa28c4e580c371528c79"
+          },
+          "package.json": {
+            "bytes": 2300,
+            "sha256": "b939dd91d34678d6e3467773c73806d8974ac0a8cc08b0302ec4255a1ba30ab5"
+          },
+          "bun.lock": {
+            "bytes": 17034,
+            "sha256": "491e17bbb50d44e7eeca51ea0993f8c8ab3c7acb52f7bfe65b43f94c442efde6"
+          },
+          "bench/presentation.mjs": {
+            "bytes": 15620,
+            "sha256": "015af7ec43ddf0999896f95232c488788cc21aa3067df1b746fffc7a7b42666c"
+          },
+          "bench/presentation-cases.mjs": {
+            "bytes": 4624,
+            "sha256": "8138b3a057e4c970ae7583f1131f08ba54a8b5bf192094f6ce6e5d4fb35f7f68"
+          }
+        },
+        "runtime": {
+          "entry": {
+            "bytes": 105334,
+            "sha256": "a48fe2b375519d3c6007700a46196792a7ef6645cc75cd5ed75a4eb5ce17374d"
+          },
+          "wasm": {
+            "bytes": 237244,
+            "sha256": "7cb3bc1eef059641fe33c7a93b4cbca0fce07bb388122912c5bbf382e7eba371"
+          }
+        }
+      }
+    },
+    {
+      "caseIdentity": {
+        "id": "chat-p90",
+        "description": "90th-percentile-length committed assistant message",
+        "options": {
+          "gfm": true,
+          "frontmatter": false,
+          "cjk": true,
+          "math": true
+        },
+        "provenance": {
+          "file": "bench/corpus/chat.json",
+          "corpusMessages": 183,
+          "zeroBasedIndex": 137,
+          "lengthRank": 163,
+          "percentile": 0.9
+        },
+        "source": {
+          "utf16CodeUnits": 431,
+          "utf8Bytes": 431,
+          "utf16leSha256": "dc2e6a805bbd0e12c023132b1dc32b02e4af746a66351ddeb354e0999cfa27c6",
+          "utf8Sha256": "f2693b943326f7dc557922f138d5504ef0c23aba1fdb46a5ccf96fc37ae236e9"
+        },
+        "caseSha256": "a6f011364040611c05936d3d5822694fa662838481d1e75c8bbd2f2496bf6dc9"
+      },
+      "firstCallMs": {
+        "setText": 2.5919999999999987,
+        "exact": 2.2406660000000045,
+        "open": 0.40758300000000247,
+        "ended": 0.20162500000000705
+      },
+      "snapshots": {
+        "exact": {
+          "serializedUtf8Bytes": 1329,
+          "serializedUtf16CodeUnits": 1329,
+          "serializedSha256": "d1f122f4cbeb5e9fa589880f794a14d5b37a01c526aedb971524589a81ea0ee9",
+          "nodes": {
+            "total": 13,
+            "types": {
+              "root": 1,
+              "paragraph": 2,
+              "text": 6,
+              "code": 4
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "open": {
+          "serializedUtf8Bytes": 1838,
+          "serializedUtf16CodeUnits": 1838,
+          "serializedSha256": "c98cb7a4f252e58309394a72022dc9e34a01134723cf32b7fffcb36b700c25e7",
+          "nodes": {
+            "total": 13,
+            "types": {
+              "root": 1,
+              "paragraph": 2,
+              "text": 6,
+              "code": 4
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "ended": {
+          "serializedUtf8Bytes": 1839,
+          "serializedUtf16CodeUnits": 1839,
+          "serializedSha256": "230d69c0afaa00161d6205f19cf143056c27091519c13fd75c9e8b6e275c6c13",
+          "nodes": {
+            "total": 13,
+            "types": {
+              "root": 1,
+              "paragraph": 2,
+              "text": 6,
+              "code": 4
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        }
+      },
+      "importMs": 1.7734589999999955,
+      "coldInitMs": 22.823332999999998,
+      "timingMs": {
+        "setText": {
+          "samples": [
+            0.1154160000000104,
+            0.10124999999999318,
+            0.09929199999999128,
+            0.11266699999998764,
+            0.100750000000005
+          ],
+          "minimum": 0.09929199999999128,
+          "median": 0.10124999999999318,
+          "p95": 0.1154160000000104,
+          "maximum": 0.1154160000000104
+        },
+        "exact": {
+          "samples": [
+            0.10991699999999582,
+            0.09183300000000827,
+            0.08062499999999773,
+            0.09858399999998824,
+            0.08924999999999272
+          ],
+          "minimum": 0.08062499999999773,
+          "median": 0.09183300000000827,
+          "p95": 0.10991699999999582,
+          "maximum": 0.10991699999999582
+        },
+        "open": {
+          "samples": [
+            0.07904200000000117,
+            0.07574999999999932,
+            0.07354099999997743,
+            0.077083000000016,
+            0.0983749999999759
+          ],
+          "minimum": 0.07354099999997743,
+          "median": 0.077083000000016,
+          "p95": 0.0983749999999759,
+          "maximum": 0.0983749999999759
+        },
+        "ended": {
+          "samples": [
+            0.07450000000000045,
+            0.058458000000001675,
+            0.07116699999997422,
+            0.05779200000000628,
+            0.05895799999998985
+          ],
+          "minimum": 0.05779200000000628,
+          "median": 0.05895799999998985,
+          "p95": 0.07450000000000045,
+          "maximum": 0.07450000000000045
+        }
+      },
+      "memory": {
+        "explicitGc": true,
+        "gcPassesPerStage": 3,
+        "stages": {
+          "beforeImport": {
+            "rss": 63078400,
+            "heapTotal": 8011776,
+            "heapUsed": 5111432,
+            "external": 2629958,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterImport": {
+            "rss": 63651840,
+            "heapTotal": 8011776,
+            "heapUsed": 5474320,
+            "external": 2669123,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterInit": {
+            "rss": 74514432,
+            "heapTotal": 11419648,
+            "heapUsed": 7607720,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "withSource": {
+            "rss": 74842112,
+            "heapTotal": 11419648,
+            "heapUsed": 7620896,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "afterParse": {
+            "rss": 76431360,
+            "heapTotal": 11419648,
+            "heapUsed": 7637472,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          },
+          "withExactSnapshot": {
+            "rss": 76726272,
+            "heapTotal": 11419648,
+            "heapUsed": 7665632,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          },
+          "withExactAndOpenSnapshots": {
+            "rss": 81346560,
+            "heapTotal": 11419648,
+            "heapUsed": 7684648,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          },
+          "withAllSnapshots": {
+            "rss": 81592320,
+            "heapTotal": 11419648,
+            "heapUsed": 7696368,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          },
+          "afterSnapshotRelease": {
+            "rss": 81707008,
+            "heapTotal": 11681792,
+            "heapUsed": 7744328,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          },
+          "afterDisposeWithSource": {
+            "rss": 81707008,
+            "heapTotal": 11681792,
+            "heapUsed": 7745312,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          },
+          "afterSourceRelease": {
+            "rss": 81707008,
+            "heapTotal": 11681792,
+            "heapUsed": 7745024,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1310720
+          }
+        }
+      },
+      "artifacts": {
+        "packageVersion": "0.1.10",
+        "runtimeVersion": "0.28.4",
+        "runtimePin": "github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385",
+        "wasm": {
+          "tree-sitter-md.wasm": "d798486387db54277fef9b982b3ea7874aa921245469ab3e86f2d4380c03a4cd",
+          "tree-sitter-markdown.wasm": "0c7a3f7ee38196389a4061830ed227ccf4392852abf768d94f5cd3a2608efdb7"
+        },
+        "files": {
+          "js/index.js": {
+            "bytes": 7947,
+            "sha256": "3f38aba91fff4a45f714b36b79ea2d15ab5bdbbbce6effec5756bbc43d92d274"
+          },
+          "js/semantic.js": {
+            "bytes": 7202,
+            "sha256": "0a613af9c1173ce88be4315bda8707855b7ed634cf9d97a313684b68838c24ef"
+          },
+          "js/constants.js": {
+            "bytes": 1194,
+            "sha256": "f30c241601d02b173aef00ef53b1c83b83584c0270d0fa28c4e580c371528c79"
+          },
+          "package.json": {
+            "bytes": 2300,
+            "sha256": "b939dd91d34678d6e3467773c73806d8974ac0a8cc08b0302ec4255a1ba30ab5"
+          },
+          "bun.lock": {
+            "bytes": 17034,
+            "sha256": "491e17bbb50d44e7eeca51ea0993f8c8ab3c7acb52f7bfe65b43f94c442efde6"
+          },
+          "bench/presentation.mjs": {
+            "bytes": 15620,
+            "sha256": "015af7ec43ddf0999896f95232c488788cc21aa3067df1b746fffc7a7b42666c"
+          },
+          "bench/presentation-cases.mjs": {
+            "bytes": 4624,
+            "sha256": "8138b3a057e4c970ae7583f1131f08ba54a8b5bf192094f6ce6e5d4fb35f7f68"
+          }
+        },
+        "runtime": {
+          "entry": {
+            "bytes": 105334,
+            "sha256": "a48fe2b375519d3c6007700a46196792a7ef6645cc75cd5ed75a4eb5ce17374d"
+          },
+          "wasm": {
+            "bytes": 237244,
+            "sha256": "7cb3bc1eef059641fe33c7a93b4cbca0fce07bb388122912c5bbf382e7eba371"
+          }
+        }
+      }
+    },
+    {
+      "caseIdentity": {
+        "id": "chat-longest",
+        "description": "Longest committed assistant message",
+        "options": {
+          "gfm": true,
+          "frontmatter": false,
+          "cjk": true,
+          "math": true
+        },
+        "provenance": {
+          "file": "bench/corpus/chat.json",
+          "corpusMessages": 183,
+          "zeroBasedIndex": 12,
+          "lengthRank": 182,
+          "percentile": 1
+        },
+        "source": {
+          "utf16CodeUnits": 8642,
+          "utf8Bytes": 8705,
+          "utf16leSha256": "a3f6f5f1a386be63ce35c2f3629a40e2b67e21f457f796012bc69922149d34b3",
+          "utf8Sha256": "6c300254f1a33758141c6c9b9c5158a5b06fa5ded7eff816a0bc455832be793d"
+        },
+        "caseSha256": "3c568e21b8f57351da62e80b5bb4e10878c1a63f38de0aaf9140276a8f13a383"
+      },
+      "firstCallMs": {
+        "setText": 3.950958,
+        "exact": 3.981250000000003,
+        "open": 1.625165999999993,
+        "ended": 1.1707090000000022
+      },
+      "snapshots": {
+        "exact": {
+          "serializedUtf8Bytes": 28622,
+          "serializedUtf16CodeUnits": 28559,
+          "serializedSha256": "0a415599b050017ee844d614b2218b48caff535854d8d57945c420869595f0ab",
+          "nodes": {
+            "total": 326,
+            "types": {
+              "root": 1,
+              "paragraph": 18,
+              "text": 163,
+              "code": 121,
+              "heading": 5,
+              "strong": 12,
+              "emphasis": 5,
+              "break": 1
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "open": {
+          "serializedUtf8Bytes": 37461,
+          "serializedUtf16CodeUnits": 37335,
+          "serializedSha256": "5d64c0ab3d47c3d837fd7a1807248cd86e68793b32755b12df97b0a4521710b9",
+          "nodes": {
+            "total": 326,
+            "types": {
+              "root": 1,
+              "paragraph": 18,
+              "text": 163,
+              "code": 121,
+              "heading": 5,
+              "strong": 12,
+              "emphasis": 5,
+              "break": 1
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "ended": {
+          "serializedUtf8Bytes": 37462,
+          "serializedUtf16CodeUnits": 37336,
+          "serializedSha256": "95e75b823fcf3ea865a1db772289ca4365f7993887278effa65f49c6507ab428",
+          "nodes": {
+            "total": 326,
+            "types": {
+              "root": 1,
+              "paragraph": 18,
+              "text": 163,
+              "code": 121,
+              "heading": 5,
+              "strong": 12,
+              "emphasis": 5,
+              "break": 1
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        }
+      },
+      "importMs": 1.8440410000000043,
+      "coldInitMs": 22.619125000000004,
+      "timingMs": {
+        "setText": {
+          "samples": [
+            0.5978750000000161,
+            0.4614159999999856,
+            0.47104199999998286,
+            0.43899999999999295,
+            0.41062500000001023
+          ],
+          "minimum": 0.41062500000001023,
+          "median": 0.4614159999999856,
+          "p95": 0.5978750000000161,
+          "maximum": 0.5978750000000161
+        },
+        "exact": {
+          "samples": [
+            0.7074580000000026,
+            0.636415999999997,
+            0.625333999999981,
+            0.5787500000000136,
+            0.5405000000000086
+          ],
+          "minimum": 0.5405000000000086,
+          "median": 0.625333999999981,
+          "p95": 0.7074580000000026,
+          "maximum": 0.7074580000000026
+        },
+        "open": {
+          "samples": [
+            0.7855409999999949,
+            0.7319999999999993,
+            0.709666999999996,
+            0.6768339999999853,
+            0.6949170000000038
+          ],
+          "minimum": 0.6768339999999853,
+          "median": 0.709666999999996,
+          "p95": 0.7855409999999949,
+          "maximum": 0.7855409999999949
+        },
+        "ended": {
+          "samples": [
+            0.7744579999999814,
+            0.7925830000000076,
+            0.7573329999999885,
+            0.7279169999999908,
+            0.71070899999998
+          ],
+          "minimum": 0.71070899999998,
+          "median": 0.7573329999999885,
+          "p95": 0.7925830000000076,
+          "maximum": 0.7925830000000076
+        }
+      },
+      "memory": {
+        "explicitGc": true,
+        "gcPassesPerStage": 3,
+        "stages": {
+          "beforeImport": {
+            "rss": 63143936,
+            "heapTotal": 8011776,
+            "heapUsed": 5111432,
+            "external": 2629958,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterImport": {
+            "rss": 63668224,
+            "heapTotal": 8011776,
+            "heapUsed": 5474320,
+            "external": 2669123,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterInit": {
+            "rss": 74285056,
+            "heapTotal": 11419648,
+            "heapUsed": 7607648,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "withSource": {
+            "rss": 74727424,
+            "heapTotal": 11419648,
+            "heapUsed": 7637624,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "afterParse": {
+            "rss": 85966848,
+            "heapTotal": 11419648,
+            "heapUsed": 7659296,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1376256
+          },
+          "withExactSnapshot": {
+            "rss": 101646336,
+            "heapTotal": 11419648,
+            "heapUsed": 7746968,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1441792
+          },
+          "withExactAndOpenSnapshots": {
+            "rss": 103038976,
+            "heapTotal": 11681792,
+            "heapUsed": 7832312,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1441792
+          },
+          "withAllSnapshots": {
+            "rss": 103268352,
+            "heapTotal": 11681792,
+            "heapUsed": 7909192,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1441792
+          },
+          "afterSnapshotRelease": {
+            "rss": 103694336,
+            "heapTotal": 11681792,
+            "heapUsed": 7895240,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1441792
+          },
+          "afterDisposeWithSource": {
+            "rss": 103710720,
+            "heapTotal": 11681792,
+            "heapUsed": 7895640,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1441792
+          },
+          "afterSourceRelease": {
+            "rss": 103710720,
+            "heapTotal": 11681792,
+            "heapUsed": 7895352,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1441792
+          }
+        }
+      },
+      "artifacts": {
+        "packageVersion": "0.1.10",
+        "runtimeVersion": "0.28.4",
+        "runtimePin": "github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385",
+        "wasm": {
+          "tree-sitter-md.wasm": "d798486387db54277fef9b982b3ea7874aa921245469ab3e86f2d4380c03a4cd",
+          "tree-sitter-markdown.wasm": "0c7a3f7ee38196389a4061830ed227ccf4392852abf768d94f5cd3a2608efdb7"
+        },
+        "files": {
+          "js/index.js": {
+            "bytes": 7947,
+            "sha256": "3f38aba91fff4a45f714b36b79ea2d15ab5bdbbbce6effec5756bbc43d92d274"
+          },
+          "js/semantic.js": {
+            "bytes": 7202,
+            "sha256": "0a613af9c1173ce88be4315bda8707855b7ed634cf9d97a313684b68838c24ef"
+          },
+          "js/constants.js": {
+            "bytes": 1194,
+            "sha256": "f30c241601d02b173aef00ef53b1c83b83584c0270d0fa28c4e580c371528c79"
+          },
+          "package.json": {
+            "bytes": 2300,
+            "sha256": "b939dd91d34678d6e3467773c73806d8974ac0a8cc08b0302ec4255a1ba30ab5"
+          },
+          "bun.lock": {
+            "bytes": 17034,
+            "sha256": "491e17bbb50d44e7eeca51ea0993f8c8ab3c7acb52f7bfe65b43f94c442efde6"
+          },
+          "bench/presentation.mjs": {
+            "bytes": 15620,
+            "sha256": "015af7ec43ddf0999896f95232c488788cc21aa3067df1b746fffc7a7b42666c"
+          },
+          "bench/presentation-cases.mjs": {
+            "bytes": 4624,
+            "sha256": "8138b3a057e4c970ae7583f1131f08ba54a8b5bf192094f6ce6e5d4fb35f7f68"
+          }
+        },
+        "runtime": {
+          "entry": {
+            "bytes": 105334,
+            "sha256": "a48fe2b375519d3c6007700a46196792a7ef6645cc75cd5ed75a4eb5ce17374d"
+          },
+          "wasm": {
+            "bytes": 237244,
+            "sha256": "7cb3bc1eef059641fe33c7a93b4cbca0fce07bb388122912c5bbf382e7eba371"
+          }
+        }
+      }
+    },
+    {
+      "caseIdentity": {
+        "id": "normal32k",
+        "description": "32 KiB structured response with unfinished trailing emphasis",
+        "options": {
+          "gfm": true,
+          "frontmatter": false,
+          "cjk": true,
+          "math": true
+        },
+        "provenance": {
+          "generated": "repeated complete structured sections, plain padding, unfinished trailing emphasis",
+          "targetUtf8Bytes": 32768
+        },
+        "source": {
+          "utf16CodeUnits": 32768,
+          "utf8Bytes": 32768,
+          "utf16leSha256": "71b6c524f99dc89f26177c7698e71f8b7c6cdc7b8cd52527584c254eb455694e",
+          "utf8Sha256": "c41f6866365f4a06d9e88e30241f1cd4add9edd3d2d3564b36d8539700427935"
+        },
+        "caseSha256": "d00d454995a75b54c9e25cdfb7fc237e9217aea65103edfbd76066e992181336"
+      },
+      "firstCallMs": {
+        "setText": 14.199708000000001,
+        "exact": 11.013666,
+        "open": 6.62337500000001,
+        "ended": 6.189832999999993
+      },
+      "snapshots": {
+        "exact": {
+          "serializedUtf8Bytes": 287080,
+          "serializedUtf16CodeUnits": 287080,
+          "serializedSha256": "009970d5199a9f3f6ae28363fcba76451f408a941cc9b93e1a7cf44cb5b55b7f",
+          "nodes": {
+            "total": 3785,
+            "types": {
+              "root": 1,
+              "paragraph": 338,
+              "text": 1598,
+              "math": 84,
+              "code": 168,
+              "table": 84,
+              "tableRow": 252,
+              "tableCell": 504,
+              "quote": 84,
+              "break": 84,
+              "list": 84,
+              "listItem": 168,
+              "link": 84,
+              "emphasis": 84,
+              "strong": 84,
+              "heading": 84
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "open": {
+          "serializedUtf8Bytes": 322075,
+          "serializedUtf16CodeUnits": 322075,
+          "serializedSha256": "f6f957a91ff6d51882ab39c4c3a16256b3b337bc0ab2347fc31be684a3b96071",
+          "nodes": {
+            "total": 3786,
+            "types": {
+              "root": 1,
+              "paragraph": 338,
+              "strong": 85,
+              "text": 1598,
+              "math": 84,
+              "code": 168,
+              "table": 84,
+              "tableRow": 252,
+              "tableCell": 504,
+              "quote": 84,
+              "break": 84,
+              "list": 84,
+              "listItem": 168,
+              "link": 84,
+              "emphasis": 84,
+              "heading": 84
+            }
+          },
+          "provisionalRecords": 1,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "ended": {
+          "serializedUtf8Bytes": 321943,
+          "serializedUtf16CodeUnits": 321943,
+          "serializedSha256": "477bebad2c589f62f9351dee60cabba90523fc2856789256cb7606c6f7238a08",
+          "nodes": {
+            "total": 3785,
+            "types": {
+              "root": 1,
+              "paragraph": 338,
+              "text": 1598,
+              "math": 84,
+              "code": 168,
+              "table": 84,
+              "tableRow": 252,
+              "tableCell": 504,
+              "quote": 84,
+              "break": 84,
+              "list": 84,
+              "listItem": 168,
+              "link": 84,
+              "emphasis": 84,
+              "strong": 84,
+              "heading": 84
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        }
+      },
+      "importMs": 1.9504999999999981,
+      "coldInitMs": 24.74795799999999,
+      "timingMs": {
+        "setText": {
+          "samples": [
+            4.344540999999992,
+            3.8689170000000104,
+            3.915999999999997,
+            3.9336250000000064,
+            3.6359580000000165
+          ],
+          "minimum": 3.6359580000000165,
+          "median": 3.915999999999997,
+          "p95": 4.344540999999992,
+          "maximum": 4.344540999999992
+        },
+        "exact": {
+          "samples": [
+            4.179707999999977,
+            4.057333,
+            4.139665999999977,
+            4.133291999999983,
+            3.9311250000000086
+          ],
+          "minimum": 3.9311250000000086,
+          "median": 4.133291999999983,
+          "p95": 4.179707999999977,
+          "maximum": 4.179707999999977
+        },
+        "open": {
+          "samples": [
+            4.828459000000009,
+            4.6552090000000135,
+            4.656457999999986,
+            4.702124999999967,
+            4.386624999999981
+          ],
+          "minimum": 4.386624999999981,
+          "median": 4.656457999999986,
+          "p95": 4.828459000000009,
+          "maximum": 4.828459000000009
+        },
+        "ended": {
+          "samples": [
+            5.356082999999984,
+            5.033625000000001,
+            5.379624999999976,
+            4.731833999999992,
+            4.484582999999986
+          ],
+          "minimum": 4.484582999999986,
+          "median": 5.033625000000001,
+          "p95": 5.379624999999976,
+          "maximum": 5.379624999999976
+        }
+      },
+      "memory": {
+        "explicitGc": true,
+        "gcPassesPerStage": 3,
+        "stages": {
+          "beforeImport": {
+            "rss": 63225856,
+            "heapTotal": 8011776,
+            "heapUsed": 5111432,
+            "external": 2629958,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterImport": {
+            "rss": 63782912,
+            "heapTotal": 8011776,
+            "heapUsed": 5474320,
+            "external": 2669123,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterInit": {
+            "rss": 74563584,
+            "heapTotal": 11419648,
+            "heapUsed": 7607648,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "withSource": {
+            "rss": 74645504,
+            "heapTotal": 11419648,
+            "heapUsed": 7649840,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "afterParse": {
+            "rss": 96616448,
+            "heapTotal": 11419648,
+            "heapUsed": 7670768,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 2686976
+          },
+          "withExactSnapshot": {
+            "rss": 109871104,
+            "heapTotal": 11419648,
+            "heapUsed": 8253232,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 3407872
+          },
+          "withExactAndOpenSnapshots": {
+            "rss": 111902720,
+            "heapTotal": 12468224,
+            "heapUsed": 8797552,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 3407872
+          },
+          "withAllSnapshots": {
+            "rss": 113819648,
+            "heapTotal": 13778944,
+            "heapUsed": 9357888,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 3407872
+          },
+          "afterSnapshotRelease": {
+            "rss": 118030336,
+            "heapTotal": 16138240,
+            "heapUsed": 8419552,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 3407872
+          },
+          "afterDisposeWithSource": {
+            "rss": 118030336,
+            "heapTotal": 16138240,
+            "heapUsed": 8420536,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 3407872
+          },
+          "afterSourceRelease": {
+            "rss": 118030336,
+            "heapTotal": 16138240,
+            "heapUsed": 8420248,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 3407872
+          }
+        }
+      },
+      "artifacts": {
+        "packageVersion": "0.1.10",
+        "runtimeVersion": "0.28.4",
+        "runtimePin": "github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385",
+        "wasm": {
+          "tree-sitter-md.wasm": "d798486387db54277fef9b982b3ea7874aa921245469ab3e86f2d4380c03a4cd",
+          "tree-sitter-markdown.wasm": "0c7a3f7ee38196389a4061830ed227ccf4392852abf768d94f5cd3a2608efdb7"
+        },
+        "files": {
+          "js/index.js": {
+            "bytes": 7947,
+            "sha256": "3f38aba91fff4a45f714b36b79ea2d15ab5bdbbbce6effec5756bbc43d92d274"
+          },
+          "js/semantic.js": {
+            "bytes": 7202,
+            "sha256": "0a613af9c1173ce88be4315bda8707855b7ed634cf9d97a313684b68838c24ef"
+          },
+          "js/constants.js": {
+            "bytes": 1194,
+            "sha256": "f30c241601d02b173aef00ef53b1c83b83584c0270d0fa28c4e580c371528c79"
+          },
+          "package.json": {
+            "bytes": 2300,
+            "sha256": "b939dd91d34678d6e3467773c73806d8974ac0a8cc08b0302ec4255a1ba30ab5"
+          },
+          "bun.lock": {
+            "bytes": 17034,
+            "sha256": "491e17bbb50d44e7eeca51ea0993f8c8ab3c7acb52f7bfe65b43f94c442efde6"
+          },
+          "bench/presentation.mjs": {
+            "bytes": 15620,
+            "sha256": "015af7ec43ddf0999896f95232c488788cc21aa3067df1b746fffc7a7b42666c"
+          },
+          "bench/presentation-cases.mjs": {
+            "bytes": 4624,
+            "sha256": "8138b3a057e4c970ae7583f1131f08ba54a8b5bf192094f6ce6e5d4fb35f7f68"
+          }
+        },
+        "runtime": {
+          "entry": {
+            "bytes": 105334,
+            "sha256": "a48fe2b375519d3c6007700a46196792a7ef6645cc75cd5ed75a4eb5ce17374d"
+          },
+          "wasm": {
+            "bytes": 237244,
+            "sha256": "7cb3bc1eef059641fe33c7a93b4cbca0fce07bb388122912c5bbf382e7eba371"
+          }
+        }
+      }
+    },
+    {
+      "caseIdentity": {
+        "id": "structured256k",
+        "description": "256 KiB structured document",
+        "options": {
+          "gfm": true,
+          "frontmatter": false,
+          "cjk": true,
+          "math": true
+        },
+        "provenance": {
+          "generated": "repeated complete structured sections and plain padding",
+          "targetUtf8Bytes": 262144
+        },
+        "source": {
+          "utf16CodeUnits": 262144,
+          "utf8Bytes": 262144,
+          "utf16leSha256": "0303200344deab82f71f467aef91bcd4a28f5275681c49b7a7909608c53aad3d",
+          "utf8Sha256": "bba94dfa2ff28eb50972cfda18964d439a88782e9c2c5cac70e7186714918b9b"
+        },
+        "caseSha256": "f0e7e7544e01b9e19ec7362fa5244a8cd32a2de122a4e57e07fb6e4488481ed6"
+      },
+      "firstCallMs": {
+        "setText": 47.406000000000006,
+        "exact": 45.178042000000005,
+        "open": 39.31508299999999,
+        "ended": 40.550291999999985
+      },
+      "snapshots": {
+        "exact": {
+          "serializedUtf8Bytes": 2364563,
+          "serializedUtf16CodeUnits": 2364563,
+          "serializedSha256": "d8669c156a4781c4c0d6b74c022599a6b7d586464fb1bfacc4391fe20eb3a559",
+          "nodes": {
+            "total": 30470,
+            "types": {
+              "root": 1,
+              "paragraph": 2710,
+              "text": 12865,
+              "math": 677,
+              "code": 1354,
+              "table": 677,
+              "tableRow": 2031,
+              "tableCell": 4062,
+              "quote": 677,
+              "break": 677,
+              "list": 677,
+              "listItem": 1354,
+              "link": 677,
+              "emphasis": 677,
+              "strong": 677,
+              "heading": 677
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "open": {
+          "serializedUtf8Bytes": 2643034,
+          "serializedUtf16CodeUnits": 2643034,
+          "serializedSha256": "c047f10c8ce42099c81f69c8d22225fa29caa129fa6b2be3aef69fb7e99d6ec7",
+          "nodes": {
+            "total": 30470,
+            "types": {
+              "root": 1,
+              "paragraph": 2710,
+              "text": 12865,
+              "math": 677,
+              "code": 1354,
+              "table": 677,
+              "tableRow": 2031,
+              "tableCell": 4062,
+              "quote": 677,
+              "break": 677,
+              "list": 677,
+              "listItem": 1354,
+              "link": 677,
+              "emphasis": 677,
+              "strong": 677,
+              "heading": 677
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "ended": {
+          "serializedUtf8Bytes": 2643035,
+          "serializedUtf16CodeUnits": 2643035,
+          "serializedSha256": "06b78c613032e8829f354a6a88c6c4bce5af9b4e6d7c55a5b990e8e0d9a42aa4",
+          "nodes": {
+            "total": 30470,
+            "types": {
+              "root": 1,
+              "paragraph": 2710,
+              "text": 12865,
+              "math": 677,
+              "code": 1354,
+              "table": 677,
+              "tableRow": 2031,
+              "tableCell": 4062,
+              "quote": 677,
+              "break": 677,
+              "list": 677,
+              "listItem": 1354,
+              "link": 677,
+              "emphasis": 677,
+              "strong": 677,
+              "heading": 677
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        }
+      },
+      "importMs": 1.7858330000000038,
+      "coldInitMs": 22.47208299999999,
+      "timingMs": {
+        "setText": {
+          "samples": [
+            29.937332999999967,
+            29.817749999999933,
+            27.48412499999995,
+            27.995457999999985,
+            27.473833999999897
+          ],
+          "minimum": 27.473833999999897,
+          "median": 27.995457999999985,
+          "p95": 29.937332999999967,
+          "maximum": 29.937332999999967
+        },
+        "exact": {
+          "samples": [
+            30.742583999999965,
+            31.951000000000022,
+            29.808874999999944,
+            30.86104200000011,
+            29.711457999999993
+          ],
+          "minimum": 29.711457999999993,
+          "median": 30.742583999999965,
+          "p95": 31.951000000000022,
+          "maximum": 31.951000000000022
+        },
+        "open": {
+          "samples": [
+            36.34424999999999,
+            36.100584000000026,
+            36.032249999999976,
+            35.518625000000156,
+            34.700624999999945
+          ],
+          "minimum": 34.700624999999945,
+          "median": 36.032249999999976,
+          "p95": 36.34424999999999,
+          "maximum": 36.34424999999999
+        },
+        "ended": {
+          "samples": [
+            40.236375000000066,
+            37.74587500000007,
+            40.74120800000003,
+            39.420667000000094,
+            38.30362500000001
+          ],
+          "minimum": 37.74587500000007,
+          "median": 39.420667000000094,
+          "p95": 40.74120800000003,
+          "maximum": 40.74120800000003
+        }
+      },
+      "memory": {
+        "explicitGc": true,
+        "gcPassesPerStage": 3,
+        "stages": {
+          "beforeImport": {
+            "rss": 63078400,
+            "heapTotal": 8011776,
+            "heapUsed": 5110032,
+            "external": 2629958,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterImport": {
+            "rss": 63717376,
+            "heapTotal": 8273920,
+            "heapUsed": 5472920,
+            "external": 2669123,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterInit": {
+            "rss": 74514432,
+            "heapTotal": 11681792,
+            "heapUsed": 7606248,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "withSource": {
+            "rss": 75399168,
+            "heapTotal": 11960320,
+            "heapUsed": 7877784,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "afterParse": {
+            "rss": 109772800,
+            "heapTotal": 11960320,
+            "heapUsed": 7898528,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 12582912
+          },
+          "withExactSnapshot": {
+            "rss": 131465216,
+            "heapTotal": 21135360,
+            "heapUsed": 12067208,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 17235968
+          },
+          "withExactAndOpenSnapshots": {
+            "rss": 149045248,
+            "heapTotal": 33980416,
+            "heapUsed": 16405712,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 17235968
+          },
+          "withAllSnapshots": {
+            "rss": 161153024,
+            "heapTotal": 45252608,
+            "heapUsed": 20754224,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 17235968
+          },
+          "afterSnapshotRelease": {
+            "rss": 176816128,
+            "heapTotal": 37142528,
+            "heapUsed": 12458952,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 17235968
+          },
+          "afterDisposeWithSource": {
+            "rss": 176832512,
+            "heapTotal": 37142528,
+            "heapUsed": 12459936,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 17235968
+          },
+          "afterSourceRelease": {
+            "rss": 176832512,
+            "heapTotal": 37142528,
+            "heapUsed": 12459648,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 17235968
+          }
+        }
+      },
+      "artifacts": {
+        "packageVersion": "0.1.10",
+        "runtimeVersion": "0.28.4",
+        "runtimePin": "github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385",
+        "wasm": {
+          "tree-sitter-md.wasm": "d798486387db54277fef9b982b3ea7874aa921245469ab3e86f2d4380c03a4cd",
+          "tree-sitter-markdown.wasm": "0c7a3f7ee38196389a4061830ed227ccf4392852abf768d94f5cd3a2608efdb7"
+        },
+        "files": {
+          "js/index.js": {
+            "bytes": 7947,
+            "sha256": "3f38aba91fff4a45f714b36b79ea2d15ab5bdbbbce6effec5756bbc43d92d274"
+          },
+          "js/semantic.js": {
+            "bytes": 7202,
+            "sha256": "0a613af9c1173ce88be4315bda8707855b7ed634cf9d97a313684b68838c24ef"
+          },
+          "js/constants.js": {
+            "bytes": 1194,
+            "sha256": "f30c241601d02b173aef00ef53b1c83b83584c0270d0fa28c4e580c371528c79"
+          },
+          "package.json": {
+            "bytes": 2300,
+            "sha256": "b939dd91d34678d6e3467773c73806d8974ac0a8cc08b0302ec4255a1ba30ab5"
+          },
+          "bun.lock": {
+            "bytes": 17034,
+            "sha256": "491e17bbb50d44e7eeca51ea0993f8c8ab3c7acb52f7bfe65b43f94c442efde6"
+          },
+          "bench/presentation.mjs": {
+            "bytes": 15620,
+            "sha256": "015af7ec43ddf0999896f95232c488788cc21aa3067df1b746fffc7a7b42666c"
+          },
+          "bench/presentation-cases.mjs": {
+            "bytes": 4624,
+            "sha256": "8138b3a057e4c970ae7583f1131f08ba54a8b5bf192094f6ce6e5d4fb35f7f68"
+          }
+        },
+        "runtime": {
+          "entry": {
+            "bytes": 105334,
+            "sha256": "a48fe2b375519d3c6007700a46196792a7ef6645cc75cd5ed75a4eb5ce17374d"
+          },
+          "wasm": {
+            "bytes": 237244,
+            "sha256": "7cb3bc1eef059641fe33c7a93b4cbca0fce07bb388122912c5bbf382e7eba371"
+          }
+        }
+      }
+    },
+    {
+      "caseIdentity": {
+        "id": "giant-paragraph256k",
+        "description": "One 256 KiB paragraph with dense inline markup",
+        "options": {
+          "gfm": true,
+          "frontmatter": false,
+          "cjk": true,
+          "math": true
+        },
+        "provenance": {
+          "generated": "one paragraph with repeated strong, emphasis, code and inline links",
+          "targetUtf8Bytes": 262144
+        },
+        "source": {
+          "utf16CodeUnits": 262144,
+          "utf8Bytes": 262144,
+          "utf16leSha256": "2ec29beed132b88f388af2f080cc613eb657c543c67e44f4a820b5b4d52974f0",
+          "utf8Sha256": "d5e2f7850fafd420f1ed47a2f5620fa3efab4bb21ce4bcec8a91631e585caeea"
+        },
+        "caseSha256": "3c0fe9570232f1fd6a4c8698f10bce961dce2a1f101d212796fff78995e1b184"
+      },
+      "firstCallMs": {
+        "setText": 18.067416999999992,
+        "exact": 52.72924999999999,
+        "open": 50.161542,
+        "ended": 43.29441699999998
+      },
+      "snapshots": {
+        "exact": {
+          "serializedUtf8Bytes": 3290318,
+          "serializedUtf16CodeUnits": 3290318,
+          "serializedSha256": "4de273fa1ecfaa585169528d28bbad7759e81b3cb27eafadc5cf8cb33a1c7195",
+          "nodes": {
+            "total": 45774,
+            "types": {
+              "root": 1,
+              "paragraph": 1,
+              "text": 29128,
+              "link": 4161,
+              "code": 4161,
+              "emphasis": 4161,
+              "strong": 4161
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "open": {
+          "serializedUtf8Bytes": 3552539,
+          "serializedUtf16CodeUnits": 3552539,
+          "serializedSha256": "14c57e641cf80d6f4437003fb933b9c1fac7c34969e88fc81dd1cf29408ec0f8",
+          "nodes": {
+            "total": 45774,
+            "types": {
+              "root": 1,
+              "paragraph": 1,
+              "text": 29128,
+              "link": 4161,
+              "code": 4161,
+              "emphasis": 4161,
+              "strong": 4161
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "ended": {
+          "serializedUtf8Bytes": 3552540,
+          "serializedUtf16CodeUnits": 3552540,
+          "serializedSha256": "46f938cd8c999e232196a442b3c5388c9046a54e8672164e2e31cc450f54be0b",
+          "nodes": {
+            "total": 45774,
+            "types": {
+              "root": 1,
+              "paragraph": 1,
+              "text": 29128,
+              "link": 4161,
+              "code": 4161,
+              "emphasis": 4161,
+              "strong": 4161
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        }
+      },
+      "importMs": 1.7412500000000009,
+      "coldInitMs": 22.672332999999995,
+      "timingMs": {
+        "setText": {
+          "samples": [
+            12.401042000000075,
+            11.033625000000029,
+            10.202209000000039,
+            10.287083000000052,
+            10.102917000000161
+          ],
+          "minimum": 10.102917000000161,
+          "median": 10.287083000000052,
+          "p95": 12.401042000000075,
+          "maximum": 12.401042000000075
+        },
+        "exact": {
+          "samples": [
+            34.48695800000007,
+            34.31875000000002,
+            34.92475000000002,
+            35.03820899999994,
+            34.73149999999987
+          ],
+          "minimum": 34.31875000000002,
+          "median": 34.73149999999987,
+          "p95": 35.03820899999994,
+          "maximum": 35.03820899999994
+        },
+        "open": {
+          "samples": [
+            45.44212500000003,
+            43.38404200000002,
+            43.904292000000055,
+            43.856667000000016,
+            43.80325000000016
+          ],
+          "minimum": 43.38404200000002,
+          "median": 43.856667000000016,
+          "p95": 45.44212500000003,
+          "maximum": 45.44212500000003
+        },
+        "ended": {
+          "samples": [
+            46.58466700000008,
+            44.606250000000045,
+            45.88145799999995,
+            45.96433400000001,
+            45.1740420000001
+          ],
+          "minimum": 44.606250000000045,
+          "median": 45.88145799999995,
+          "p95": 46.58466700000008,
+          "maximum": 46.58466700000008
+        }
+      },
+      "memory": {
+        "explicitGc": true,
+        "gcPassesPerStage": 3,
+        "stages": {
+          "beforeImport": {
+            "rss": 63242240,
+            "heapTotal": 8011776,
+            "heapUsed": 5111408,
+            "external": 2629958,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterImport": {
+            "rss": 63815680,
+            "heapTotal": 8273920,
+            "heapUsed": 5474296,
+            "external": 2669123,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterInit": {
+            "rss": 74448896,
+            "heapTotal": 11681792,
+            "heapUsed": 7607624,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "withSource": {
+            "rss": 75333632,
+            "heapTotal": 11960320,
+            "heapUsed": 7879208,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "afterParse": {
+            "rss": 84934656,
+            "heapTotal": 11960320,
+            "heapUsed": 7898304,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 2359296
+          },
+          "withExactSnapshot": {
+            "rss": 131039232,
+            "heapTotal": 21676032,
+            "heapUsed": 13477632,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 21823488
+          },
+          "withExactAndOpenSnapshots": {
+            "rss": 159170560,
+            "heapTotal": 40828928,
+            "heapUsed": 19289400,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 21823488
+          },
+          "withAllSnapshots": {
+            "rss": 172408832,
+            "heapTotal": 53428224,
+            "heapUsed": 25092704,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 21823488
+          },
+          "afterSnapshotRelease": {
+            "rss": 198721536,
+            "heapTotal": 48168960,
+            "heapUsed": 13891056,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 21823488
+          },
+          "afterDisposeWithSource": {
+            "rss": 198737920,
+            "heapTotal": 48168960,
+            "heapUsed": 13892040,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 21823488
+          },
+          "afterSourceRelease": {
+            "rss": 198737920,
+            "heapTotal": 48168960,
+            "heapUsed": 13891752,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 21823488
+          }
+        }
+      },
+      "artifacts": {
+        "packageVersion": "0.1.10",
+        "runtimeVersion": "0.28.4",
+        "runtimePin": "github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385",
+        "wasm": {
+          "tree-sitter-md.wasm": "d798486387db54277fef9b982b3ea7874aa921245469ab3e86f2d4380c03a4cd",
+          "tree-sitter-markdown.wasm": "0c7a3f7ee38196389a4061830ed227ccf4392852abf768d94f5cd3a2608efdb7"
+        },
+        "files": {
+          "js/index.js": {
+            "bytes": 7947,
+            "sha256": "3f38aba91fff4a45f714b36b79ea2d15ab5bdbbbce6effec5756bbc43d92d274"
+          },
+          "js/semantic.js": {
+            "bytes": 7202,
+            "sha256": "0a613af9c1173ce88be4315bda8707855b7ed634cf9d97a313684b68838c24ef"
+          },
+          "js/constants.js": {
+            "bytes": 1194,
+            "sha256": "f30c241601d02b173aef00ef53b1c83b83584c0270d0fa28c4e580c371528c79"
+          },
+          "package.json": {
+            "bytes": 2300,
+            "sha256": "b939dd91d34678d6e3467773c73806d8974ac0a8cc08b0302ec4255a1ba30ab5"
+          },
+          "bun.lock": {
+            "bytes": 17034,
+            "sha256": "491e17bbb50d44e7eeca51ea0993f8c8ab3c7acb52f7bfe65b43f94c442efde6"
+          },
+          "bench/presentation.mjs": {
+            "bytes": 15620,
+            "sha256": "015af7ec43ddf0999896f95232c488788cc21aa3067df1b746fffc7a7b42666c"
+          },
+          "bench/presentation-cases.mjs": {
+            "bytes": 4624,
+            "sha256": "8138b3a057e4c970ae7583f1131f08ba54a8b5bf192094f6ce6e5d4fb35f7f68"
+          }
+        },
+        "runtime": {
+          "entry": {
+            "bytes": 105334,
+            "sha256": "a48fe2b375519d3c6007700a46196792a7ef6645cc75cd5ed75a4eb5ce17374d"
+          },
+          "wasm": {
+            "bytes": 237244,
+            "sha256": "7cb3bc1eef059641fe33c7a93b4cbca0fce07bb388122912c5bbf382e7eba371"
+          }
+        }
+      }
+    },
+    {
+      "caseIdentity": {
+        "id": "references2048",
+        "description": "2048 late reference definitions and their earlier uses",
+        "options": {
+          "gfm": true,
+          "frontmatter": false,
+          "cjk": true,
+          "math": true
+        },
+        "provenance": {
+          "generated": "2048 uses followed by 2048 definitions and one unresolved use",
+          "references": 2048
+        },
+        "source": {
+          "utf16CodeUnits": 63531,
+          "utf8Bytes": 63531,
+          "utf16leSha256": "1664f87a7e8f5698f823843a1a81bb7cb26cb20961a7040ac72292f899d0f173",
+          "utf8Sha256": "857e6f6a616289a6e1e14eabb6a5e36c33628524aa96b803872fbb0fd528e262"
+        },
+        "caseSha256": "b13ec71215803eee38993d541ca37318ff54808ed5da8796ac392fa00d1b4589"
+      },
+      "firstCallMs": {
+        "setText": 43.31383299999999,
+        "exact": 17.466250000000002,
+        "open": 16.244208000000015,
+        "ended": 15.085000000000008
+      },
+      "snapshots": {
+        "exact": {
+          "serializedUtf8Bytes": 700645,
+          "serializedUtf16CodeUnits": 700645,
+          "serializedSha256": "c0e268f0b8f801fed0594e333339a40137ffac9096c73de076cd4897a757a760",
+          "nodes": {
+            "total": 8195,
+            "types": {
+              "root": 1,
+              "paragraph": 2,
+              "text": 4096,
+              "definition": 2048,
+              "link": 2048
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "open": {
+          "serializedUtf8Bytes": 962282,
+          "serializedUtf16CodeUnits": 962282,
+          "serializedSha256": "8484c6844dc254505f205a4356a2fcf3c5de2d97ce64c568ffde01ecfb252c9f",
+          "nodes": {
+            "total": 8195,
+            "types": {
+              "root": 1,
+              "paragraph": 2,
+              "text": 4096,
+              "definition": 2048,
+              "link": 2048
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 2049
+        },
+        "ended": {
+          "serializedUtf8Bytes": 962283,
+          "serializedUtf16CodeUnits": 962283,
+          "serializedSha256": "249fc85d3dd13ac0705a15d25ec983426fc82ee4ce42a2e5dc04a0ec77ffe51a",
+          "nodes": {
+            "total": 8195,
+            "types": {
+              "root": 1,
+              "paragraph": 2,
+              "text": 4096,
+              "definition": 2048,
+              "link": 2048
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 2049
+        }
+      },
+      "importMs": 1.9810829999999982,
+      "coldInitMs": 24.284666,
+      "timingMs": {
+        "setText": {
+          "samples": [
+            26.518417,
+            24.246708000000012,
+            24.276250000000005,
+            23.921666999999957,
+            23.6087500000001
+          ],
+          "minimum": 23.6087500000001,
+          "median": 24.246708000000012,
+          "p95": 26.518417,
+          "maximum": 26.518417
+        },
+        "exact": {
+          "samples": [
+            10.713124999999991,
+            11.470624999999984,
+            10.866583000000048,
+            10.534791999999925,
+            9.780457999999953
+          ],
+          "minimum": 9.780457999999953,
+          "median": 10.713124999999991,
+          "p95": 11.470624999999984,
+          "maximum": 11.470624999999984
+        },
+        "open": {
+          "samples": [
+            12.974957999999958,
+            12.936500000000024,
+            13.502917000000025,
+            12.94454200000007,
+            12.282790999999975
+          ],
+          "minimum": 12.282790999999975,
+          "median": 12.94454200000007,
+          "p95": 13.502917000000025,
+          "maximum": 13.502917000000025
+        },
+        "ended": {
+          "samples": [
+            14.588624999999979,
+            13.560416999999973,
+            13.84337499999998,
+            14.055541999999946,
+            13.04970800000001
+          ],
+          "minimum": 13.04970800000001,
+          "median": 13.84337499999998,
+          "p95": 14.588624999999979,
+          "maximum": 14.588624999999979
+        }
+      },
+      "memory": {
+        "explicitGc": true,
+        "gcPassesPerStage": 3,
+        "stages": {
+          "beforeImport": {
+            "rss": 63242240,
+            "heapTotal": 8011776,
+            "heapUsed": 5111408,
+            "external": 2629958,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterImport": {
+            "rss": 63864832,
+            "heapTotal": 8273920,
+            "heapUsed": 5474296,
+            "external": 2669123,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterInit": {
+            "rss": 74514432,
+            "heapTotal": 11681792,
+            "heapUsed": 7607624,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "withSource": {
+            "rss": 74694656,
+            "heapTotal": 11681792,
+            "heapUsed": 7682176,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "afterParse": {
+            "rss": 104284160,
+            "heapTotal": 11681792,
+            "heapUsed": 7709944,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 6291456
+          },
+          "withExactSnapshot": {
+            "rss": 108789760,
+            "heapTotal": 12468224,
+            "heapUsed": 8993392,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 8519680
+          },
+          "withExactAndOpenSnapshots": {
+            "rss": 115441664,
+            "heapTotal": 17448960,
+            "heapUsed": 10481032,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 8519680
+          },
+          "withAllSnapshots": {
+            "rss": 119750656,
+            "heapTotal": 20856832,
+            "heapUsed": 11946768,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 8519680
+          },
+          "afterSnapshotRelease": {
+            "rss": 127467520,
+            "heapTotal": 22953984,
+            "heapUsed": 9405064,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 8519680
+          },
+          "afterDisposeWithSource": {
+            "rss": 127467520,
+            "heapTotal": 22953984,
+            "heapUsed": 9406048,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 8519680
+          },
+          "afterSourceRelease": {
+            "rss": 127467520,
+            "heapTotal": 22953984,
+            "heapUsed": 9405760,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 8519680
+          }
+        }
+      },
+      "artifacts": {
+        "packageVersion": "0.1.10",
+        "runtimeVersion": "0.28.4",
+        "runtimePin": "github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385",
+        "wasm": {
+          "tree-sitter-md.wasm": "d798486387db54277fef9b982b3ea7874aa921245469ab3e86f2d4380c03a4cd",
+          "tree-sitter-markdown.wasm": "0c7a3f7ee38196389a4061830ed227ccf4392852abf768d94f5cd3a2608efdb7"
+        },
+        "files": {
+          "js/index.js": {
+            "bytes": 7947,
+            "sha256": "3f38aba91fff4a45f714b36b79ea2d15ab5bdbbbce6effec5756bbc43d92d274"
+          },
+          "js/semantic.js": {
+            "bytes": 7202,
+            "sha256": "0a613af9c1173ce88be4315bda8707855b7ed634cf9d97a313684b68838c24ef"
+          },
+          "js/constants.js": {
+            "bytes": 1194,
+            "sha256": "f30c241601d02b173aef00ef53b1c83b83584c0270d0fa28c4e580c371528c79"
+          },
+          "package.json": {
+            "bytes": 2300,
+            "sha256": "b939dd91d34678d6e3467773c73806d8974ac0a8cc08b0302ec4255a1ba30ab5"
+          },
+          "bun.lock": {
+            "bytes": 17034,
+            "sha256": "491e17bbb50d44e7eeca51ea0993f8c8ab3c7acb52f7bfe65b43f94c442efde6"
+          },
+          "bench/presentation.mjs": {
+            "bytes": 15620,
+            "sha256": "015af7ec43ddf0999896f95232c488788cc21aa3067df1b746fffc7a7b42666c"
+          },
+          "bench/presentation-cases.mjs": {
+            "bytes": 4624,
+            "sha256": "8138b3a057e4c970ae7583f1131f08ba54a8b5bf192094f6ce6e5d4fb35f7f68"
+          }
+        },
+        "runtime": {
+          "entry": {
+            "bytes": 105334,
+            "sha256": "a48fe2b375519d3c6007700a46196792a7ef6645cc75cd5ed75a4eb5ce17374d"
+          },
+          "wasm": {
+            "bytes": 237244,
+            "sha256": "7cb3bc1eef059641fe33c7a93b4cbca0fce07bb388122912c5bbf382e7eba371"
+          }
+        }
+      }
+    },
+    {
+      "caseIdentity": {
+        "id": "nested64",
+        "description": "64 nested quote levels with mixed block and inline constructs",
+        "options": {
+          "gfm": true,
+          "frontmatter": false,
+          "cjk": true,
+          "math": true
+        },
+        "provenance": {
+          "generated": "64 quote levels containing a heading, list, fence and unfinished emphasis",
+          "quoteDepth": 64
+        },
+        "source": {
+          "utf16CodeUnits": 1441,
+          "utf8Bytes": 1441,
+          "utf16leSha256": "09081b3d95e5575e89e28be8b43533d902a9b8d0d5a0b7657e49190e7552abb6",
+          "utf8Sha256": "61fd042dfc531f88eac481415a4c8b3836b4ef9617f33d10e176de58a6be0c1a"
+        },
+        "caseSha256": "5ba7aa55a4b85681d73239365c12b5fb404bc73de96b6cd1b473b43ac5703005"
+      },
+      "firstCallMs": {
+        "setText": 3.0718750000000057,
+        "exact": 3.1122079999999954,
+        "open": 0.4659170000000046,
+        "ended": 0.5594590000000039
+      },
+      "snapshots": {
+        "exact": {
+          "serializedUtf8Bytes": 5649,
+          "serializedUtf16CodeUnits": 5649,
+          "serializedSha256": "e9b310b49c086c140106ce3bec756368ed754368c97815f360d814275d1d05a1",
+          "nodes": {
+            "total": 84,
+            "types": {
+              "root": 1,
+              "quote": 64,
+              "paragraph": 3,
+              "text": 7,
+              "code": 2,
+              "list": 1,
+              "listItem": 2,
+              "strong": 1,
+              "link": 1,
+              "emphasis": 1,
+              "heading": 1
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        },
+        "open": {
+          "serializedUtf8Bytes": 1783,
+          "serializedUtf16CodeUnits": 1783,
+          "serializedSha256": "81722b1406862812a78732a16e7bb55acdc921f3ae6b93ae9611e6b329e24ba6",
+          "nodes": {
+            "total": 1,
+            "types": {
+              "root": 1
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 1,
+          "referenceRecords": 0
+        },
+        "ended": {
+          "serializedUtf8Bytes": 7176,
+          "serializedUtf16CodeUnits": 7176,
+          "serializedSha256": "0ce21a0987737979a511bd372ad524c3c23c0cf3fc82a3fc4e0ea4d46b037025",
+          "nodes": {
+            "total": 84,
+            "types": {
+              "root": 1,
+              "quote": 64,
+              "paragraph": 3,
+              "text": 7,
+              "code": 2,
+              "list": 1,
+              "listItem": 2,
+              "strong": 1,
+              "link": 1,
+              "emphasis": 1,
+              "heading": 1
+            }
+          },
+          "provisionalRecords": 0,
+          "suppressedRecords": 0,
+          "referenceRecords": 0
+        }
+      },
+      "importMs": 1.8268330000000006,
+      "coldInitMs": 22.657375000000002,
+      "timingMs": {
+        "setText": {
+          "samples": [
+            0.30008399999999824,
+            0.29237500000002115,
+            0.26866699999999355,
+            0.2601659999999981,
+            0.25825000000000387
+          ],
+          "minimum": 0.25825000000000387,
+          "median": 0.26866699999999355,
+          "p95": 0.30008399999999824,
+          "maximum": 0.30008399999999824
+        },
+        "exact": {
+          "samples": [
+            0.338957999999991,
+            0.32891700000001833,
+            0.3384580000000028,
+            0.2986669999999947,
+            0.304458000000011
+          ],
+          "minimum": 0.2986669999999947,
+          "median": 0.32891700000001833,
+          "p95": 0.338957999999991,
+          "maximum": 0.338957999999991
+        },
+        "open": {
+          "samples": [
+            0.09700000000000841,
+            0.09383300000001782,
+            0.11437499999999545,
+            0.09037499999999454,
+            0.0957080000000019
+          ],
+          "minimum": 0.09037499999999454,
+          "median": 0.0957080000000019,
+          "p95": 0.11437499999999545,
+          "maximum": 0.11437499999999545
+        },
+        "ended": {
+          "samples": [
+            0.3189999999999884,
+            0.3094999999999857,
+            0.3057500000000175,
+            0.2765420000000063,
+            0.29966699999999946
+          ],
+          "minimum": 0.2765420000000063,
+          "median": 0.3057500000000175,
+          "p95": 0.3189999999999884,
+          "maximum": 0.3189999999999884
+        }
+      },
+      "memory": {
+        "explicitGc": true,
+        "gcPassesPerStage": 3,
+        "stages": {
+          "beforeImport": {
+            "rss": 63225856,
+            "heapTotal": 8011776,
+            "heapUsed": 5111408,
+            "external": 2629958,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterImport": {
+            "rss": 63832064,
+            "heapTotal": 8273920,
+            "heapUsed": 5474296,
+            "external": 2669123,
+            "arrayBuffers": 143615,
+            "wasmLinearMemoryCapacityBytes": 0
+          },
+          "afterInit": {
+            "rss": 74481664,
+            "heapTotal": 11681792,
+            "heapUsed": 7607624,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "withSource": {
+            "rss": 74563584,
+            "heapTotal": 11681792,
+            "heapUsed": 7619048,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1245184
+          },
+          "afterParse": {
+            "rss": 83378176,
+            "heapTotal": 11681792,
+            "heapUsed": 7636672,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1376256
+          },
+          "withExactSnapshot": {
+            "rss": 90587136,
+            "heapTotal": 11681792,
+            "heapUsed": 7691768,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1572864
+          },
+          "withExactAndOpenSnapshots": {
+            "rss": 95633408,
+            "heapTotal": 11681792,
+            "heapUsed": 7700064,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1572864
+          },
+          "withAllSnapshots": {
+            "rss": 95731712,
+            "heapTotal": 11681792,
+            "heapUsed": 7725936,
+            "external": 4207805,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1572864
+          },
+          "afterSnapshotRelease": {
+            "rss": 95911936,
+            "heapTotal": 11681792,
+            "heapUsed": 7782232,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1572864
+          },
+          "afterDisposeWithSource": {
+            "rss": 95944704,
+            "heapTotal": 11681792,
+            "heapUsed": 7783216,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1572864
+          },
+          "afterSourceRelease": {
+            "rss": 95944704,
+            "heapTotal": 11681792,
+            "heapUsed": 7782928,
+            "external": 4238213,
+            "arrayBuffers": 154851,
+            "wasmLinearMemoryCapacityBytes": 1572864
+          }
+        }
+      },
+      "artifacts": {
+        "packageVersion": "0.1.10",
+        "runtimeVersion": "0.28.4",
+        "runtimePin": "github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385",
+        "wasm": {
+          "tree-sitter-md.wasm": "d798486387db54277fef9b982b3ea7874aa921245469ab3e86f2d4380c03a4cd",
+          "tree-sitter-markdown.wasm": "0c7a3f7ee38196389a4061830ed227ccf4392852abf768d94f5cd3a2608efdb7"
+        },
+        "files": {
+          "js/index.js": {
+            "bytes": 7947,
+            "sha256": "3f38aba91fff4a45f714b36b79ea2d15ab5bdbbbce6effec5756bbc43d92d274"
+          },
+          "js/semantic.js": {
+            "bytes": 7202,
+            "sha256": "0a613af9c1173ce88be4315bda8707855b7ed634cf9d97a313684b68838c24ef"
+          },
+          "js/constants.js": {
+            "bytes": 1194,
+            "sha256": "f30c241601d02b173aef00ef53b1c83b83584c0270d0fa28c4e580c371528c79"
+          },
+          "package.json": {
+            "bytes": 2300,
+            "sha256": "b939dd91d34678d6e3467773c73806d8974ac0a8cc08b0302ec4255a1ba30ab5"
+          },
+          "bun.lock": {
+            "bytes": 17034,
+            "sha256": "491e17bbb50d44e7eeca51ea0993f8c8ab3c7acb52f7bfe65b43f94c442efde6"
+          },
+          "bench/presentation.mjs": {
+            "bytes": 15620,
+            "sha256": "015af7ec43ddf0999896f95232c488788cc21aa3067df1b746fffc7a7b42666c"
+          },
+          "bench/presentation-cases.mjs": {
+            "bytes": 4624,
+            "sha256": "8138b3a057e4c970ae7583f1131f08ba54a8b5bf192094f6ce6e5d4fb35f7f68"
+          }
+        },
+        "runtime": {
+          "entry": {
+            "bytes": 105334,
+            "sha256": "a48fe2b375519d3c6007700a46196792a7ef6645cc75cd5ed75a4eb5ce17374d"
+          },
+          "wasm": {
+            "bytes": 237244,
+            "sha256": "7cb3bc1eef059641fe33c7a93b4cbca0fce07bb388122912c5bbf382e7eba371"
+          }
+        }
+      }
+    }
+  ],
+  "finished": {
+    "at": "2026-10-18T08:21:19.851Z",
+    "loadAverage": [
+      3.2373046875,
+      2.74755859375,
+      2.5400390625
+    ],
+    "freeMemoryBytes": 637501440
+  },
+  "qualification": {
+    "sourceBaseCommit": "a458762c1ef620a77335b9b910ed2b0878e5332a",
+    "artifactIdentity": "Per-case hashes identify the measured uncommitted candidate; source code is delivered in the same change.",
+    "hostConditions": "Apple M1, 16 GiB RAM, AC power, no owner reservation, exclusive agent lock; background OS load remains in started/finished observations. No speedup claim."
+  }
+}

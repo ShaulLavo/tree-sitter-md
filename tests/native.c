@@ -64,6 +64,54 @@ static void source_ownership(void) {
   source_equal(sibling, final, 1);
   tsmd_free(sibling);
 }
+static void deep_case(Document *document, uint32_t depth, const char *prefix) {
+  uint16_t text[2048];
+  uint32_t length = 0, width = strlen(prefix);
+  for (uint32_t at = 0; at < depth * width; at++) text[length++] = prefix[at % width];
+  text[length++] = 'x';
+  set(document, text, length);
+  assert(tsmd_semantics(document) > 0);
+  tsmd_semantic_release(document);
+  assert(tsmd_presentation(document, 0) > 0);
+  tsmd_semantic_release(document);
+  assert(tsmd_presentation(document, 1) > 0);
+  tsmd_semantic_release(document);
+}
+static void deep_nesting(void) {
+  Document *document = tsmd_new(13, tree_sitter_markdown());
+  const uint32_t depths[] = {180, 199, 200, 201, 256};
+  const char *prefixes[] = {"> ", "- ", "> - "};
+  for (uint32_t i = 0; i < sizeof(depths) / sizeof(depths[0]); i++) {
+    for (uint32_t prefix = 0; prefix < sizeof(prefixes) / sizeof(prefixes[0]); prefix++)
+      deep_case(document, depths[i], prefixes[prefix]);
+  }
+  tsmd_free(document);
+}
+
+static void many_documents(void) {
+  Document *documents[64];
+  char *snapshots[64];
+  const uint16_t source[] = {'[', 'x', ']', '[', 'i', 'd', ']', '\n', '\n', '*', '*', 'x', 0, 0xd83d};
+  for (uint32_t i = 0; i < 64; i++) {
+    documents[i] = tsmd_new(13, tree_sitter_markdown());
+    set(documents[i], source, sizeof(source) / sizeof(source[0]));
+    assert(tsmd_presentation(documents[i], 0) > 0);
+    snapshots[i] = strdup(documents[i]->semantic);
+    assert(snapshots[i]);
+  }
+  for (uint32_t i = 0; i < 63; i++) {
+    uint32_t length = documents[i]->len;
+    tsmd_input(documents[i], 1)[0] = 0xde00;
+    tsmd_edit(documents[i], length, length);
+    assert(tsmd_presentation(documents[i], 0) > 0);
+    assert(strcmp(documents[i]->semantic, snapshots[i]));
+    tsmd_free(documents[i]);
+    assert(tsmd_presentation(documents[i + 1], 0) > 0);
+    assert(!strcmp(documents[i + 1]->semantic, snapshots[i + 1]));
+  }
+  tsmd_free(documents[63]);
+  for (uint32_t i = 0; i < 64; i++) free(snapshots[i]);
+}
 static uint16_t source_unit(unsigned char c) {
   if (c == '?') return 0xd83d;
   if (c == '\x01') return 0xde00;
@@ -86,6 +134,8 @@ static void semantic_prefixes(Document *incremental, Document *fresh, const char
 }
 int main(void) {
   source_ownership();
+  deep_nesting();
+  many_documents();
   Document *incremental = tsmd_new(13, tree_sitter_markdown()), *fresh = tsmd_new(13, tree_sitter_markdown());
   const char *fixtures[] = {
     "- [ ] pending\n- [x](streamdown:incomplete-link)\n- [x] done",
