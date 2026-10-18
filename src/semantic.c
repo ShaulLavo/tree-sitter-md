@@ -675,17 +675,51 @@ static uint32_t math_limit(Document *d, TSNode n) {
     if (is(p, d->ids.list_item) || is(p, d->ids.block_quote)) return end(p);
   return d->len;
 }
+static uint32_t math_spaces(Document *d, uint32_t stop, uint32_t *at, uint32_t *virtual, uint32_t limit) {
+  uint32_t count = *virtual < limit ? *virtual : limit;
+  *virtual -= count;
+  while (*at < stop && count < limit && (d->text[*at] == ' ' || d->text[*at] == '\t')) {
+    uint32_t width = d->text[*at] == '\t' ? 4 - column_at(d, *at) % 4 : 1;
+    (*at)++;
+    uint32_t used = width < limit - count ? width : limit - count;
+    count += used; *virtual += width - used;
+  }
+  return count;
+}
+static bool math_prefix_container(Document *d, TSNode container, uint32_t stop, uint32_t *at, uint32_t *virtual) {
+  if (is(container, d->ids.list_item)) {
+    TSNode marker = ts_node_named_child(container, 0);
+    uint32_t required = item_indent(d, container);
+    if (*at == start(marker)) {
+      uint32_t before = column_at(d, *at);
+      while (*at < stop && !ws(d->text[*at])) (*at)++;
+      required -= column_at(d, *at) - before;
+    }
+    return math_spaces(d, stop, at, virtual, required) == required;
+  }
+  math_spaces(d, stop, at, virtual, 3);
+  if (*virtual || *at == stop || d->text[*at] != '>') return false;
+  (*at)++;
+  math_spaces(d, stop, at, virtual, 1);
+  return true;
+}
+static bool math_prefix(Document *d, TSNode n, uint32_t row, uint32_t stop, uint32_t *at, uint32_t *virtual) {
+  TSNode path[200]; uint32_t count = 0;
+  for (TSNode p = ts_node_parent(n); !ts_node_is_null(p); p = ts_node_parent(p)) {
+    if (count == 200) return false;
+    if (is(p, d->ids.list_item) || is(p, d->ids.block_quote)) path[count++] = p;
+  }
+  *at = row; *virtual = 0;
+  while (*at && d->text[*at - 1] != '\n' && d->text[*at - 1] != '\r') (*at)--;
+  while (count) if (!math_prefix_container(d, path[--count], stop, at, virtual)) return false;
+  return true;
+}
 typedef struct { uint32_t marker, suffix, opening_end, width, indent; } MathOpening;
 static bool math_opening(Document *d, TSNode n, uint32_t row, MathOpening *opening) {
   uint32_t stop = line_end(d, row, math_limit(d, n));
-  cmark_strbuf prefix = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
-  uint32_t at = row == start(n) ? row : container_prefix(d, d, ts_node_parent(n), row, stop, &prefix, false);
-  uint32_t indent = prefix.size, column = column_at(d, at);
-  cmark_strbuf_free(&prefix);
-  while (at < stop && (d->text[at] == ' ' || d->text[at] == '\t')) {
-    uint32_t width = d->text[at++] == '\t' ? 4 - column % 4 : 1;
-    column += width; indent += width;
-  }
+  uint32_t at, virtual;
+  if (!math_prefix(d, n, row, stop, &at, &virtual)) return false;
+  uint32_t indent = math_spaces(d, stop, &at, &virtual, 4);
   if (indent > 3) return false;
   uint32_t marker = at;
   while (at < stop && d->text[at] == '$') at++;
@@ -716,7 +750,7 @@ static uint32_t flow_math(Semantic *s, TSNode n, MathOpening opening, bool *firs
     uint32_t stop = line_end(d, row, limit);
     cmark_strbuf line = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
     uint32_t from = container_prefix(d, d, ts_node_parent(n), row, stop, &line, false);
-    append_utf16(&line, d, from, stop);
+    append_line(&line, d, from, stop);
     consumed = next_line(d, stop, limit); finish = stop;
     if (math_closer(&line, opening.width)) { closed = true; cmark_strbuf_free(&line); break; }
     cmark_strbuf_put(&value, line.ptr, line.size); cmark_strbuf_free(&line);
@@ -731,10 +765,12 @@ static uint32_t flow_math(Semantic *s, TSNode n, MathOpening opening, bool *firs
   put(s, ",\"meta\":");
   uint32_t a = opening.suffix, b = opening.opening_end;
   while (a < b && (d->text[a] == ' ' || d->text[a] == '\t')) a++;
-  while (b > a && (d->text[b - 1] == ' ' || d->text[b - 1] == '\t')) b--;
   cmark_strbuf meta = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
   append_utf16(&meta, d, a, b);
-  if (meta.size) literal_string(s, meta.ptr, meta.size, a, b); else put(s, "null");
+  cmark_strbuf decoded = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
+  houdini_unescape_html_f(&decoded, meta.ptr, meta.size); cmark_strbuf_unescape(&decoded);
+  if (decoded.size) literal_string(s, decoded.ptr, decoded.size, a, b); else put(s, "null");
+  cmark_strbuf_free(&decoded);
   cmark_strbuf_free(&meta);
   put(s, ",\"value\":"); literal_string(s, value.ptr, value.size, body_start, finish); put(s, "}");
   cmark_strbuf_free(&value); s->skip_until = consumed;

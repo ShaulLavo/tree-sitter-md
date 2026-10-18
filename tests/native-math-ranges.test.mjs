@@ -125,7 +125,7 @@ function assertBlockMath(node, start, end, value, meta) {
 test('CHAT flow math separates line-start openings from paragraph text', () => {
   const { semantic, open } = snapshot('A $$x\ny\n$$')
   assert.deepEqual(semantic.root.children, [
-    node('paragraph', 0, 7, { children: [text('A $$x\ny', 0, 7)] }),
+    node('paragraph', 0, 7, { children: [text('A $$x', 0, 5), node('break', 5, 6, { hard: false }), text('y', 6, 7)] }),
     node('math', 8, 10, { value: '', meta: null }),
   ])
   assert.deepEqual(open.root.children, semantic.root.children)
@@ -182,4 +182,15 @@ test('CHAT math retains exact source with a lone surrogate before a flow block',
   assert.equal(open.source, source)
   const math = semantic.root.children[1]
   assertBlockMath(math, 2, 10, 'y', 'x')
+})
+
+
+test('CHAT flow metadata decodes string escapes and keeps trailing metadata space', () => {
+  const source = '$$ a &amp; b \\* \nbody\n$$'
+  assertBlockMath(snapshot(source).semantic.root.children[0], 0, source.length, 'body', 'a & b * ')
+})
+
+test('CHAT flow math strips authored opener indentation from body lines', () => {
+  const source = '  $$x\n  y\n  $$'
+  assertBlockMath(snapshot(source).semantic.root.children[0], 2, source.length, 'y', 'x')
 })
