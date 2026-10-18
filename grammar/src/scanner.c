@@ -1507,6 +1507,21 @@ static bool parse_pipe_table(Scanner *s, TSLexer *lexer,
     return true;
 }
 
+static bool scan_continuation_interrupt(Scanner *s, TSLexer *lexer, bool table) {
+    if (!table)
+        return scan(s, lexer, paragraph_interrupt_symbols);
+    bool symbols[sizeof(paragraph_interrupt_symbols) / sizeof(bool)];
+    memcpy(symbols, paragraph_interrupt_symbols, sizeof(symbols));
+    symbols[INDENTED_CHUNK_START] = true;
+    symbols[LIST_MARKER_MINUS_DONT_INTERRUPT] = true;
+    symbols[LIST_MARKER_PLUS_DONT_INTERRUPT] = true;
+    symbols[LIST_MARKER_STAR_DONT_INTERRUPT] = true;
+    symbols[LIST_MARKER_DOT_DONT_INTERRUPT] = true;
+    symbols[LIST_MARKER_PARENTHESIS_DONT_INTERRUPT] = true;
+    symbols[HTML_BLOCK_7_START] = true;
+    return scan(s, lexer, symbols);
+}
+
 static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
     bool after_definition[sizeof(paragraph_interrupt_symbols) / sizeof(bool)];
     if (s->reference_lines && !(s->state & STATE_MATCHING) &&
@@ -1730,7 +1745,7 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
             }
             bool all_will_be_matched = s->matched == s->open_blocks.size;
             if (!lexer->eof(lexer) &&
-                !scan(s, lexer, paragraph_interrupt_symbols)) {
+                !scan_continuation_interrupt(s, lexer, valid_symbols[PIPE_TABLE_LINE_ENDING])) {
                 s->matched = matched_temp;
                 // If the last line break ended a paragraph and no new block
                 // opened, the last line break should have been a soft line
