@@ -10,6 +10,14 @@ validateFixtureManifest(manifest)
 await init()
 const report = runFixtureMatrix(MarkdownDocument, manifest)
 
+test('native presentation matches every authored streaming checkpoint', () => {
+  assert.equal(report.exact.failed, 0)
+  assert.equal(report.candidate.missing, 0)
+  assert.equal(report.candidate.failed, 0)
+  assert.equal(report.candidate.passed, report.candidate.required)
+  assert.equal(report.verdict, 'READY')
+})
+
 for (const fixture of manifest.fixtures) {
   test('independent ended roots and incremental prefixes: ' + fixture.id, () => {
     const failures = report.exact.checks.filter(check => check.fixture === fixture.id && check.status === 'failed')

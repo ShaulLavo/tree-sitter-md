@@ -13,7 +13,7 @@ static cmark_node *parse(const char *source, int options, cmark_reference_map *m
   assert(root->data);
   memcpy(root->data, source, root->len + 1);
   root->start_line = root->start_column = 1;
-  cmark_parse_inlines(cmark_get_default_mem_allocator(), root, map, options);
+  cmark_parse_inlines(cmark_get_default_mem_allocator(), root, map, options, NULL);
   free(root->data);
   root->data = NULL;
   root->len = 0;

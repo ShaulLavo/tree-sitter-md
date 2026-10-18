@@ -501,7 +501,7 @@ static uint32_t reference_lines(Scanner *s, TSLexer *lexer, cmark_strbuf *text) 
     uint32_t title_at = 0;
     int32_t close = 0;
     // Reject ordinary links before scanning the rest of their paragraph.
-    while (!lexer->eof(lexer) && label++ <= 1000) {
+    while (!lexer->eof(lexer) && label++ <= MAX_LINK_LABEL_LENGTH + 1) {
         int32_t c = lexer->lookahead;
         if (c == '\n' || c == '\r') {
             cmark_strbuf_putc(text, '\n');

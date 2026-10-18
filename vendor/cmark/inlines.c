@@ -70,6 +70,8 @@ typedef struct {
   int block_offset;
   int column_offset;
   cmark_reference_map *refmap;
+  cmark_reference_uses *uses;
+  bufsize_t reference_label_start, reference_label_end;
   delimiter *last_delim;
   bracket *last_bracket;
   bufsize_t backticks[MAXBACKTICKS + 1];
@@ -218,6 +220,8 @@ static void subject_from_buf(cmark_mem *mem, int line_number, int block_offset, 
   e->block_offset = block_offset;
   e->column_offset = 0;
   e->refmap = refmap;
+  e->uses = NULL;
+  e->reference_label_start = e->reference_label_end = -1;
   e->last_delim = NULL;
   e->last_bracket = NULL;
   for (i = 0; i <= MAXBACKTICKS; i++) {
@@ -1325,7 +1329,10 @@ static int link_label(subject *subj, cmark_chunk *raw_label) {
         length++;
       }
     } else {
-      advance(subj);
+      int32_t scalar;
+      int width = cmark_utf8proc_iterate(subj->input.data + subj->pos,
+                                         subj->input.len - subj->pos, &scalar);
+      subj->pos += width > 0 ? width : 1;
       length++;
     }
     if (length > MAX_LINK_LABEL_LENGTH) {
@@ -1484,6 +1491,47 @@ static void finish_open_brackets(subject *subj) {
   }
 }
 
+void cmark_reference_uses_free(cmark_mem *mem, cmark_reference_uses *uses) {
+  if (!uses) return;
+  for (size_t i = 0; i < uses->count; i++) mem->free(uses->items[i].identifier);
+  mem->free(uses->items);
+  memset(uses, 0, sizeof(*uses));
+}
+
+static bool reference_retry(subject *subj, cmark_reference_form form,
+                              bufsize_t start, bufsize_t end) {
+  if (form != CMARK_REFERENCE_SHORTCUT) return false;
+  if (start >= subj->reference_label_start && end <= subj->reference_label_end) return true;
+  cmark_reference_uses *uses = subj->uses;
+  if (!uses->count) return false;
+  const cmark_reference_use *last = &uses->items[uses->count - 1];
+  return last->form == CMARK_REFERENCE_FOOTNOTE && last->start == start;
+}
+
+static void reference_use(subject *subj, cmark_chunk *label, cmark_reference_form form,
+                           bufsize_t start, bufsize_t end, bufsize_t label_start,
+                           bool image, bool resolved) {
+  if (!subj->uses || reference_retry(subj, form, start, end)) return;
+  if (!cmark_reference_label_valid(label)) return;
+  unsigned char *identifier = cmark_normalize_reference(subj->mem, label);
+  if (!identifier) return;
+  cmark_reference_uses *uses = subj->uses;
+  if (form == CMARK_REFERENCE_FULL && uses->count &&
+      uses->items[uses->count - 1].form == CMARK_REFERENCE_FOOTNOTE &&
+      uses->items[uses->count - 1].start == start)
+    subj->mem->free(uses->items[--uses->count].identifier);
+  if (uses->count == uses->capacity) {
+    uses->capacity = uses->capacity ? uses->capacity * 2 : 8;
+    uses->items = subj->mem->realloc(uses->items, uses->capacity * sizeof(*uses->items));
+  }
+  uses->items[uses->count++] = (cmark_reference_use){
+    .start = start, .end = end, .label_start = label_start, .label_end = end,
+    .identifier = identifier, .form = form, .image = image, .resolved = resolved};
+  if (form != CMARK_REFERENCE_FULL) return;
+  subj->reference_label_start = label_start;
+  subj->reference_label_end = end;
+}
+
 // Return a link, an image, or a literal close bracket.
 static cmark_node *handle_close_bracket(subject *subj) {
   bufsize_t initial_pos, after_link_text_pos;
@@ -1496,6 +1544,7 @@ static cmark_node *handle_close_bracket(subject *subj) {
   cmark_node *inl;
   cmark_chunk raw_label;
   int found_label;
+  cmark_reference_form form;
   cmark_node *tmp, *tmpnext;
   bool is_image;
   bool incomplete_url = false, pending_destination = false;
@@ -1514,7 +1563,7 @@ static cmark_node *handle_close_bracket(subject *subj) {
   // Now we check to see if it's a link/image.
   is_image = opener->image;
 
-  if (!is_image && subj->no_link_openers) {
+  if (!opener->active || (!is_image && subj->no_link_openers)) {
     // take delimiter off stack
     pop_bracket(subj);
     return make_str(subj, subj->pos - 1, subj->pos - 1, cmark_chunk_literal("]"));
@@ -1563,6 +1612,8 @@ static cmark_node *handle_close_bracket(subject *subj) {
   // skip spaces
   raw_label = cmark_chunk_literal("");
   found_label = link_label(subj, &raw_label);
+  form = CMARK_REFERENCE_SHORTCUT;
+  if (found_label) form = raw_label.len ? CMARK_REFERENCE_FULL : CMARK_REFERENCE_COLLAPSED;
   if (!found_label) {
     // If we have a shortcut reference link, back up
     // to before the spaces we skipped.
@@ -1578,6 +1629,9 @@ static cmark_node *handle_close_bracket(subject *subj) {
 
   if (found_label) {
     ref = cmark_reference_lookup(subj->refmap, &raw_label);
+    if (ref || form != CMARK_REFERENCE_SHORTCUT || peek_at(subj, initial_pos) != '(')
+      reference_use(subj, &raw_label, form, opener->inl_text->source_start,
+                      subj->pos, initial_pos, is_image, ref != NULL);
     cmark_chunk_free(&raw_label);
   }
 
@@ -1708,12 +1762,12 @@ static bufsize_t subject_find_special_char(subject *subj, int options) {
   return subj->input.len;
 }
 
-static const char *footnote_reference(subject *subj, bufsize_t *closing) {
+static const char *footnote_reference(subject *subj, bufsize_t *closing, bool observe) {
   if (!subj->refmap->lookup_footnote || subj->pos + 2 >= subj->input.len ||
       subj->input.data[subj->pos + 1] != '^')
     return NULL;
   bufsize_t start = subj->pos + 2, end = start;
-  while (end < subj->input.len && end - start <= MAX_LINK_LABEL_LENGTH) {
+  while (end < subj->input.len) {
     unsigned char c = subj->input.data[end];
     if (c == ']')
       break;
@@ -1721,17 +1775,22 @@ static const char *footnote_reference(subject *subj, bufsize_t *closing) {
       return NULL;
     end += c == '\\' && end + 1 < subj->input.len && cmark_ispunct(subj->input.data[end + 1]) ? 2 : 1;
   }
-  if (end >= subj->input.len || end == start || end - start > MAX_LINK_LABEL_LENGTH)
-    return NULL;
+  if (end >= subj->input.len) return NULL;
+  cmark_chunk label = {subj->input.data + start, end - start};
+  if (!cmark_reference_label_valid(&label)) return NULL;
   const char *identifier = subj->refmap->lookup_footnote(subj->refmap->footnote_context,
                               subj->input.data + start, end - start);
+  if (observe) {
+    reference_use(subj, &label, CMARK_REFERENCE_FOOTNOTE, subj->pos, end + 1,
+                    subj->pos, false, identifier != NULL);
+  }
   *closing = end;
   return identifier;
 }
 
 static cmark_node *handle_footnote_reference(subject *subj) {
   bufsize_t end = 0;
-  const char *identifier = footnote_reference(subj, &end);
+  const char *identifier = footnote_reference(subj, &end, true);
   if (!identifier)
     return NULL;
   cmark_node *node = make_literal(subj, CMARK_NODE_FOOTNOTE_REFERENCE, subj->pos, end);
@@ -1809,7 +1868,7 @@ static int parse_inline(subject *subj, cmark_node *parent, int options) {
   case '!':
     advance(subj);
     if (peek_char(subj) == '[' && (options & CMARK_OPT_FOOTNOTES) &&
-        footnote_reference(subj, &endpos)) {
+        footnote_reference(subj, &endpos, false)) {
       new_inl = make_str(subj, subj->pos - 1, subj->pos - 1, cmark_chunk_literal("!"));
       break;
     }
@@ -1860,7 +1919,8 @@ static int parse_inline(subject *subj, cmark_node *parent, int options) {
 
 // Parse inlines from parent's string_content, adding as children of parent.
 void cmark_parse_inlines(cmark_mem *mem, cmark_node *parent,
-                         cmark_reference_map *refmap, int options) {
+                         cmark_reference_map *refmap, int options,
+                         cmark_reference_uses *uses) {
   int internal_offset = parent->type == CMARK_NODE_HEADING ?
     parent->as.heading.internal_offset : 0;
   subject subj;
@@ -1868,6 +1928,7 @@ void cmark_parse_inlines(cmark_mem *mem, cmark_node *parent,
   subject_from_buf(mem, parent->start_line, parent->start_column - 1 + internal_offset, &subj, &content, refmap);
   cmark_chunk_rtrim(&subj.input);
   subj.temporary_eof = (options & CMARK_OPT_PRESENTATION) != 0;
+  subj.uses = uses;
 
   while (!is_eof(&subj) && parse_inline(&subj, parent, options))
     ;

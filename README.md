@@ -59,9 +59,25 @@ in `suppressed`; an empty resulting paragraph is omitted. Only the final open
 source-mapped leaf receives this interpretation, including quote/list continuations.
 Ended presentation and `semantics()` keep the exact interpretation.
 
-Block-marker suppression and reference reporting remain in the
-[AI chat streaming plan](plans/ai-chat-streaming.md). The full streaming
-qualification command remains nonzero until those behaviors pass.
+Open presentation also suppresses empty trailing heading, quote, list, and task
+markers. Visible siblings remain in the tree, and `suppressed` records each
+withheld source range. Ended reads retain the exact block interpretation.
+
+`references` reports normalized native reference dependencies in source order,
+including unresolved uses and references inside nested containers and footnotes.
+The `link` kind covers reference links and reference images; `footnote` covers
+footnote references. Each record includes the authored use range and its current
+resolution. Reference labels follow the CommonMark limit of 999 characters.
+Definitions can change earlier uses on the next read. Code, math,
+and HTML payloads remain opaque to reference interpretation.
+
+Double-dollar block math preserves text following its opening dollar run as TeX,
+including on the opening line. An unclosed block is `pendingMath` during open
+presentation and exact `math` after input ends.
+
+The authored streaming checkpoint matrix passes through `bun run streaming:check`.
+Exhaustive chunk/lifecycle qualification and release-baseline work remain in the
+[AI chat streaming plan](plans/ai-chat-streaming.md).
 
 Received source preserves NUL, BOM, CRLF, and lone surrogate units separately from
 Markdown normalization. Presentation trees are recursively distinct from exact

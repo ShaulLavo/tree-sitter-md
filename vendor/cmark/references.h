@@ -3,6 +3,8 @@
 
 #include "chunk.h"
 
+#define MAX_LINK_LABEL_LENGTH 999
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -32,6 +34,9 @@ struct cmark_reference_map {
 };
 
 typedef struct cmark_reference_map cmark_reference_map;
+
+bool cmark_reference_label_valid(const cmark_chunk *label);
+unsigned char *cmark_normalize_reference(cmark_mem *mem, cmark_chunk *label);
 
 cmark_reference_map *cmark_reference_map_new(cmark_mem *mem);
 void cmark_reference_map_free(cmark_reference_map *map);

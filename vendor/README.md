@@ -20,6 +20,21 @@ container prefixes. `cmark_parse_inlines` takes a single leaf, with no block pas
 indentation. Reference destination scanners accept leaf EOF; an empty unbracketed destination
 still fails. Reference maps report every normalized lookup, including unsuccessful lookups.
 
+Optional inline presentation uses the existing delimiter and bracket owners to interpret
+eligible unfinished syntax at the received leaf EOF. The ordinary inline path keeps exact
+semantics. Bracket matching checks each opener's active state, so a later bracket cannot
+reactivate an outer opener after a nested link invalidates it.
+
+`cmark_parse_inlines` accepts an optional `cmark_reference_uses` output. It records native
+full, collapsed, shortcut, image, and footnote reference decisions with owned normalized
+identifiers and body-relative byte spans. Explicit-label ownership removes duplicate
+shortcut retries after full-reference rollback. Failed inline-destination probes produce
+no unresolved shortcut record. Latent nested references remain dependencies even when
+the current outer link contains their literal syntax. Callers map the records to document
+coordinates, then release them with `cmark_reference_uses_free`; ordinary callers pass
+`NULL`. The journal retains no node or bracket pointers. The semantic and footnote readers
+share the reference normalizer and the 999-character label bound.
+
 Tilde delimiters match equal runs of one or two, following the GFM extension's `match` and
 `insert` rules. They share CommonMark's delimiter processing while bypassing its rule of three.
 Autolink matching uses the extension's host, domain, punctuation and email rules on contiguous

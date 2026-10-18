@@ -71,6 +71,19 @@ async function run() {
     check(pending.type === 'pendingLink', 'Browser presentation lost pending link')
     check(!('url' in pending) && !('title' in pending), 'Browser pending link invented a destination')
     const retainedPending = JSON.stringify(pendingSnapshot)
+    doc.setText('[late][id]\n\n- [ ]')
+    const dependencies = doc.presentation({ input: 'open' })
+    check(dependencies.root.children.length === 1, 'Browser emitted an empty trailing list')
+    check(dependencies.suppressed[0]?.range.start === 12 && dependencies.suppressed[0]?.range.end === 17, 'Browser block suppression lost its source range')
+    check(dependencies.references.length === 1 && dependencies.references[0].identifier === 'id' && dependencies.references[0].resolution === 'unresolved', 'Browser unresolved reference reporting changed')
+    const retainedDependencies = JSON.stringify(dependencies)
+    memory.grow(1)
+    doc.edit(17, 17, '\n\n[id]: /target')
+    const resolved = doc.presentation({ input: 'ended' })
+    check(resolved.root.children[0].children[0].url === '/target', 'Browser late reference stayed unresolved')
+    check(resolved.references[0].resolution === 'resolved', 'Browser late reference metadata stayed unresolved')
+    check(JSON.stringify(resolved.root) === JSON.stringify(doc.semantics().root), 'Browser block/reference ended output changed exact semantics')
+    check(JSON.stringify(dependencies) === retainedDependencies, 'Memory growth/edit changed retained reference snapshot')
     doc.edit(0, 0, 'before ')
     doc.setText('replacement')
     check(doc.semantics().root.children[0].children[0].value === 'replacement', 'Later allocation changed semantics')
@@ -80,8 +93,9 @@ async function run() {
     check(JSON.stringify(presented) === retainedPresentation, 'Disposal changed retained presentation')
     check(JSON.stringify(live) === retainedLive, 'Edits/disposal changed retained provisional snapshot')
     check(JSON.stringify(pendingSnapshot) === retainedPending, 'Edits/disposal changed retained pending link')
+    check(JSON.stringify(dependencies) === retainedDependencies, 'Disposal changed retained reference snapshot')
   } finally { doc.dispose() }
-  return { resizable: buffer.resizable, rawDecodeRejected, growths: 3, retainedBytes: retained.length }
+  return { resizable: buffer.resizable, rawDecodeRejected, growths: 4, retainedBytes: retained.length }
 }
 
 run().then(result => { window.result = result }, error => { window.failure = error.stack })

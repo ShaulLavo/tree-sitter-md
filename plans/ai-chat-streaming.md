@@ -1,6 +1,17 @@
 # Native Markdown streaming for AI chat
 
-Status: **Approved**, requested 2026-10-16. P0 through P2 are implemented; P3 through P5 have not started.
+Status: **Approved**, requested 2026-10-16. P0 through P3 are implemented. P4 and P5 remain open.
+
+P3 implementation, 2026-10-18: native presentation suppresses empty trailing
+block markers and reports resolved and unresolved reference dependencies in both
+modes. Full-reference ownership removes duplicate suffix retries; latent nested
+uses and image-alt references remain available. Footnote EOF uses consumed source
+extent while authored ranges stay trimmed. Same-line block math preserves its
+opening-line suffix. Native task boundaries, blank-line task paragraphs, disabled
+GFM task text, inactive link openers, and the 999-Unicode-scalar reference-label
+limit have dedicated regressions. All 54 focused P3 cases and the 364 authored
+presentation checks pass. Exhaustive P4 schedules and P5 release-baseline work
+remain separate gates.
 
 P2 delivery, 2026-10-18: native inline resolution interprets eligible unmatched
 emphasis, strike, code, brackets, destinations, images and math. Provisional paths
@@ -235,25 +246,27 @@ Interleaving open and exact reads cannot contaminate either result or another do
 
 ### P3. Handle block reclassification and document dependencies
 
-Known exact-math gap found during P2 review: with `{ math: true }`,
-`semantics()` for `$$x *a*` returns a block `math` node with an empty value because
-`src/semantic.c:math_block` consumes the opening line as a marker. This behavior
-predates P2. Open pending output now retains `x *a*`; ended output still follows
-exact semantics. Before expanding block math in P3, add independently authored
-ended expectations and decide whether a block opener requires a standalone line
-or includes its same-line suffix. Reproduce with `node --input-type=module` after
-`await init()`, `document.setText('$$x *a*')`, then inspect
-`document.semantics().root` and both presentation modes. No reference definition,
-chunk schedule, or JavaScript healing is involved.
+P3 math dialect: a block opener includes its same-line suffix as received TeX.
+With `{ math: true }`, `$$x *a*` has exact block-math value `x *a*` and open
+`pendingMath` with the same payload. The native opener still requires at least
+two dollars and no later dollar on the opening line, so complete `$$x$$` follows
+the inline-math path. Independently authored ended expectations cover this fix
+for the payload loss found during P2 review.
 
-- [ ] Cover fences with arbitrary matching runs, language/info fragments, nested
+Reference metadata uses the existing `link` namespace for both reference links
+and reference images. It includes latent unresolved nested uses that can
+reclassify an outer link after a later definition. Native full-reference label
+ownership removes duplicate shortcut retries; inline destinations and opaque
+code, math, and HTML payloads do not create unresolved shortcut records.
+
+- [x] Cover fences with arbitrary matching runs, language/info fragments, nested
   containers, headings, list/task markers, tightness, table candidates, wide tables,
   and HTML. Ordinary prose has no newline or unrelated-reference visibility barrier.
-- [ ] Resolve definitions and footnotes across the entire document. Exercise late,
+- [x] Resolve definitions and footnotes across the entire document. Exercise late,
   duplicate, deleted, and changed definitions before and after their uses.
-- [ ] Verify replacement of a paragraph by a table/heading and removal of stale
+- [x] Verify replacement of a paragraph by a table/heading and removal of stale
   definition text. Separate required semantic changes from correspondence metadata.
-- [ ] Compare fresh and edited results after insertions, deletions, undo-shaped edits,
+- [x] Compare fresh and edited results after insertions, deletions, undo-shaped edits,
   and whole-source replacement. Validate source ranges throughout nested containers.
 
 Exit: complete snapshots have correct earlier uses, no stale blocks, no lost columns
@@ -283,7 +296,7 @@ only a future byte API would own byte-decoder behavior.
 
 ### P5. Package and record a correct baseline
 
-- [ ] Require all presentation fixtures in `tests/streaming.mjs` and existing CI.
+- [x] Require all presentation fixtures in `tests/streaming.mjs` and existing CI.
   Reuse the fixture driver for a small report command recording pins, case counts,
   failures, and capability gaps. A missing capability must make qualification fail.
 - [ ] Extend native tests and packed Node, Bun, and production Vite/Chromium consumers

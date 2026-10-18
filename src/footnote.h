@@ -37,6 +37,7 @@ const Footnote *footnotes_lookup(const Footnotes *footnotes, const unsigned char
                                  uint32_t length);
 bool footnotes_contains(const Footnotes *footnotes, uint32_t start, uint32_t end);
 cmark_reference_map *footnotes_definitions(const Footnotes *footnotes);
+bool footnotes_map_source_end(const Footnotes *notes, uint32_t end, uint32_t *mapped_end);
 bool footnotes_map_range(const Footnotes *footnotes, uint32_t start, uint32_t end,
                          uint32_t *mapped_start, uint32_t *mapped_end);
 

@@ -42,10 +42,13 @@ same comparator used for actual candidates.
 The corpus currently has 33 fixtures, 76 checkpoints, and all 15 planned behavior
 rows. `fixtures.mjs` contains original authored expectations and source provenance.
 Its small constructors only build literal semantic nodes and ranges; they do not
-call a parser. Exact ended roots run against the real native parser. Native inline
-presentation is implemented. Block-marker suppression and reference
-metadata remain unqualified. `tests/presentation-inline.mjs` requires the P2 subset
-of this same matrix, with additional authored EOF, ownership and payload cases.
+call a parser. Exact ended roots run against the real native parser. The Node
+suite requires every declared presentation checkpoint to pass. Native inline
+presentation, empty trailing block suppression, and reference metadata are covered.
+`tests/presentation-inline.mjs` adds authored EOF, ownership, and payload cases.
+`tests/presentation-blocks.mjs` and `tests/presentation-dependencies.mjs` extend the
+matrix with block reclassification, arbitrary fences, wide tables, changed and
+deleted definitions, latent reference dependencies, and mapped source ranges.
 
 After the root dependencies are installed, run:
 

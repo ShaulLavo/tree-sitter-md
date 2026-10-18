@@ -15,11 +15,23 @@ static void reference_free(cmark_reference_map *map, cmark_reference *ref) {
   }
 }
 
+bool cmark_reference_label_valid(const cmark_chunk *label) {
+  if (!label || label->len < 1) return false;
+  bufsize_t count = 0, at = 0;
+  while (at < label->len) {
+    int32_t scalar;
+    int width = cmark_utf8proc_iterate(label->data + at, label->len - at, &scalar);
+    at += width > 0 ? width : 1;
+    if (++count > MAX_LINK_LABEL_LENGTH) return false;
+  }
+  return true;
+}
+
 // normalize reference:  collapse internal whitespace to single space,
 // remove leading/trailing whitespace, case fold
 // Return NULL if the reference name is actually empty (i.e. composed
 // solely from whitespace)
-static unsigned char *normalize_reference(cmark_mem *mem, cmark_chunk *ref) {
+unsigned char *cmark_normalize_reference(cmark_mem *mem, cmark_chunk *ref) {
   cmark_strbuf normalized = CMARK_BUF_INIT(mem);
   unsigned char *result;
 
@@ -47,7 +59,8 @@ static unsigned char *normalize_reference(cmark_mem *mem, cmark_chunk *ref) {
 void cmark_reference_create(cmark_reference_map *map, cmark_chunk *label,
                             cmark_chunk *url, cmark_chunk *title) {
   cmark_reference *ref;
-  unsigned char *reflabel = normalize_reference(map->mem, label);
+  if (!cmark_reference_label_valid(label)) return;
+  unsigned char *reflabel = cmark_normalize_reference(map->mem, label);
 
   /* empty reference name, or composed from only whitespace */
   if (reflabel == NULL)
@@ -118,13 +131,13 @@ cmark_reference *cmark_reference_lookup(cmark_reference_map *map,
   cmark_reference *r = NULL;
   unsigned char *norm;
 
-  if (label->len < 1 || label->len > MAX_LINK_LABEL_LENGTH)
+  if (!cmark_reference_label_valid(label))
     return NULL;
 
   if (map == NULL)
     return NULL;
 
-  norm = normalize_reference(map->mem, label);
+  norm = cmark_normalize_reference(map->mem, label);
   if (norm == NULL)
     return NULL;
 

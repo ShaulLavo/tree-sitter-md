@@ -14,6 +14,8 @@ clang $flags tests/presentation-inline.c src/*.c vendor/cmark/*.c $runtime -o ta
 ASAN_OPTIONS=detect_leaks=1 target/c/check-presentation-inline
 clang $flags tests/presentation-resolver.c vendor/cmark/*.c -o target/c/check-presentation-resolver
 ASAN_OPTIONS=detect_leaks=1 target/c/check-presentation-resolver
+clang $flags tests/presentation-references.c vendor/cmark/*.c -o target/c/check-presentation-references
+ASAN_OPTIONS=detect_leaks=1 target/c/check-presentation-references
 clang $flags tests/footnote.c src/*.c vendor/cmark/*.c $runtime -o target/c/check-footnote
 ASAN_OPTIONS=detect_leaks=1 target/c/check-footnote
 printf 'ASan + UBSan: footnote definitions, references and mapped bodies passed\n'

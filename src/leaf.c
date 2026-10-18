@@ -142,6 +142,37 @@ static uint32_t push_block_tail(Document *d, TSNode node, uint32_t from, bool *l
   push_lines(d, from, end(node), line_start);
   return end(node);
 }
+static TSNode literal_task_prefix(Document *d, TSNode paragraph) {
+  TSNode parent = ts_node_parent(paragraph), task = {0};
+  if (d->gfm || !is(parent, d->ids.list_item)) return task;
+  for (uint32_t i = 0; i < ts_node_named_child_count(parent); i++) {
+    TSNode child = ts_node_named_child(parent, i);
+    if (is(child, d->ids.task_checked) || is(child, d->ids.task_unchecked)) task = child;
+    if (!is(child, d->ids.paragraph)) continue;
+    if (start(child) != start(paragraph)) return (TSNode){0};
+    break;
+  }
+  if (ts_node_is_null(task)) return task;
+  uint32_t lines = 0;
+  for (uint32_t at = end(task); at < start(paragraph); at++) {
+    uint16_t c = d->text[at];
+    lines += c == '\n' || (c == '\r' && (at + 1 == start(paragraph) || d->text[at + 1] != '\n'));
+    if (lines > 1) return (TSNode){0};
+  }
+  return task;
+}
+static void push_task_prefix(Document *d, TSNode paragraph, uint32_t limit, bool *line_start) {
+  TSNode task = literal_task_prefix(d, paragraph);
+  if (ts_node_is_null(task)) return;
+  uint32_t from = start(task);
+  TSNode parent = ts_node_parent(paragraph);
+  for (uint32_t i = 0; i < ts_node_named_child_count(parent); i++) {
+    TSNode child = ts_node_named_child(parent, i);
+    if (!is(child, d->ids.block_continuation) || start(child) < from || end(child) > limit) continue;
+    push_lines(d, from, start(child), line_start); from = end(child);
+  }
+  push_lines(d, from, limit, line_start);
+}
 void leaf_build(Document *d, TSNode node, int kind) {
   leaf_clear(&d->leaf);
   d->leaf.source_end = end(node);
@@ -181,6 +212,7 @@ void leaf_build(Document *d, TSNode node, int kind) {
     return;
   }
   bool line_start = true;
+  if (kind == PARAGRAPH) push_task_prefix(d, node, a, &line_start);
   count = ts_node_named_child_count(in);
   for (uint32_t i = 0; i < count; i++) {
     TSNode c = ts_node_named_child(in, i);
@@ -300,7 +332,7 @@ void inline_resolve(Leaf *leaf, int kind, bool gfm, bool cjk, bool math, cmark_r
   defs->lookup_context = deps;
   cmark_parse_inlines(cmark_get_default_mem_allocator(), root, defs,
                       (gfm ? CMARK_OPT_GFM : 0) | (cjk ? CMARK_OPT_CJK : 0) |
-                        (math ? CMARK_OPT_MATH : 0));
+                        (math ? CMARK_OPT_MATH : 0), NULL);
   defs->lookup_label = NULL;
   defs->lookup_context = NULL;
   inline_nodes(leaf, gfm, root->first_child, body, out, false);
