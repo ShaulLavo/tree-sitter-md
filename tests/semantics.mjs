@@ -91,6 +91,24 @@ test('GFM table continuation recognizes type-seven HTML blocks', () => {
   assert.equal(blocks[1].type, 'html')
   assert.equal(snapshot('paragraph\n<custom>').root.children[0].type, 'paragraph')
 })
+function tableContinuationBlocks(source) {
+  const blocks = snapshot(source).root.children
+  if (blocks[0].type === 'quote') return blocks[0].children
+  if (blocks[0].type === 'list') return blocks[0].items[0].children
+  return blocks
+}
+test('GFM tables end before indented code after matching container prefixes', () => {
+  const rows = ['*', '-', '+', '2.', '<custom>', 'text', 'a|b']
+  const sources = rows.map(row => `a|b\n-|-\n    ${row}\n`)
+    .concat(['a|b\n-|-\n\ttext\n', '> a|b\n> -|-\n>     text\n', '- a|b\n  -|-\n      text\n'])
+  for (const source of sources.concat(sources.map(value => value.replaceAll('\n', '\r\n')))) {
+    const blocks = tableContinuationBlocks(source)
+    assert.deepEqual(blocks.map(node => node.type), ['table', 'code'], source)
+    assert.equal(blocks[0].rows.length, 1, source)
+    assert.equal(blocks[1].fence, 'indented', source)
+  }
+  assert.equal(snapshot('paragraph\n    text').root.children[0].type, 'paragraph')
+})
 test('header-only tables recognize complete one-dash delimiter cells at EOF', () => {
   for (const source of ['| Name | Value |\n| --- | -', '| Name | Value |\n| --- | -:']) {
     const table = snapshot(source).root.children[0]
