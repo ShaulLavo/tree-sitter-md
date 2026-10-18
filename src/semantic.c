@@ -727,12 +727,20 @@ static uint32_t fence_end(Document *d, TSNode n, bool closed) {
   for (TSNode tail = n; !closed && ts_node_named_child_count(tail);) {
     tail = ts_node_named_child(tail, ts_node_named_child_count(tail) - 1);
     if (end(tail) != finish) break;
-    if (is(tail, d->ids.block_continuation)) return start(tail);
+    if (is(tail, d->ids.block_continuation)) { finish = start(tail); break; }
   }
   bool quoted = false;
   for (TSNode parent = ts_node_parent(n); !ts_node_is_null(parent); parent = ts_node_parent(parent))
     if (is(parent, d->ids.block_quote)) quoted = true;
-  if (!closed && !quoted) return finish;
+  if (!closed && !quoted) {
+    for (TSNode parent = ts_node_parent(n); !ts_node_is_null(parent); parent = ts_node_parent(parent)) {
+      if (!is(parent, d->ids.list_item)) continue;
+      uint32_t owner = content_end(d, parent);
+      if (owner < finish) finish = owner;
+      break;
+    }
+    return finish;
+  }
   if (finish > start(n) && d->text[finish - 1] == '\n') finish--;
   if (finish > start(n) && d->text[finish - 1] == '\r') finish--;
   return finish;
