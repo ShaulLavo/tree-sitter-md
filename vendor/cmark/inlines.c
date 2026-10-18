@@ -1717,6 +1717,49 @@ static cmark_node *handle_newline(subject *subj) {
   }
 }
 
+static cmark_node *handle_gfm_autolink(subject *subj, cmark_node *parent, int options) {
+  if (!(options & CMARK_OPT_GFM) || subj->last_bracket || !subj->refmap->match_autolink)
+    return NULL;
+
+  size_t begin, end;
+  if (!subj->refmap->match_autolink(subj->input.data, subj->input.len, subj->pos, &begin, &end,
+                                    (options & CMARK_OPT_CJK) != 0))
+    return NULL;
+  size_t rewind = subj->pos - begin;
+  cmark_node *last = parent->last_child;
+  if (rewind && (!last || last->type != CMARK_NODE_TEXT || last->source_end != subj->pos ||
+                 (size_t)last->len < rewind))
+    return NULL;
+  if (rewind) {
+    last->len -= rewind;
+    last->data[last->len] = 0;
+    last->source_end -= rewind;
+    last->end_column -= rewind;
+  }
+  if (rewind && !last->len) {
+    cmark_node_unlink(last);
+    cmark_node_free(last);
+  }
+
+  cmark_chunk raw = cmark_chunk_dup(&subj->input, begin, end - begin);
+  cmark_node *link = make_simple(subj->mem, CMARK_NODE_LINK);
+  link->flags |= CMARK_NODE__GFM_AUTOLINK;
+  link->source_start = begin;
+  link->source_end = end;
+  link->label_start = begin;
+  link->label_end = end;
+  link->start_line = link->end_line = subj->line;
+  link->start_column = begin + 1 + subj->column_offset + subj->block_offset;
+  link->end_column = end + subj->column_offset + subj->block_offset;
+  cmark_strbuf url = CMARK_BUF_INIT(subj->mem);
+  if (raw.data[0] == 'w' || raw.data[0] == 'W') cmark_strbuf_puts(&url, "http://");
+  houdini_unescape_html_f(&url, raw.data, raw.len);
+  link->as.link.url = cmark_strbuf_detach(&url);
+  append_child(link, make_str_with_entities(subj, begin, end - 1, &raw));
+  subj->pos = end;
+  return link;
+}
+
 static bufsize_t subject_find_special_char(subject *subj, int options) {
   // "\r\n\\`&_*[]<!"
   static const int8_t SPECIAL_CHARS[256] = {
@@ -1748,10 +1791,18 @@ static bufsize_t subject_find_special_char(subject *subj, int options) {
   };
 
   bufsize_t n = subj->pos + 1;
+  bool gfm_autolink = (options & CMARK_OPT_GFM) && !subj->last_bracket && subj->refmap->match_autolink;
 
   while (n < subj->input.len) {
     if ((options & CMARK_OPT_MATH) && subj->input.data[n] == '$') return n;
     if ((options & CMARK_OPT_GFM) && subj->input.data[n] == '~') return n;
+    if (gfm_autolink && subj->input.data[n] == ':' && n + 2 < subj->input.len &&
+        subj->input.data[n + 1] == '/' && subj->input.data[n + 2] == '/') return n;
+    if (gfm_autolink && n + 3 < subj->input.len &&
+        (subj->input.data[n] == 'w' || subj->input.data[n] == 'W') &&
+        (subj->input.data[n + 1] == 'w' || subj->input.data[n + 1] == 'W') &&
+        (subj->input.data[n + 2] == 'w' || subj->input.data[n + 2] == 'W') && subj->input.data[n + 3] == '.' &&
+        (!n || cmark_isspace(subj->input.data[n - 1]) || strchr("*_~([]", subj->input.data[n - 1]))) return n;
     if (SPECIAL_CHARS[subj->input.data[n]])
       return n;
     if (options & CMARK_OPT_SMART && SMART_PUNCT_CHARS[subj->input.data[n]])
@@ -1814,6 +1865,13 @@ static int parse_inline(subject *subj, cmark_node *parent, int options) {
     return 0;
   }
   switch (c) {
+  case ':':
+  case 'w':
+  case 'W':
+    new_inl = handle_gfm_autolink(subj, parent, options);
+    if (new_inl)
+      break;
+    goto text_run;
   case '$':
     if (!(options & CMARK_OPT_MATH))
       goto text_run;
@@ -1883,8 +1941,8 @@ static int parse_inline(subject *subj, cmark_node *parent, int options) {
   default:
   text_run:
     endpos = subject_find_special_char(subj, options);
-    contents = cmark_chunk_dup(&subj->input, subj->pos, endpos - subj->pos);
-    startpos = subj->pos;
+    contents = cmark_chunk_dup(&subj->input, source_start, endpos - source_start);
+    startpos = source_start;
     subj->pos = endpos;
 
     // if we're at a newline, strip trailing spaces.
@@ -1895,7 +1953,9 @@ static int parse_inline(subject *subj, cmark_node *parent, int options) {
     new_inl = make_str(subj, startpos, endpos - 1, contents);
   }
   if (new_inl != NULL) {
-    new_inl->source_start = source_start;
+    bool gfm_autolink = new_inl->flags & CMARK_NODE__GFM_AUTOLINK;
+    if (!gfm_autolink)
+      new_inl->source_start = source_start;
     new_inl->source_end = subj->pos;
     if (new_inl->type == CMARK_NODE_LINEBREAK) {
       if (c == '\n' || c == '\r') {
@@ -1907,7 +1967,7 @@ static int parse_inline(subject *subj, cmark_node *parent, int options) {
       if (e < subj->input.len && subj->input.data[e - 1] == '\r' && subj->input.data[e] == '\n') e++;
       new_inl->source_end = e;
     }
-    if (new_inl->type == CMARK_NODE_LINK) {
+    if (new_inl->type == CMARK_NODE_LINK && !gfm_autolink) {
       new_inl->label_start = source_start + 1;
       new_inl->label_end = subj->pos - 1;
     }

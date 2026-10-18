@@ -1,4 +1,5 @@
 #include "resolver.h"
+#include "autolink.h"
 #include "utf8.h"
 #include <assert.h>
 
@@ -300,7 +301,7 @@ static void inline_nodes(Leaf *leaf, bool gfm, cmark_node *node, uint32_t offset
       leaf_record(leaf, out, offset + n->source_start, offset + n->source_end, kind);
     if (n->first_child)
       inline_nodes(leaf, gfm, n->first_child, offset, out, in_link || kind == A || kind == IMG);
-    if ((kind == A || kind == IMG) && n->label_end > n->label_start)
+    if ((kind == A || kind == IMG) && !(n->flags & CMARK_NODE__GFM_AUTOLINK) && n->label_end > n->label_start)
       leaf_record(leaf, out, offset + n->label_start, offset + n->label_end, LINK_TEXT);
     if (gfm && !in_link && n->type == CMARK_NODE_TEXT)
       n = text_run(leaf, n, offset, out);
@@ -328,6 +329,7 @@ void inline_resolve(Leaf *leaf, int kind, bool gfm, bool cjk, bool math, cmark_r
   root->len = b - body;
   root->start_line = 1;
   root->start_column = 1;
+  defs->match_autolink = tsmd_gfm_autolink_match;
   defs->lookup_label = dependency;
   defs->lookup_context = deps;
   cmark_parse_inlines(cmark_get_default_mem_allocator(), root, defs,
