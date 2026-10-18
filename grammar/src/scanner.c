@@ -228,7 +228,7 @@ typedef struct {
     // The current column. Used to decide how many spaces a tab should equal
     uint8_t column;
     // The delimiter length of the currently open fenced code block
-    uint8_t fenced_code_block_delimiter_length;
+    uint32_t fenced_code_block_delimiter_length;
 
     uint32_t reference_lines;
     bool simulate;
@@ -265,7 +265,9 @@ static unsigned serialize(Scanner *s, char *buffer) {
     buffer[size++] = (char)s->matched;
     buffer[size++] = (char)s->indentation;
     buffer[size++] = (char)s->column;
-    buffer[size++] = (char)s->fenced_code_block_delimiter_length;
+    memcpy(&buffer[size], &s->fenced_code_block_delimiter_length,
+           sizeof(s->fenced_code_block_delimiter_length));
+    size += sizeof(s->fenced_code_block_delimiter_length);
     size_t blocks_count = s->open_blocks.size;
     if (blocks_count > 0) {
         memcpy(&buffer[size], s->open_blocks.items,
@@ -293,7 +295,9 @@ static void deserialize(Scanner *s, const char *buffer, unsigned length) {
         s->matched = (uint8_t)buffer[size++];
         s->indentation = (uint8_t)buffer[size++];
         s->column = (uint8_t)buffer[size++];
-        s->fenced_code_block_delimiter_length = (uint8_t)buffer[size++];
+        memcpy(&s->fenced_code_block_delimiter_length, &buffer[size],
+               sizeof(s->fenced_code_block_delimiter_length));
+        size += sizeof(s->fenced_code_block_delimiter_length);
         size_t blocks_size = length - size;
         if (blocks_size > 0) {
             size_t blocks_count = blocks_size / sizeof(Block);
@@ -589,7 +593,7 @@ static bool parse_fenced_code_block(Scanner *s, const char delimiter,
                                     TSLexer *lexer, const bool *valid_symbols) {
     // Keep a zero-width table start until a real fence delimiter is known.
     mark_end(s, lexer);
-    uint8_t level = 0;
+    uint32_t level = 0;
     while (lexer->lookahead == delimiter) {
         advance(s, lexer);
         level++;

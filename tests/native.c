@@ -155,7 +155,41 @@ static void table_blocks(void) {
   table_block_case(d, "| a | b |\n|---|---|\n[x]:* [x]: /target\n| a | *b |\n|---|---|\n*/```\n&?", 6);
   tsmd_free(d);
 }
+static void append_fence(uint16_t *text, uint32_t *length, char marker, uint32_t count) {
+  for (uint32_t i = 0; i < count; i++) text[(*length)++] = marker;
+}
+static void append_ascii(uint16_t *text, uint32_t *length, const char *source) {
+  while (*source) text[(*length)++] = (unsigned char)*source++;
+}
+static void long_fence_case(Document *d, char marker, uint32_t count) {
+  uint16_t *text = malloc((count * 3 + 32) * sizeof(uint16_t));
+  assert(text);
+  uint32_t length = 0;
+  append_fence(text, &length, marker, count);
+  append_ascii(text, &length, "a|b\n-|-\n");
+  append_fence(text, &length, marker, count - 1);
+  append_ascii(text, &length, "\nbody\n");
+  append_fence(text, &length, marker, count);
+  append_ascii(text, &length, "\ntail");
+  set(d, text, length);
+  TSNode section = ts_node_named_child(ts_tree_root_node(d->tree), 0);
+  assert(ts_node_named_child_count(section) == 2);
+  assert(!strcmp(ts_node_type(ts_node_named_child(section, 0)), "fenced_code_block"));
+  assert(!strcmp(ts_node_type(ts_node_named_child(section, 1)), "paragraph"));
+  source_equal(d, text, length);
+  free(text);
+}
+static void long_fences(void) {
+  Document *d = tsmd_new(13, tree_sitter_markdown());
+  const uint32_t lengths[] = {3, 255, 256, 257, 258, 259, 512, 65536};
+  for (unsigned i = 0; i < sizeof(lengths) / sizeof(lengths[0]); i++) {
+    long_fence_case(d, '`', lengths[i]);
+    long_fence_case(d, '~', lengths[i]);
+  }
+  tsmd_free(d);
+}
 int main(void) {
+  long_fences();
   table_blocks();
   source_ownership();
   deep_nesting();

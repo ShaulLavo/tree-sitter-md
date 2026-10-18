@@ -92,3 +92,77 @@ test('table recognition edits and undo equal a fresh native parse', () => {
     }
   } finally { document.dispose() }
 })
+
+const fenceLengths = [3, 255, 256, 257, 258, 259, 511, 512, 65535, 65536, 65537]
+
+function checkFenceClassification(marker, length, eol) {
+  const fence = marker.repeat(length)
+  const source = `${fence}a|b${eol}-|-${eol}${fence}`
+  const root = snapshot(source)
+  assert.deepEqual(root.children.map(node => node.type), ['code'], `${marker} x ${length}`)
+  assert.equal(root.children[0].value, '-|-')
+  assert.deepEqual(root.children[0].range, { start: 0, end: source.length })
+}
+
+test('long real fences never wrap into short-marker table dispatch', () => {
+  for (const marker of ['`', '~']) {
+    for (const length of fenceLengths) {
+      checkFenceClassification(marker, length, '\n')
+      checkFenceClassification(marker, length, '\r\n')
+    }
+  }
+})
+
+function checkFenceClose(marker, length, closingLength) {
+  const closing = marker.repeat(closingLength)
+  const source = `${marker.repeat(length)}info\nbody\n${closing}\ntail`
+  const root = snapshot(source)
+  const closes = closingLength >= length
+  assert.deepEqual(root.children.map(node => node.type), closes ? ['code', 'paragraph'] : ['code'], `${marker} ${length}/${closingLength}`)
+  assert.equal(root.children[0].value, closes ? 'body' : `body\n${closing}\ntail`)
+  assert.equal(root.children[0].range.end, closes ? source.length - 5 : source.length)
+}
+
+test('long fences close only with an equal or longer run of the same marker', () => {
+  for (const marker of ['`', '~']) {
+    for (const length of fenceLengths) {
+      checkFenceClose(marker, length, length - 1)
+      checkFenceClose(marker, length, length)
+      checkFenceClose(marker, length, length + 1)
+    }
+  }
+})
+
+function checkFenceEdits(marker, length) {
+  let source = `${marker.repeat(length)}info\nbody\n${marker.repeat(length - 1)}\ntail`
+  const document = new MarkdownDocument()
+  const edit = (start, end, inserted) => {
+    document.edit(start, end, inserted)
+    source = source.slice(0, start) + inserted + source.slice(end)
+    assert.deepEqual(document.semantics().root, snapshot(source))
+    document.reparse()
+    assert.deepEqual(document.semantics().root, snapshot(source))
+    assert.equal(document.presentation({ input: 'ended' }).source, source)
+  }
+  try {
+    document.setText(source)
+    const bodyStart = length + 5
+    edit(bodyStart, bodyStart + 4, 'edited')
+    const closeStart = source.indexOf(marker.repeat(length - 1), bodyStart)
+    edit(closeStart, closeStart, marker)
+    assert.deepEqual(document.semantics().root.children.map(node => node.type), ['code', 'paragraph'])
+    edit(0, 0, marker)
+    assert.deepEqual(document.semantics().root.children.map(node => node.type), ['code'])
+    edit(0, 1, '')
+    edit(closeStart, closeStart + 1, '')
+    assert.deepEqual(document.semantics().root.children.map(node => node.type), ['code'])
+  } finally { document.dispose() }
+}
+
+test('long fence state survives incremental body, closing and opening edits', () => {
+  for (const marker of ['`', '~']) {
+    for (const length of [255, 256, 257, 258, 259, 512, 65536]) {
+      checkFenceEdits(marker, length)
+    }
+  }
+})
