@@ -68,6 +68,47 @@ test('semantic tables keep every alignment and pad short rows', () => {
   assert.equal(table.rows[1].cells.length, 40)
   assert.equal(table.rows[1].cells[39].children.length, 0)
 })
+test('GFM tables end before empty list items and noninitial ordered lists', () => {
+  for (const ending of ['\n', '\r\n']) {
+    for (const marker of ['*', '-', '+', '2.', '2)', '2. item', '2) item']) {
+      const source = `a|b\n-|-${ending}${marker}${ending}x`
+      const blocks = snapshot(source).root.children
+      assert.equal(blocks[0].type, 'table', source)
+      assert.equal(blocks[0].rows.length, 1, source)
+      assert.equal(blocks[1].type, 'list', source)
+    }
+  }
+  for (const source of ['| a | b |\n|---|---|\n*\r\n:/$_x$es', '| a | b |\n|---|---|\n*\n:/$_x$es']) {
+    assert.deepEqual(snapshot(source).root.children.map(node => node.type), ['table', 'list', 'paragraph'])
+  }
+  assert.equal(snapshot('paragraph\n*').root.children[0].type, 'paragraph')
+  assert.equal(snapshot('paragraph\n2. item').root.children[0].type, 'paragraph')
+})
+test('GFM table continuation recognizes type-seven HTML blocks', () => {
+  const blocks = snapshot('a|b\n-|-\n<custom>\nx').root.children
+  assert.equal(blocks[0].type, 'table')
+  assert.equal(blocks[0].rows.length, 1)
+  assert.equal(blocks[1].type, 'html')
+  assert.equal(snapshot('paragraph\n<custom>').root.children[0].type, 'paragraph')
+})
+function tableContinuationBlocks(source) {
+  const blocks = snapshot(source).root.children
+  if (blocks[0].type === 'quote') return blocks[0].children
+  if (blocks[0].type === 'list') return blocks[0].items[0].children
+  return blocks
+}
+test('GFM tables end before indented code after matching container prefixes', () => {
+  const rows = ['*', '-', '+', '2.', '<custom>', 'text', 'a|b']
+  const sources = rows.map(row => `a|b\n-|-\n    ${row}\n`)
+    .concat(['a|b\n-|-\n\ttext\n', '> a|b\n> -|-\n>     text\n', '- a|b\n  -|-\n      text\n'])
+  for (const source of sources.concat(sources.map(value => value.replaceAll('\n', '\r\n')))) {
+    const blocks = tableContinuationBlocks(source)
+    assert.deepEqual(blocks.map(node => node.type), ['table', 'code'], source)
+    assert.equal(blocks[0].rows.length, 1, source)
+    assert.equal(blocks[1].fence, 'indented', source)
+  }
+  assert.equal(snapshot('paragraph\n    text').root.children[0].type, 'paragraph')
+})
 test('header-only tables recognize complete one-dash delimiter cells at EOF', () => {
   for (const source of ['| Name | Value |\n| --- | -', '| Name | Value |\n| --- | -:']) {
     const table = snapshot(source).root.children[0]
