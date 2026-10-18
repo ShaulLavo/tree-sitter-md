@@ -795,7 +795,7 @@ static uint32_t fence_end(Document *d, TSNode n, bool closed) {
   for (TSNode tail = n; !closed && ts_node_named_child_count(tail);) {
     tail = ts_node_named_child(tail, ts_node_named_child_count(tail) - 1);
     if (end(tail) != finish) break;
-    if (is(tail, d->ids.block_continuation)) { finish = start(tail); break; }
+    if (is(tail, d->ids.block_continuation) && start(tail) < finish) return start(tail);
   }
   bool quoted = false;
   for (TSNode parent = ts_node_parent(n); !ts_node_is_null(parent); parent = ts_node_parent(parent))

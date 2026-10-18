@@ -221,3 +221,14 @@ test('CHAT flow container continuation is not a lazy paragraph continuation', ()
     assertOwnership(semantic.root)
   }
 })
+
+
+test('nonzero quote continuations retain their already-owned LF and CRLF endpoints', () => {
+  for (const [source, end] of [['> ```js\n>', 8], ['> ```js\r\n>', 9]]) {
+    const {semantic, open} = snapshot(source)
+    assert.equal(open.source, source)
+    const code = descendants(semantic.root, 'code')[0]
+    assert.deepEqual(code.range, range(2, end))
+    assertOwnership(semantic.root)
+  }
+})
