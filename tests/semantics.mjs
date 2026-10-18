@@ -37,6 +37,21 @@ for (const match of gfm.matchAll(/^`{32} example(?: \w+)?\n([\s\S]*?)^\.\n([\s\S
   })
 }
 
+test('ordinary emphasis preserves a remaining opener after a one-marker match', () => {
+  const source = '**`x` d*$x$$*_x$*'
+  assert.deepEqual(snapshot(source, { gfm: false }).root.children[0].children, [
+    { type: 'emphasis', range: { start: 0, end: 13 }, children: [
+      { type: 'emphasis', range: { start: 1, end: 8 }, children: [
+        { type: 'code', range: { start: 2, end: 5 }, value: 'x' },
+        { type: 'text', range: { start: 5, end: 7 }, value: ' d' },
+      ] },
+      { type: 'text', range: { start: 8, end: 12 }, value: '$x$$' },
+    ] },
+    { type: 'text', range: { start: 13, end: 14 }, value: '_' },
+    { type: 'text', range: { start: 14, end: 16 }, value: 'x$' },
+    { type: 'text', range: { start: 16, end: 17 }, value: '*' },
+  ])
+})
 test('semantic buffers own decoded payloads and survive edits/disposal', () => {
   const doc = new MarkdownDocument()
   doc.setText('> 3. **Hi &amp; [x](</a&b> "t&amp;u")**\n')
