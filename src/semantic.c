@@ -543,18 +543,18 @@ static void append_line(cmark_strbuf *out, Document *d, uint32_t a, uint32_t b) 
   }
   append_utf16(out, d, a, b);
 }
-static uint32_t container_prefix(Document *d, TSNode parent, uint32_t a, uint32_t b, cmark_strbuf *out, bool literal) {
+static uint32_t container_prefix(Document *d, Document *context, TSNode parent, uint32_t a, uint32_t b, cmark_strbuf *out, bool literal) {
   TSNode path[200]; uint32_t count = 0;
   for (; !ts_node_is_null(parent); parent = ts_node_parent(parent)) {
     if (count == 200) break;
-    if (is(parent, d->ids.block_quote) || is(parent, d->ids.list_item)) path[count++] = parent;
+    if (is(parent, context->ids.block_quote) || is(parent, context->ids.list_item)) path[count++] = parent;
   }
   uint32_t virtual_spaces = 0;
   while (count) {
     TSNode n = path[--count]; uint32_t column = column_at(d, a), width = 0;
     uint32_t saved = a, saved_virtual = virtual_spaces;
-    bool list = is(n, d->ids.list_item);
-    uint32_t required = list ? item_indent(d, n) : (literal ? UINT32_MAX : 3);
+    bool list = is(n, context->ids.list_item);
+    uint32_t required = list ? item_indent(context, n) : (literal ? UINT32_MAX : 3);
     if (literal) { width = virtual_spaces < required ? virtual_spaces : required; virtual_spaces -= width; }
     while (a < b && width < required && (d->text[a] == ' ' || d->text[a] == '\t')) {
       uint32_t added = d->text[a] == '\t' ? 4 - column % 4 : 1;
@@ -599,6 +599,11 @@ static void code_source_value(Semantic *s, cmark_node *node, uint32_t a, uint32_
     put(s, ",\"sourceValue\":"); literal_string(s, node->data, node->len, a, b); return;
   }
   TSNode context = ts_node_descendant_for_byte_range(ts_tree_root_node(d->tree), a * 2, a * 2);
+  FootnoteSource source = {0};
+  if (!footnotes_source_range(s->footnotes, a, b, &source)) abort();
+  Document authored = {.text = source.text, .len = source.len};
+  uint32_t source_a = a, source_b = b;
+  d = &authored; a = 0; b = source.len;
   uint32_t ticks = 0;
   while (a + ticks < b && d->text[a + ticks] == '`') ticks++;
   a += ticks;
@@ -613,13 +618,11 @@ static void code_source_value(Semantic *s, cmark_node *node, uint32_t a, uint32_
     uint32_t next = stop + 1;
     if (d->text[stop] == '\r' && next < b && d->text[next] == '\n') next++;
     append_source(&value, d, stop, next);
-    TSNode continuation = ts_node_descendant_for_byte_range(ts_tree_root_node(d->tree), next * 2, next * 2);
-    from = is(continuation, d->ids.block_continuation) ?
-      container_prefix(d, context, next, end(continuation), &value, true) : next;
+    from = container_prefix(d, s->d, context, next, b, &value, true);
   }
   trim_source_padding(&value);
-  put(s, ",\"sourceValue\":"); literal_string(s, value.ptr, value.size, a, b);
-  cmark_strbuf_free(&value);
+  put(s, ",\"sourceValue\":"); literal_string(s, value.ptr, value.size, source_a, source_b);
+  cmark_strbuf_free(&value); free(source.text);
 }
 static void block_value(Document *d, TSNode n, uint32_t a, uint32_t b, cmark_strbuf *out,
                         bool preserve_whitespace) {
@@ -627,7 +630,7 @@ static void block_value(Document *d, TSNode n, uint32_t a, uint32_t b, cmark_str
   while (a < b) {
     uint32_t stop = a;
     while (stop < b && d->text[stop] != '\r' && d->text[stop] != '\n') stop++;
-    uint32_t from = first ? a : container_prefix(d, ts_node_parent(n), a, stop, out, false);
+    uint32_t from = first ? a : container_prefix(d, d, ts_node_parent(n), a, stop, out, false);
     if (preserve_whitespace) append_utf16(out, d, from, stop);
     else append_line(out, d, from, stop);
     first = false;
@@ -687,7 +690,7 @@ static bool math_block(Semantic *s, TSNode n, bool *first) {
   while (row < limit) {
     uint32_t stop = line_end(d, row, limit);
     cmark_strbuf line = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
-    uint32_t from = container_prefix(d, ts_node_parent(n), row, stop, &line, false);
+    uint32_t from = container_prefix(d, d, ts_node_parent(n), row, stop, &line, false);
     append_utf16(&line, d, from, stop);
     consumed = next_line(d, stop, limit); finish = stop;
     if (math_closer(&line, width)) { closed = true; cmark_strbuf_free(&line); break; }

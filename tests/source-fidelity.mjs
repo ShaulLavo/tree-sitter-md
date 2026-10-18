@@ -123,3 +123,40 @@ test('single-line code retains existing cell escape handling', () => {
   assert.equal(code.sourceValue, 'x|y')
   assert.deepEqual(code.range, { start: 14, end: 20 })
 })
+
+const footnoteLiterals = [
+  ['lazy one', '[^x]: `a{eol} b`', 'a{eol} b', 'a  b'],
+  ['lazy two', '[^x]: `a{eol}  b`', 'a{eol}  b', 'a   b'],
+  ['required indent', '[^x]: `a{eol}    b`', 'a{eol}b', 'a     b'],
+  ['extra indent', '[^x]: `a{eol}     b`', 'a{eol} b', 'a      b'],
+  ['inner list lazy', '[^x]: - `a{eol}   b`', 'a{eol} b', 'a  b'],
+  ['inner quote', '[^x]: > `a{eol}    >  b`', 'a{eol} b', 'a  b'],
+  ['outer quote lazy', '> [^x]: `a{eol}>  b`', 'a{eol} b'],
+  ['outer list tab', '- [^x]: `a{eol}\t   b`', 'a{eol} b', 'a \t   b'],
+  ['nested footnote', '[^x]: [^y]: `a{eol}     b`', 'a{eol} b', 'a      b'],
+  ['nested quote footnote', '[^x]: > [^y]: `a{eol}    >  b`', 'a{eol} b'],
+]
+function checkFootnoteLiteral(source, expected, canonical) {
+  for (const input of [undefined, 'open', 'ended']) {
+    const code = nodes(read(source, input), 'code')[0]
+    assert.ok(code, 'canonical code node exists')
+    assert.equal(code.sourceValue, expected)
+    assert.equal(code.value, canonical)
+    assert.deepEqual(code.range, { start: source.indexOf('`'), end: source.length })
+  }
+}
+for (const eol of ['\n', '\r\n', '\r']) {
+  for (const [name, template, value, crValue] of footnoteLiterals.filter(row => eol !== '\r' || row.length === 4)) test('footnote source mapping ' + name + ' ' + JSON.stringify(eol), () => {
+    checkFootnoteLiteral(template.replaceAll('{eol}', eol), value.replaceAll('{eol}', eol), eol === '\r' ? crValue : 'a b')
+  })
+}
+
+test('lazy footnote literal mapping retains the accepted referenced definition', () => {
+  const source = '[^x]: `a\n b`\n\n[^x]'
+  for (const input of [undefined, 'open', 'ended']) {
+    const code = nodes(read(source, input), 'code')[0]
+    assert.equal(code.sourceValue, 'a\n b')
+    assert.equal(code.value, 'a b')
+    assert.deepEqual(code.range, { start: 6, end: 12 })
+  }
+})

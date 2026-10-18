@@ -26,7 +26,7 @@ static void clear(Footnotes *notes) {
   for (uint32_t i = 0; i < notes->count; i++) {
     Footnote *note = &notes->items[i];
     free(note->identifier);
-    free(note->starts.v); free(note->ends.v);
+    free(note->starts.v); free(note->ends.v); free(note->containers.v);
     footnotes_free(note->nested);
     tsmd_free(note->body);
   }
@@ -69,17 +69,36 @@ static uint32_t indentation(Document *d, uint32_t *at, uint32_t b, uint32_t want
     columns += d->text[(*at)++] == '\t' ? 4 - columns % 4 : 1;
   return columns;
 }
-static bool strip_container(Document *d, uint32_t *at, uint32_t b, Container container) {
+static uint32_t source_indentation(Document *d, uint32_t *at, uint32_t b,
+                                    uint32_t wanted, uint32_t *padding) {
+  uint32_t column = 0, line = *at;
+  while (line && d->text[line - 1] != '\r' && d->text[line - 1] != '\n') line--;
+  for (; line < *at; line++) column += d->text[line] == '\t' ? 4 - column % 4 : 1;
+  uint32_t width = *padding < wanted ? *padding : wanted;
+  *padding -= width;
+  while (*at < b && horizontal(d->text[*at]) && width < wanted) {
+    uint32_t added = d->text[(*at)++] == '\t' ? 4 - column % 4 : 1;
+    column += added; width += added;
+  }
+  if (width > wanted) *padding += width - wanted;
+  return width;
+}
+static bool strip_container(Document *d, uint32_t *at, uint32_t b, Container container,
+                            uint32_t *padding) {
   for (uint32_t i = 0; i < container.count; i++) {
     uint32_t indent = container.steps[i];
     if (indent) {
-      if (indentation(d, at, b, indent) < indent) return false;
+      uint32_t width = padding ? source_indentation(d, at, b, indent, padding) : indentation(d, at, b, indent);
+      if (width < indent) return false;
       continue;
     }
-    indentation(d, at, b, 3);
+    if (padding) source_indentation(d, at, b, 3, padding);
+    else indentation(d, at, b, 3);
     if (*at == b || d->text[*at] != '>') return false;
     (*at)++;
-    if (*at < b && horizontal(d->text[*at])) (*at)++;
+    if (*at >= b || !horizontal(d->text[*at])) continue;
+    if (padding) source_indentation(d, at, b, 1, padding);
+    else (*at)++;
   }
   return true;
 }
@@ -134,7 +153,7 @@ static void build_body(Document *d, Footnote *note, Container container) {
   while (cursor < container.limit) {
     uint32_t a = cursor, b = line_end(d, cursor, container.limit);
     uint32_t next = b < container.limit ? b + 1 : b;
-    if (!strip_container(d, &a, b, container)) break;
+    if (!strip_container(d, &a, b, container, NULL)) break;
     uint32_t columns = indentation(d, &a, b, 4);
     bool empty = trim_end(d, b, a) == a;
     if (!empty && columns < 4 && (blank || !final_paragraph(note->body) || !paragraph_line(d, a))) break;
@@ -159,11 +178,12 @@ static void add(Footnotes *notes, uint32_t a, uint32_t origin, Container contain
   if (!header(d, a, line_end(d, a, container.limit), &label_end, &content)) return;
   uint32_t logical = line_start(d, a);
   if (line_start(d, origin) == logical) logical = origin;
-  else if (!strip_container(d, &logical, a, container)) return;
+  else if (!strip_container(d, &logical, a, container, NULL)) return;
   if (indentation(d, &logical, a, 4) >= 4 || logical != a) return;
   Footnote note = {.start = a, .body_start = content};
+  for (uint32_t i = 0; i < container.count; i++) word(&note.containers, container.steps[i]);
   note.identifier = identifier(d, a + 2, label_end, &note.identifier_len);
-  if (!note.identifier) return;
+  if (!note.identifier) { free(note.containers.v); return; }
   build_body(d, &note, container);
   note.nested = footnotes_new(note.body);
   note.nested->depth = notes->depth + 1;
@@ -367,4 +387,53 @@ bool footnotes_map_range(const Footnotes *notes, uint32_t start, uint32_t end,
   uint32_t local_start = owner->starts.v[start];
   uint32_t local_end = owner->ends.v[high];
   return footnotes_map_range(notes->parent, local_start, local_end, mapped_start, mapped_end);
+}
+
+static void source_append(FootnoteSource *out, const uint16_t *text, uint32_t count) {
+  reserve((void **)&out->text, &out->cap, out->len + count, sizeof(uint16_t));
+  if (count) memcpy(out->text + out->len, text, count * sizeof(uint16_t));
+  out->len += count;
+}
+static uint32_t source_line_prefix(Document *d, uint32_t a, uint32_t b,
+                                   Container container, uint32_t *padding) {
+  uint32_t at = a;
+  if (!strip_container(d, &at, b, container, padding)) { *padding = 0; return a; }
+  uint32_t saved = at, saved_padding = *padding;
+  if (source_indentation(d, &at, b, 4, padding) < 4) {
+    *padding = saved_padding; return saved;
+  }
+  return at;
+}
+static void source_body(FootnoteSource *out, FootnoteSource *parent, const Footnote *note) {
+  Document view = {.text = parent->text, .len = parent->len};
+  Container container = {.count = note->containers.n};
+  if (container.count) memcpy(container.steps, note->containers.v, container.count * sizeof(uint32_t));
+  uint32_t at = 0;
+  bool first = true;
+  while (at < view.len) {
+    uint32_t stop = at, padding = 0;
+    while (stop < view.len && view.text[stop] != '\r' && view.text[stop] != '\n') stop++;
+    uint32_t from = first ? at : source_line_prefix(&view, at, stop, container, &padding);
+    while (padding) { uint16_t space = ' '; source_append(out, &space, 1); padding--; }
+    uint32_t next = stop;
+    if (next < view.len && view.text[next] == '\r') next++;
+    if (next < view.len && view.text[next] == '\n') next++;
+    source_append(out, view.text + from, next - from);
+    first = false; at = next;
+  }
+}
+bool footnotes_source_range(const Footnotes *notes, uint32_t start, uint32_t end,
+                            FootnoteSource *source) {
+  if (!notes || start > end || end > notes->document->len) return false;
+  if (!notes->parent) { source_append(source, notes->document->text + start, end - start); return true; }
+  if (notes->owner_index >= notes->parent->count) return false;
+  const Footnote *owner = &notes->parent->items[notes->owner_index];
+  if (start == end) return true;
+  if (end > owner->ends.n || start >= owner->starts.n) return false;
+  FootnoteSource parent = {0};
+  if (!footnotes_source_range(notes->parent, owner->starts.v[start], owner->ends.v[end - 1], &parent)) {
+    free(parent.text); return false;
+  }
+  source_body(source, &parent, owner);
+  free(parent.text); return true;
 }

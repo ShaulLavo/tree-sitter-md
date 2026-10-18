@@ -32,3 +32,9 @@ and any intervening container prefixes. Origin identifies the producer parse
 path, not whether a particular downstream transform supplies positions. No
 position is removed, including links inside unmatched brackets. Consumers own
 any selective position policy.
+
+Footnote literal extraction follows the existing recursive body-to-source maps.
+Each footnote owner keeps its parsed container steps and removes only its own
+required prefix from authored physical lines. Inner code containers are stripped
+after this mapping, so lazy indentation is not lost in the canonical body copy.
+Canonical body extraction and its range maps are unchanged.
