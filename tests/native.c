@@ -1,4 +1,5 @@
 #include "resolver.h"
+#include "native-language.h"
 #include <assert.h>
 Document *tsmd_new(uint32_t, const TSLanguage *);
 const TSLanguage *tree_sitter_markdown(void);
@@ -40,8 +41,8 @@ static void source_equal(Document *d, const uint16_t *source, uint32_t length) {
     assert(d->text[i] == (source[i] ? source[i] : 0xfffd));
 }
 static void source_ownership(void) {
-  Document *d = tsmd_new(13, tree_sitter_markdown());
-  Document *sibling = tsmd_new(13, tree_sitter_markdown());
+  Document *d = test_document(13);
+  Document *sibling = test_document(13);
   const uint16_t original[] = {0xfeff, 'a', 0, 0xfffd, '\r', '\n', 0xd83d};
   set(d, original, 7);
   source_equal(d, original, 7);
@@ -78,7 +79,7 @@ static void deep_case(Document *document, uint32_t depth, const char *prefix) {
   tsmd_semantic_release(document);
 }
 static void deep_nesting(void) {
-  Document *document = tsmd_new(13, tree_sitter_markdown());
+  Document *document = test_document(13);
   const uint32_t depths[] = {180, 199, 200, 201, 256};
   const char *prefixes[] = {"> ", "- ", "> - "};
   for (uint32_t i = 0; i < sizeof(depths) / sizeof(depths[0]); i++) {
@@ -93,7 +94,7 @@ static void many_documents(void) {
   char *snapshots[64];
   const uint16_t source[] = {'[', 'x', ']', '[', 'i', 'd', ']', '\n', '\n', '*', '*', 'x', 0, 0xd83d};
   for (uint32_t i = 0; i < 64; i++) {
-    documents[i] = tsmd_new(13, tree_sitter_markdown());
+    documents[i] = test_document(13);
     set(documents[i], source, sizeof(source) / sizeof(source[0]));
     assert(tsmd_presentation(documents[i], 0) > 0);
     snapshots[i] = strdup(documents[i]->semantic);
@@ -162,7 +163,7 @@ static void table_block_case(Document *d, const char *source, uint32_t rows) {
   source_equal(d, text, length);
 }
 static void table_blocks(void) {
-  Document *d = tsmd_new(13, tree_sitter_markdown());
+  Document *d = test_document(13);
   table_block_case(d, "`>a | b |\n|---|---|\n **see\r\n_ded", 3);
   table_block_case(d, "`>a | b |\r\n|---|---|\r\n **see\r\n_ded", 3);
   table_block_case(d, "``a|b\n-|-", 1);
@@ -195,7 +196,7 @@ static void long_fence_case(Document *d, char marker, uint32_t count) {
   free(text);
 }
 static void long_fences(void) {
-  Document *d = tsmd_new(13, tree_sitter_markdown());
+  Document *d = test_document(13);
   const uint32_t lengths[] = {3, 255, 256, 257, 258, 259, 512, 65536};
   for (unsigned i = 0; i < sizeof(lengths) / sizeof(lengths[0]); i++) {
     long_fence_case(d, '`', lengths[i]);
@@ -210,7 +211,7 @@ int main(void) {
   source_ownership();
   deep_nesting();
   many_documents();
-  Document *incremental = tsmd_new(13, tree_sitter_markdown()), *fresh = tsmd_new(13, tree_sitter_markdown());
+  Document *incremental = test_document(13), *fresh = test_document(13);
   const char *fixtures[] = {
     "- [ ] pending\n- [x](streamdown:incomplete-link)\n- [x] done",
     "> - first\n>\n> ```js\n> ?\n> ```",

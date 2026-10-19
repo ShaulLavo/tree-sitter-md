@@ -11,7 +11,7 @@ export function streamingArtifacts() {
     packageVersion: metadata.version,
     runtimeVersion: runtime.version,
     runtimePin: metadata.overrides['web-tree-sitter'],
-    wasm: Object.fromEntries(['tree-sitter-md.wasm', 'tree-sitter-markdown.wasm'].map(name => [
+    wasm: Object.fromEntries(['tree-sitter-md.wasm', 'tree-sitter-markdown.wasm', 'tree-sitter-markdown-chat.wasm'].map(name => [
       name, createHash('sha256').update(readFileSync(new URL('../' + name, import.meta.url))).digest('hex'),
     ])),
   }

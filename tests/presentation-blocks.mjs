@@ -226,18 +226,18 @@ for (const [source, type] of [['<span data-x="unfinished', 'paragraph'], ['<!-- 
   })
 }
 
-for (const [source, value, closed] of [
-  ['$$x *a*', 'x *a*', false],
-  ['$$x *a*\nnext', 'x *a*\nnext', false],
-  ['$$x *a*\nnext\n$$', 'x *a*\nnext', true],
+for (const [source, value, meta, closed] of [
+  ['$$x *a*', '', 'x *a*', false],
+  ['$$x *a*\nnext', 'next', 'x *a*', false],
+  ['$$x *a*\nnext\n$$', 'next', 'x *a*', true],
 ]) {
   test('same-line block math retains its opening-line suffix in every mode: ' + JSON.stringify(source), () => {
     const document = new MarkdownDocument(options)
     try {
       document.setText(source)
       const open = verifyReads(document, source)
-      assert.deepEqual(document.semantics().root.children, [node('math', 0, source.length, { value })])
-      assert.deepEqual(open.root.children, [node(closed ? 'math' : 'pendingMath', 0, source.length, { value })])
+      assert.deepEqual(document.semantics().root.children, [node('math', 0, source.length, { value, meta })])
+      assert.deepEqual(open.root.children, [node(closed ? 'math' : 'pendingMath', 0, source.length, { value, meta })])
       assert.deepEqual(open.provisional, closed ? [] : [{ path: ['children', 0], reason: 'unclosed-math' }])
       assert.deepEqual(open.suppressed, [])
     } finally {

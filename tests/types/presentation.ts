@@ -15,7 +15,7 @@ const nested: PresentationBlock = {
     }] }],
   }],
 }
-const pendingMath: PresentationBlock = { type: 'pendingMath', range, value: 'hello' }
+const pendingMath: PresentationBlock = { type: 'pendingMath', range, value: 'hello', meta: null }
 const inlineMath: PresentationInline = { type: 'pendingMath', range, value: 'hello' }
 const root: PresentationRoot = { type: 'root', range, children: [nested, pendingMath] }
 // @ts-expect-error Open presentation trees can contain pending nodes.

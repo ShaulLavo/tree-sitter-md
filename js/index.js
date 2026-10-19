@@ -8,6 +8,7 @@ export { Kind, CAPTURES } from './constants.js'
 
 let wasm = null
 let language = null
+let chatLanguage = null
 let initialization = null
 
 async function bytes(pending, fallback) {
@@ -42,9 +43,10 @@ export async function init(options = {}) {
   return initialization
 }
 
-async function load({ grammar, resolver }) {
+async function load({ grammar, chatGrammar, resolver }) {
   await Parser.init()
   language = grammar instanceof Language ? grammar : await Language.load(await bytes(grammar, '../tree-sitter-markdown.wasm'))
+  chatLanguage = chatGrammar instanceof Language ? chatGrammar : await Language.load(await bytes(chatGrammar, '../tree-sitter-markdown-chat.wasm'))
   wasm = await loadExtension(await bytes(resolver, '../tree-sitter-md.wasm'))
 }
 
@@ -92,7 +94,7 @@ export class MarkdownDocument {
   #math
   constructor({ gfm = true, frontmatter = false, cjk = false, math = false } = {}) {
     if (!wasm) throw new Error('tree-sitter-md: call init() first')
-    this.#handle = wasm.tsmd_new((gfm ? 1 : 0) | (frontmatter ? 2 : 0) | (cjk ? 4 : 0) | (math ? 8 : 0), language[0])
+    this.#handle = wasm.tsmd_new((gfm ? 1 : 0) | (frontmatter ? 2 : 0) | (cjk ? 4 : 0) | (math ? 8 : 0), (math ? chatLanguage : language)[0])
     this.#gfm = gfm
     this.#cjk = cjk
     this.#math = math

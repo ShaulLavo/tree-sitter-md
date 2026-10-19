@@ -110,7 +110,7 @@ static bool final_paragraph(Document *d) {
   while (!ts_node_is_null(node)) {
     if (is(node, d->ids.paragraph)) paragraph = true;
     if (is(node, d->ids.atx_heading) || is(node, d->ids.setext_heading) ||
-        is(node, d->ids.fenced_code_block) || is(node, d->ids.indented_code_block) ||
+        (d->math && is(node, d->ids.math_flow)) || is(node, d->ids.fenced_code_block) || is(node, d->ids.indented_code_block) ||
         is(node, d->ids.html_block)) return false;
     node = ts_node_parent(node);
   }
@@ -121,7 +121,7 @@ static bool paragraph_line(Document *d, uint32_t at) {
   while (!ts_node_is_null(node)) {
     if (is(node, d->ids.paragraph)) return true;
     if (is(node, d->ids.atx_heading) || is(node, d->ids.setext_heading) ||
-        is(node, d->ids.fenced_code_block) || is(node, d->ids.indented_code_block) ||
+        (d->math && is(node, d->ids.math_flow)) || is(node, d->ids.fenced_code_block) || is(node, d->ids.indented_code_block) ||
         is(node, d->ids.reference_definition) || is(node, d->ids.list_item) ||
         is(node, d->ids.html_block) || is(node, d->ids.thematic_break)) return false;
     node = ts_node_parent(node);
@@ -215,7 +215,7 @@ static bool enter(Footnotes *notes, WalkEntry *entry) {
   Document *d = notes->document;
   TSNode node = entry->node;
   entry->entered = true;
-  if (is(node, d->ids.fenced_code_block) || is(node, d->ids.indented_code_block) || is(node, d->ids.html_block)) return false;
+  if ((d->math && is(node, d->ids.math_flow)) || is(node, d->ids.fenced_code_block) || is(node, d->ids.indented_code_block) || is(node, d->ids.html_block)) return false;
   if (is(node, d->ids.block_quote) || is(node, d->ids.list_item)) {
     if (entry->container.count == 200) return false;
     TSNode marker = ts_node_named_child(node, 0);

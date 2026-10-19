@@ -6,8 +6,8 @@ P3 implementation, 2026-10-18: native presentation suppresses empty trailing
 block markers and reports resolved and unresolved reference dependencies in both
 modes. Full-reference ownership removes duplicate suffix retries; latent nested
 uses and image-alt references remain available. Footnote EOF uses consumed source
-extent while authored ranges stay trimmed. Same-line block math preserves its
-opening-line suffix. Native task boundaries, blank-line task paragraphs, disabled
+extent while authored ranges stay trimmed. Release 0.1.15 corrects flow math so its
+opening-line suffix is metadata and subsequent lines are its body. Native task boundaries, blank-line task paragraphs, disabled
 GFM task text, inactive link openers, and the 999-Unicode-scalar reference-label
 limit have dedicated regressions. All 54 focused P3 cases and the 364 authored
 presentation checks pass. Exhaustive P4 schedules and P5 release-baseline work
@@ -246,12 +246,12 @@ Interleaving open and exact reads cannot contaminate either result or another do
 
 ### P3. Handle block reclassification and document dependencies
 
-P3 math dialect: a block opener includes its same-line suffix as received TeX.
-With `{ math: true }`, `$$x *a*` has exact block-math value `x *a*` and open
-`pendingMath` with the same payload. The native opener still requires at least
-two dollars and no later dollar on the opening line, so complete `$$x$$` follows
-the inline-math path. Independently authored ended expectations cover this fix
-for the payload loss found during P2 review.
+Release 0.1.15 math dialect: a flow opener's same-line suffix is metadata.
+With `{ math: true }`, `$$x *a*` has meta `x *a*` and empty body value in both
+exact `math` and eligible open `pendingMath`. The opener requires at least two
+dollars and no later dollar on the opening line, so complete `$$x$$` follows the
+inline-math path. Single-dollar text remains literal. The [CHAT math contract](../docs/chat-math.md)
+records the pinned behavior and Streamdown's currency rationale.
 
 Reference metadata uses the existing `link` namespace for both reference links
 and reference images. It includes latent unresolved nested uses that can
@@ -422,3 +422,28 @@ LF/CRLF. Do not rewrite inline parsing or qualification comparisons. The r17
 report records direct before/after native trees and the pinned oracle output
 in `remaining-fence-info.log`; the 0.1.13 fix deliberately leaves this case
 unchanged.
+
+
+## Separate container-range investigation
+
+Status: Approved for a separate bounded investigation by the root coordinator, not
+resolved by the 0.1.15 math change. A new broad ownership assertion in
+`tests/native-math-ranges.test.mjs` reported quote `[2,16]` outside listItem `[0,11]`
+during UTF-16 prefix appends. Both profile-isolation test variants encountered the
+math-disabled document, either as the edited document or its interleaved sibling.
+The exact full source is this JavaScript string, including the lone high surrogate:
+
+```js
+'- > \t$$meta\r\n  > \ty\r\n  > \t$$\r\n\r\n# tail\ud83d'
+```
+
+The failing transient prefix was not logged. No immutable-main reproduction or
+cause is established. To recover it, temporarily add `assertOwnership(exact.root)`
+inside `comparable()` after `document.semantics()`, log the current source before
+the assertion, and run `node --test tests/native-math-ranges.test.mjs`. Compare
+that exact prefix with immutable main before classifying this as pre-existing.
+The broad assertion was removed only from the new incremental comparator; its
+incremental/fresh and sibling-isolation comparisons remain. Exact authored math
+ownership assertions and all pre-existing tests remain. The original failure is
+retained in the pickup report's `boundaries.log`, lines 260-289. No fix or waiver
+of a confirmed regression is claimed.

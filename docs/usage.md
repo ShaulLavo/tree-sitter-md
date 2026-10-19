@@ -3,7 +3,7 @@
 ```js
 import { init, MarkdownDocument, Kind, CAPTURES } from 'tree-sitter-md'
 
-await init() // or init({ grammar, resolver }): URLs, bytes, Responses, or a loaded Language as grammar
+await init() // or init({ grammar, chatGrammar, resolver }): URLs, bytes, Responses, or a loaded Language as grammar
 const doc = new MarkdownDocument({ gfm: true, frontmatter: true })
 doc.setText(text)
 doc.reparse() // once, in idle time after setText: keeps the first keystroke cheap
@@ -57,9 +57,17 @@ resolution. Reference labels follow the CommonMark limit of 999 characters.
 Definitions can change earlier uses on the next read. Code, math,
 and HTML payloads remain opaque to reference interpretation.
 
-Double-dollar block math preserves text following its opening dollar run as TeX,
-including on the opening line. An unclosed block is `pendingMath` during open
-presentation and exact `math` after input ends.
+CHAT math uses double dollars for inline expressions, such as `p $$x$$ q`.
+Single dollars remain literal, including currency. This follows Streamdown's
+[currency rationale and pinned configuration](chat-math.md#dollar-policy).
+
+A line-start dollar run of at least two dollars opens flow math if the rest of the
+line contains no dollar. Its opening-line suffix is nullable `meta`; subsequent
+lines form `value`. For example, `$$tex\nx\n$$` has meta `tex` and value `x`.
+Inline math remains value-only. A missing quote or list prefix ends flow math;
+the following line is parsed under its actual container. An unclosed flow is
+`pendingMath` only at eligible source EOF during open presentation and exact
+`math` after input ends. See the [CHAT math contract](chat-math.md).
 
 The authored streaming checkpoint matrix passes through `bun run streaming:check`.
 The [streaming qualification and presentation baseline](streaming-qualification.md)
@@ -77,8 +85,13 @@ Kinds are in `Kind` (`js/index.js`). Records come in tree order; inline records 
 the block. `LinkText` gives the text range of a link or image, so live preview can keep it and
 hide the brackets and destination.
 
-`init` loads `../tree-sitter-markdown.wasm` (the grammar) and `../tree-sitter-md.wasm` (the
-resolver) relative to `js/index.js`, into the host's `web-tree-sitter` runtime. The package
+`init` loads `../tree-sitter-markdown.wasm` for the base grammar,
+`../tree-sitter-markdown-chat.wasm` for CHAT, and `../tree-sitter-md.wasm` for the
+resolver relative to `js/index.js`, into the host's `web-tree-sitter` runtime.
+Math-enabled documents select CHAT before parsing; math-disabled documents keep the
+base grammar. Custom asset loading accepts `grammar`, `chatGrammar`, and `resolver`.
+Both grammar options accept a loaded `Language` or the same URL, byte, and response
+inputs. The package
 requires tree-sitter-x's 0.28 runtime line, starting at 0.28.1, through its `^0.28.1`
 peer range. The host pins one built Git package and resolves both packages to it with a root
 `overrides` entry for `web-tree-sitter`. Its

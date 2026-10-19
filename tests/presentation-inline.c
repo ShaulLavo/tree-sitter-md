@@ -1,4 +1,5 @@
 #include "resolver.h"
+#include "native-language.h"
 #include <assert.h>
 #include <stdio.h>
 
@@ -86,8 +87,8 @@ static void pending_destination(Document *document) {
 }
 
 int main(void) {
-  Document *nested = tsmd_new(13, tree_sitter_markdown());
-  Document *link = tsmd_new(13, tree_sitter_markdown());
+  Document *nested = test_document(13);
+  Document *link = test_document(13);
   nested_source_mapping(nested);
   pending_destination(link);
   nested_source_mapping(nested);

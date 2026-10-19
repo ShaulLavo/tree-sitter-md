@@ -1,4 +1,5 @@
 #include "resolver.h"
+#include "native-language.h"
 #include <assert.h>
 #include <inttypes.h>
 #include <stdio.h>
@@ -119,7 +120,7 @@ static void check_large_document(uint32_t gfm) {
   char *text = malloc(block_len * repeats + sizeof("end\n"));
   for (uint32_t i = 0; i < repeats; i++) memcpy(text + i * block_len, block, block_len);
   memcpy(text + block_len * repeats, "end\n", sizeof("end\n"));
-  Document *d = tsmd_new(gfm, tree_sitter_markdown());
+  Document *d = test_document(gfm);
   set_ascii(d, text);
   check_sampled_tree(d);
   TSNode section = ts_node_named_child(ts_tree_root_node(d->tree), 0);
@@ -147,7 +148,7 @@ int main(void) {
     "[ref]\n>[ref]:o"
   };
   for (uint32_t gfm = 0; gfm < 2; gfm++) {
-    Document *d = tsmd_new(gfm, tree_sitter_markdown());
+    Document *d = test_document(gfm);
     for (uint32_t i = 0; i < sizeof(fixtures) / sizeof(fixtures[0]); i++) {
       set_ascii(d, fixtures[i]); check_tree(d);
       tsmd_reparse(d); check_tree(d);

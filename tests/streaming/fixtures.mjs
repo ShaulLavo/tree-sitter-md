@@ -138,8 +138,8 @@ export default {
       checkpoint('title-ended', 5, 'ended', observation(5, [paragraph(0, 5, [text('Title', 0, 5)])])),
     ] }),
     fixture('incomplete-html-tag', ['incomplete-html'], '<span', [paragraph(0, 5, [text('<span', 0, 5)])]),
-    fixture('pending-display-math', ['pending-math'], '$$\nx * y', [node('math', 0, 8, { value: 'x * y' })], {
-      children: [node('pendingMath', 0, 8, { value: 'x * y' })],
+    fixture('pending-display-math', ['pending-math'], '$$\nx * y', [node('math', 0, 8, { value: 'x * y', meta: null })], {
+      children: [node('pendingMath', 0, 8, { value: 'x * y', meta: null })],
       provisional: [provisional(['children', 0], 'unclosed-math')],
     }),
     fixture('currency-remains-literal', ['currency'], 'Costs $5 today', [paragraph(0, 14, [text('Costs $5 today', 0, 14)])]),
