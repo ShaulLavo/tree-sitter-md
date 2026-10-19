@@ -232,3 +232,134 @@ test('nonzero quote continuations retain their already-owned LF and CRLF endpoin
     assertOwnership(semantic.root)
   }
 })
+
+const quote = (start, end, children) => node('quote', start, end, { children })
+const item = (start, end, children) => node('listItem', start, end, { spread: false, checked: null, children })
+const list = (start, end, items) => node('list', start, end, { ordered: false, start: null, spread: false, items })
+const math = (start, end, value = '', meta = null) => node('math', start, end, { value, meta })
+const paragraph = (start, end, value) => node('paragraph', start, end, { children: [text(value, start, end)] })
+
+for (const [source, children] of [
+  ['> $$x\ny\n$$', [quote(0, 5, [math(2, 5, '', 'x')]), paragraph(6, 7, 'y'), math(8, 10)]],
+  ['- $$x\ny\n$$', [list(0, 5, [item(0, 5, [math(2, 5, '', 'x')])]), paragraph(6, 7, 'y'), math(8, 10)]],
+  ['- > $$x\ny\n$$', [list(0, 7, [item(0, 7, [quote(2, 7, [math(4, 7, '', 'x')])])]), paragraph(8, 9, 'y'), math(10, 12)]],
+  ['- > $$x\n  y\n  $$', [list(0, 16, [item(0, 16, [quote(2, 7, [math(4, 7, '', 'x')]), paragraph(10, 11, 'y'), math(14, 16)])])]],
+  ['> - $$x\n> y\n> $$', [quote(0, 16, [list(2, 7, [item(2, 7, [math(4, 7, '', 'x')])]), paragraph(10, 11, 'y'), math(14, 16)])]],
+]) {
+  test('CHAT flow exits to the matching ancestor: ' + JSON.stringify(source), () => {
+    const { semantic, open } = snapshot(source)
+    assert.deepEqual(semantic.root.children, children)
+    assertOwnership(semantic.root)
+    assert.equal(open.source, source)
+    assert.equal(open.provisional.length, 1)
+    assert.deepEqual(descendants(open.root, 'pendingMath').map(n => n.range), [children.at(-1).type === 'math' ? children.at(-1).range : range(14, 16)])
+  })
+}
+
+for (const source of ['> $$x\n> y\n> $$  ', '> $$x   ', '- $$x\n\ny', '$$x\ny\n', '$$x\n\n']) {
+  test('CHAT math keeps authored whitespace endpoints: ' + JSON.stringify(source), () => {
+    const { semantic } = snapshot(source)
+    assertOwnership(semantic.root)
+    const first = descendants(semantic.root, 'math')[0]
+    assertBlockMath(first, source[0] === '>' || source[0] === '-' ? 2 : 0, source === '- $$x\n\ny' ? 6 : source.length, source.includes('y\n') ? 'y' : '', source === '> $$x   ' ? 'x   ' : 'x')
+  })
+}
+
+test('CHAT raw math does not create definitions, footnotes, headings or inline records', () => {
+  const source = '$$x\n[id]: /inside\n[^n]: hidden\n# heading\n- item\n| table |\n**bold**\n$$\n\n[id] [^n]'
+  const document = new MarkdownDocument(options)
+  try {
+    document.setText(source)
+    const { root } = document.semantics()
+    assert.deepEqual(root.children.map(n => n.type), ['math', 'paragraph'])
+    assert.equal(root.children[0].value, '[id]: /inside\n[^n]: hidden\n# heading\n- item\n| table |\n**bold**')
+    assert.deepEqual(root.children[1].children.map(n => n.type), ['text'])
+    assert.equal(document.injections().length, 0)
+    assert.equal(document.decorations(0, source.indexOf('\n\n')).length, 0)
+  } finally { document.dispose() }
+})
+
+test('CHAT flow interruption and closed-flow tail use normal block ownership', () => {
+  const source = '> a\n> $$x\n> # raw\n> $$\n> prose\n\n# root'
+  const { semantic, open } = snapshot(source)
+  assert.deepEqual(semantic.root.children.map(n => n.type), ['quote', 'heading'])
+  assert.deepEqual(semantic.root.children[0].children.map(n => n.type), ['paragraph', 'math', 'paragraph'])
+  assert.equal(semantic.root.children[0].children[1].value, '# raw')
+  assert.deepEqual(open.provisional, [])
+  assertOwnership(semantic.root)
+})
+
+for (const width of [2, 3, 255, 256, 257]) {
+  test('CHAT flow delimiter width is not truncated: ' + width, () => {
+    const fence = '$'.repeat(width)
+    const source = fence + 'meta\n' + '$'.repeat(width - 1) + '\n' + fence + ' invalid\n' + fence + '$ \t'
+    const { semantic } = snapshot(source)
+    assert.deepEqual(semantic.root.children, [math(0, source.length, '$'.repeat(width - 1) + '\n' + fence + ' invalid', 'meta')])
+  })
+}
+
+function comparable(document, source) {
+  const { revision, ...exact } = document.semantics()
+  const { revision: openRevision, ...open } = document.presentation({ input: 'open' })
+  assert.equal(open.source, source)
+  return { exact, open, decorations: Array.from(document.decorations(0, source.length)), folds: Array.from(document.folds()), injections: Array.from(document.injections()) }
+}
+
+function assertFresh(document, source, settings) {
+  const fresh = new MarkdownDocument(settings)
+  try {
+    fresh.setText(source)
+    assert.deepEqual(comparable(document, source), comparable(fresh, source), JSON.stringify(source))
+  } finally { fresh.dispose() }
+}
+
+for (const enabled of [false, true]) {
+  test('CHAT grammar profiles stay isolated through incremental delimiter and prefix edits: ' + enabled, () => {
+    const settings = { ...options, math: enabled }
+    const document = new MarkdownDocument(settings)
+    const sibling = new MarkdownDocument({ ...options, math: !enabled })
+    const source = '- > \t$$meta\r\n  > \ty\r\n  > \t$$\r\n\r\n# tail\ud83d'
+    sibling.setText(source)
+    const saved = comparable(sibling, source)
+    let received = ''
+    try {
+      document.setText(received)
+      for (const unit of source.split('')) {
+        document.edit(received.length, received.length, unit)
+        received += unit
+        assertFresh(document, received, settings)
+        assert.deepEqual(comparable(sibling, source), saved)
+      }
+      for (const [from, to, inserted] of [[2, 4, ''], [0, 2, ''], [0, 0, '> '], [0, 2, ''], [2, 3, ''], [2, 2, '$']]) {
+        document.edit(from, to, inserted)
+        received = received.slice(0, from) + inserted + received.slice(to)
+        assertFresh(document, received, settings)
+      }
+    } finally { document.dispose(); sibling.dispose() }
+  })
+}
+
+test('math-disabled lazy paragraphs retain their authored membership', () => {
+  for (const source of ['> $$x\ny\n$$', '- $$x\ny\n$$', '> a\nb', '- a\nb']) {
+    const document = new MarkdownDocument({ math: false })
+    try {
+      document.setText(source)
+      const root = document.semantics().root
+      assert.equal(root.children.length, 1)
+      assert.equal(descendants(root, 'math').length, 0)
+      assert.equal(descendants(root, 'paragraph').length, 1)
+      assertOwnership(root)
+    } finally { document.dispose() }
+  }
+})
+
+for (const [source, value] of [['> $$x\n> ', ''], ['> $$x\n> y\n> ', 'y'], ['- > $$x\n  > ', '']]) {
+  test('a received full container prefix still belongs to open math: ' + JSON.stringify(source), () => {
+    const { semantic, open } = snapshot(source)
+    const first = descendants(semantic.root, 'math')[0]
+    assertBlockMath(first, source.startsWith('-') ? 4 : 2, source.lastIndexOf('\n') + 1, value, 'x')
+    assert.equal(semantic.root.children[0].range.end, source.length)
+    assertOwnership(semantic.root)
+    assert.equal(open.provisional.length, 1)
+  })
+}

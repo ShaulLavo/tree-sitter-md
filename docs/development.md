@@ -17,7 +17,7 @@ Release 0.1 passes all 676 CommonMark/GFM examples, 183 chat fixtures and the pi
 
 | Path | What |
 | --- | --- |
-| `grammar/` | The block grammar (`grammar.js`), generated `src/parser.c`, the external scanner |
+| `grammar/` | The base block grammar and scanner, plus the derived CHAT profile in `chat/` |
 | `src/document.c` | UTF-16 document, incremental tree, definitions, per-leaf cache, record walks and wasm exports |
 | `src/leaf.c` | Leaf content and continuation mapping; cmark inline pass with no block parse |
 | `src/autolink.c` | GFM autolink literals ported from cmark-gfm |
@@ -31,14 +31,16 @@ Release 0.1 passes all 676 CommonMark/GFM examples, 183 chat fixtures and the pi
 The resolver builds with WASI SDK 34 as a side module (`-fPIC -shared`, no libc): tree-sitter
 and libc come from the tree-sitter-x runtime it is loaded into. Set `WASI_SDK` to the extracted
 SDK directory before building. The grammar builds with the same WASI SDK.
-The tree-sitter CLI is needed only to regenerate parse tables.
+The tree-sitter CLI is needed only to regenerate parse tables. `npm run generate`
+regenerates both profiles with CLI 0.26.9; generated files are never edited by hand.
+The [CHAT source inventory](chat-math.md#source-inventory) classifies the local changes.
 `web-tree-sitter` is tree-sitter-x's built package (`github:ShaulLavo/tree-sitter-x#<commit>`,
 its `web-tree-sitter` branch). The native tests compile tree-sitter-x's C runtime from a checkout:
 `TREE_SITTER_LIB` is its `lib/`, `../tree-sitter-x/lib` by default.
 
 ```sh
-npm run generate   # only when changing the grammar; tree-sitter CLI 0.26
-npm run build      # tree-sitter-md.wasm, then tree-sitter-markdown.wasm
+npm run generate   # only when changing the grammar; tree-sitter CLI 0.26.9
+npm run build      # resolver, base grammar, and CHAT grammar wasm
 OPT=-Oz npm run build
 npm test           # focused wasm API regressions
 bun run test:types # public exact/presentation type contracts
@@ -78,14 +80,14 @@ corpus, both edit counts and the negative control.
 consumer and checks Node, Bun and a Vite production build in Chromium. Install the browser
 with `bunx playwright install chromium` first. Each runtime tests host-first, Markdown-first
 and concurrent initialization, repeated initialization, sibling document isolation and
-continued host parsing. The browser must fetch all three wasm assets.
+continued host parsing. The browser must fetch all four wasm assets, including the host runtime.
 
 `bun run test:browser` checks public semantics with resizable Wasm memory, including
 Unicode, heap growth, edits and retained results after disposal. Pass `chromium firefox webkit`
 to run all three installed Playwright browsers. Set `TREE_SITTER_RUNTIME` to a built runtime
 package directory to check that artifact.
 
-The release workflow runs these checks plus both wasm builds and native sanitizers.
+The release workflow runs these checks plus all three wasm builds and native sanitizers.
 The native source revision is pinned separately from the built JavaScript host package. Paired timing checks use `scripts/compare-builds.sh` and
 `scripts/summarize.mjs` as described in FINDINGS.
 

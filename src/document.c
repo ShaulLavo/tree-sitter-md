@@ -166,7 +166,7 @@ static void resolve_leaf(Document *d, TSNode node, int kind) {
 static bool has_leaves(Document *d, TSNode n) {
   Ids *i = &d->ids;
   uint16_t id = ts_node_symbol(n);
-  return id != i->fenced_code_block && id != i->indented_code_block && id != i->html_block &&
+  return (!i->math_flow || id != i->math_flow) && id != i->fenced_code_block && id != i->indented_code_block && id != i->html_block &&
          id != i->pipe_table && id != i->atx_heading && id != i->thematic_break &&
          id != i->inline_node;
 }
@@ -393,6 +393,7 @@ static bool emit(Document *d, TSNode n) {
     resolve_leaf(d, n, TABLE_LEAF);
     return false;
   }
+  if (i->math_flow && id == i->math_flow) { emit_nested_quote_marks(d, n); return false; }
   if (id == i->fenced_code_block) {
     record(&d->out, s, e, CODE, 1);
     emit_nested_quote_marks(d, n);
@@ -451,7 +452,7 @@ static bool fold(Document *d, TSNode n) {
   const char *kind = ts_node_type(n);
   uint32_t a = start(n), b = is(n, d->ids.list_item) ? item_end(d, n) : end(n);
   trim(d, &a, &b);
-  bool foldable = !strcmp(kind, "section") || is(n, d->ids.fenced_code_block) ||
+  bool foldable = !strcmp(kind, "section") || is(n, d->ids.fenced_code_block) || (d->math && is(n, d->ids.math_flow)) ||
                   is(n, d->ids.block_quote) || is(n, d->ids.list_item) ||
                   is(n, d->ids.pipe_table) || is(n, d->ids.html_block);
   for (uint32_t j = a; foldable && j < b; j++) {
@@ -461,7 +462,7 @@ static bool fold(Document *d, TSNode n) {
       break;
     }
   }
-  return !is(n, d->ids.paragraph) && !is(n, d->ids.fenced_code_block) &&
+  return !is(n, d->ids.paragraph) && !(d->math && is(n, d->ids.math_flow)) && !is(n, d->ids.fenced_code_block) &&
          !is(n, d->ids.html_block) && !is(n, d->ids.pipe_table) &&
          !is(n, d->ids.indented_code_block);
 }

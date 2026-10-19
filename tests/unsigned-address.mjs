@@ -54,7 +54,7 @@ test('Wasm i32 pointers above 2 GiB are unsigned byte offsets', async t => {
   let binding
   try { binding = await import('../js/index.js?unsigned-address') }
   finally { hooks.deregister(); delete globalThis[key] }
-  await binding.init({ grammar: new Language(), resolver: new Uint8Array() })
+  await binding.init({ grammar: new Language(), chatGrammar: new Language(), resolver: new Uint8Array() })
   const doc = new binding.MarkdownDocument()
   t.after(() => doc.dispose())
   await t.test('setText and edit write UTF-16 at the unsigned input address', () => {

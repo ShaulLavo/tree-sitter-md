@@ -64,6 +64,10 @@ typedef enum {
     REFERENCE_LINE,
     REFERENCE_LAST_LINE,
     STANDALONE_REFERENCE_START,
+#ifdef TSMD_CHAT_MATH
+    MATH_FLOW_START,
+    MATH_FLOW_END,
+#endif
 } TokenType;
 
 // Description of a block on the block stack.
@@ -94,6 +98,9 @@ typedef enum {
     LIST_ITEM_14_INDENTATION,
     LIST_ITEM_MAX_INDENTATION,
     FENCED_CODE_BLOCK,
+#ifdef TSMD_CHAT_MATH
+    MATH_FLOW,
+#endif
     ANONYMOUS,
 } Block;
 
@@ -183,6 +190,10 @@ static const bool paragraph_interrupt_symbols[] = {
     false, // REFERENCE_LINE,
     false, // REFERENCE_LAST_LINE,
     false, // STANDALONE_REFERENCE_START,
+#ifdef TSMD_CHAT_MATH
+    true,  // MATH_FLOW_START,
+    false, // MATH_FLOW_END,
+#endif
 };
 
 // State bitflags used with `Scanner.state`
@@ -230,6 +241,9 @@ typedef struct {
     // The delimiter length of the currently open fenced code block
     uint32_t fenced_code_block_delimiter_length;
 
+#ifdef TSMD_CHAT_MATH
+    uint32_t math_flow_width;
+#endif
     uint32_t reference_lines;
     bool simulate;
 } Scanner;
@@ -259,7 +273,11 @@ static inline Block pop_block(Scanner *s) {
 // Write the whole state of a Scanner to a byte buffer
 static unsigned serialize(Scanner *s, char *buffer) {
     unsigned size = 0;
-    memcpy(buffer, &s->reference_lines, sizeof(s->reference_lines));
+#ifdef TSMD_CHAT_MATH
+    memcpy(buffer, &s->math_flow_width, sizeof(s->math_flow_width));
+    size += sizeof(s->math_flow_width);
+#endif
+    memcpy(buffer + size, &s->reference_lines, sizeof(s->reference_lines));
     size += sizeof(s->reference_lines);
     buffer[size++] = (char)s->state;
     buffer[size++] = (char)s->matched;
@@ -280,6 +298,9 @@ static unsigned serialize(Scanner *s, char *buffer) {
 // Read the whole state of a Scanner from a byte buffer
 // `serizalize` and `deserialize` should be fully symmetric.
 static void deserialize(Scanner *s, const char *buffer, unsigned length) {
+#ifdef TSMD_CHAT_MATH
+    s->math_flow_width = 0;
+#endif
     s->reference_lines = 0;
     s->open_blocks.size = 0;
     s->open_blocks.capacity = 0;
@@ -289,8 +310,13 @@ static void deserialize(Scanner *s, const char *buffer, unsigned length) {
     s->column = 0;
     s->fenced_code_block_delimiter_length = 0;
     if (length > 0) {
-        size_t size = sizeof(s->reference_lines);
-        memcpy(&s->reference_lines, buffer, size);
+        size_t size = 0;
+#ifdef TSMD_CHAT_MATH
+        memcpy(&s->math_flow_width, buffer, sizeof(s->math_flow_width));
+        size += sizeof(s->math_flow_width);
+#endif
+        memcpy(&s->reference_lines, buffer + size, sizeof(s->reference_lines));
+        size += sizeof(s->reference_lines);
         s->state = (uint8_t)buffer[size++];
         s->matched = (uint8_t)buffer[size++];
         s->indentation = (uint8_t)buffer[size++];
@@ -422,6 +448,9 @@ static bool match(Scanner *s, TSLexer *lexer, Block block) {
             }
             break;
         case FENCED_CODE_BLOCK:
+#ifdef TSMD_CHAT_MATH
+        case MATH_FLOW:
+#endif
         case ANONYMOUS:
             return true;
     }
@@ -588,6 +617,33 @@ static bool parse_reference(Scanner *s, TSLexer *lexer) {
 }
 
 static bool parse_pipe_table(Scanner *s, TSLexer *lexer, bool header_prefix);
+
+#ifdef TSMD_CHAT_MATH
+static bool parse_math_flow(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
+    if (s->indentation >= 4) return false;
+    uint32_t width = 0;
+    while (lexer->lookahead == '$') { advance(s, lexer); width++; }
+    mark_end(s, lexer);
+    if (valid_symbols[MATH_FLOW_END] && width >= s->math_flow_width) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') advance(s, lexer);
+        if (lexer->lookahead != '\n' && lexer->lookahead != '\r' && !lexer->eof(lexer)) return false;
+        mark_end(s, lexer);
+        s->math_flow_width = 0;
+        lexer->result_symbol = MATH_FLOW_END;
+        return true;
+    }
+    if (!valid_symbols[MATH_FLOW_START] || width < 2) return false;
+    while (lexer->lookahead != '\n' && lexer->lookahead != '\r' && !lexer->eof(lexer)) {
+        if (lexer->lookahead == '$') return false;
+        advance(s, lexer);
+    }
+    if (!s->simulate && !push_block(s, MATH_FLOW)) return false;
+    s->math_flow_width = width;
+    s->indentation = 0;
+    lexer->result_symbol = MATH_FLOW_START;
+    return true;
+}
+#endif
 
 static bool parse_fenced_code_block(Scanner *s, const char delimiter,
                                     TSLexer *lexer, const bool *valid_symbols) {
@@ -1609,6 +1665,10 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
         if (lexer->lookahead == '[' && (valid_symbols[REFERENCE_START] || valid_symbols[STANDALONE_REFERENCE_START]))
             return parse_reference(s, lexer);
         switch (lexer->lookahead) {
+#ifdef TSMD_CHAT_MATH
+            case '$':
+                return parse_math_flow(s, lexer, valid_symbols);
+#endif
             case '\r':
             case '\n':
                 if (valid_symbols[BLANK_LINE_START]) {

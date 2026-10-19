@@ -1,5 +1,7 @@
 typedef struct {
   uint16_t paragraph;
+  uint16_t math_flow;
+  uint16_t math_delimiter;
   uint16_t reference_definition;
   uint16_t inline_node;
   uint16_t block_continuation;
@@ -33,6 +35,8 @@ static inline uint16_t symbol(const TSLanguage *lang, const char *s) {
 }
 static inline Ids make_ids(const TSLanguage *lang) {
   Ids ids = {0};
+  ids.math_flow = symbol(lang, "math_flow");
+  ids.math_delimiter = symbol(lang, "math_flow_delimiter");
   ids.paragraph = symbol(lang, "paragraph");
   ids.reference_definition = symbol(lang, "reference_definition");
   ids.inline_node = symbol(lang, "inline");

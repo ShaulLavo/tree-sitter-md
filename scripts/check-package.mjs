@@ -18,7 +18,7 @@ process.once('SIGTERM', interrupted)
 try {
   const packed = JSON.parse(run('npm', ['pack', '--json', '--pack-destination', directory], root))[0]
   const paths = packed.files.map(file => file.path)
-  for (const path of ['js/index.js', 'js/index.d.ts', 'js/constants.js', 'js/constants.d.ts', 'js/semantic.js', 'js/semantic.d.ts', 'tree-sitter-md.wasm', 'tree-sitter-markdown.wasm', 'LICENSE', 'NOTICE.md']) assert(paths.includes(path), `Missing packed ${path}`)
+  for (const path of ['js/index.js', 'js/index.d.ts', 'js/constants.js', 'js/constants.d.ts', 'js/semantic.js', 'js/semantic.d.ts', 'tree-sitter-md.wasm', 'tree-sitter-markdown.wasm', 'tree-sitter-markdown-chat.wasm', 'LICENSE', 'NOTICE.md']) assert(paths.includes(path), `Missing packed ${path}`)
   assert(paths.some(path => path.startsWith('licenses/')), 'Third-party licenses are missing')
   // With sideEffects false, importing only Kind skips index.js and web-tree-sitter; that needs import-free constants.
   assert(!/^import /m.test(readFileSync(join(root, 'js/constants.js'), 'utf8')), 'js/constants.js must not import anything')
@@ -63,7 +63,7 @@ async function checkBrowser(order, port) {
   const result = await page.evaluate(() => ({ result: window.result, failure: window.failure }))
   assert.equal(result.failure, undefined)
   assert.deepEqual(errors, [])
-  for (const name of ['web-tree-sitter-', 'tree-sitter-markdown-', 'tree-sitter-md-']) assert([...assets].some(path => path.includes(name)), `Missing browser wasm request: ${name}`)
+  for (const name of ['web-tree-sitter-', 'tree-sitter-markdown-', 'tree-sitter-markdown-chat-', 'tree-sitter-md-']) assert([...assets].some(path => path.includes(name)), `Missing browser wasm request: ${name}`)
   console.log(`vite/chromium: ${JSON.stringify(result.result)}, ${assets.size} wasm assets`)
   await page.close()
 }

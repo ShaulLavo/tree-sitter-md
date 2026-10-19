@@ -113,17 +113,17 @@ const cases = [
   ['pending math keeps entity and emphasis syntax opaque', 'p $$&amp; *x', [
     paragraph(0, 12, [text('p ', 0, 2), node('pendingMath', 2, 12, { value: '&amp; *x' })]),
   ], [provisional(['children', 0, 'children', 1], 'unclosed-math')]],
-  ['pending display math preserves received payload on the opening line', '$$x *a*', [
-    node('pendingMath', 0, 7, { value: 'x *a*' }),
+  ['pending display math keeps opening-line metadata separate', '$$x *a*', [
+    node('pendingMath', 0, 7, { value: '', meta: 'x *a*' }),
   ], [provisional(['children', 0], 'unclosed-math')]],
-  ['pending display math normalizes one final newline after opening-line payload', '$$x\n', [
-    node('pendingMath', 0, 3, { value: 'x' }),
+  ['pending display math retains the authored final newline after metadata', '$$x\n', [
+    node('pendingMath', 0, 4, { value: '', meta: 'x' }),
   ], [provisional(['children', 0], 'unclosed-math')]],
-  ['pending display math normalizes final CRLF after opening-line payload', '$$x\r\n', [
-    node('pendingMath', 0, 3, { value: 'x' }),
+  ['pending display math retains authored CRLF after metadata', '$$x\r\n', [
+    node('pendingMath', 0, 5, { value: '', meta: 'x' }),
   ], [provisional(['children', 0], 'unclosed-math')]],
-  ['pending display math preserves a received newline before the final newline', '$$x\n\n', [
-    node('pendingMath', 0, 4, { value: 'x\n' }),
+  ['pending display math keeps a blank body separate from metadata', '$$x\n\n', [
+    node('pendingMath', 0, 5, { value: '', meta: 'x' }),
   ], [provisional(['children', 0], 'unclosed-math')]],
   ['pending inline math preserves all-space received payload', 'p $$   ', [
     paragraph(0, 7, [text('p ', 0, 2), node('pendingMath', 2, 7, { value: '   ' })]),
