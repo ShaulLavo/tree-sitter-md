@@ -35,3 +35,7 @@ CC-BY-SA 4.0, John MacFarlane. `bench/web/lezer.min.js` bundles `@lezer/markdown
 `@lezer/common`, MIT, Marijn Haverbeke. `bench/docs/` holds text from the
 [Platform](https://github.com/ShaulLavo/platform) repository: `AGENTS.md`, and `docs/` + `plans/`
 concatenated and cut at 1,000,143 characters, the files Plan 176 measured.
+
+The adapted GFM domain validator retains the cmark-gfm attribution above.
+Its local changes and original regression evidence are classified in
+[the 0.1.17 source inventory](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/RELEASE-0.1.17.md#source-inventory).
