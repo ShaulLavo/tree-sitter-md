@@ -1,4 +1,5 @@
 #include "resolver.h"
+#include "autolink.h"
 #include "houdini.h"
 #include "utf8.h"
 #include "footnote.h"
@@ -288,18 +289,6 @@ static uint32_t leaf_byte(Leaf *l, uint32_t position, uint32_t from, uint32_t to
   while (from < to && l->starts.v[from] < position) from++;
   return from;
 }
-static uint32_t cjk_link_end(Leaf *l, uint32_t a, uint32_t b) {
-  for (uint32_t i = a; i < b;) {
-    int32_t c = 0; int width = cmark_utf8proc_iterate((unsigned char *)l->text + i, b - i, &c);
-    if (width <= 0) break;
-    if (c == 0x3002 || c == 0xff0e || c == 0xff0c || c == 0x3001 || c == 0xff1f || c == 0xff01 ||
-        c == 0xff1a || c == 0xff1b || c == 0xff08 || c == 0xff09 || c == 0x3010 || c == 0x3011 ||
-        c == 0x300c || c == 0x300d || c == 0x300e || c == 0x300f || c == 0x3008 || c == 0x3009 ||
-        c == 0x300a || c == 0x300b) return i;
-    i += width;
-  }
-  return b;
-}
 static void decoded_part(cmark_strbuf *out, Leaf *l, cmark_node *first, cmark_node *last,
                          uint32_t a, uint32_t b, Words *positions) {
   for (cmark_node *n = first; n; n = n->next) {
@@ -366,7 +355,7 @@ static cmark_node *text_nodes(Semantic *s, Leaf *l, cmark_node *n, uint32_t offs
     uint32_t x = leaf_byte(l, links.v[i], offset + at, offset + b) - offset;
     uint32_t y = x;
     while (offset + y < l->n && l->ends.v[offset + y] <= links.v[i + 1]) y++;
-    if (s->d->cjk) y = cjk_link_end(l, offset + x, offset + y) - offset;
+    if (s->d->cjk) y = tsmd_cjk_autolink_end((unsigned char *)l->text, offset + x, offset + y) - offset;
     text_part(s, l, n, last, offset, at, x, false, first);
     text_part(s, l, n, last, offset, x, y, true, first); at = y;
   }
@@ -380,6 +369,10 @@ static void inline_children(Semantic *s, Leaf *l, cmark_node *n, uint32_t offset
       uint32_t a, b; inline_range(l, n, offset, &a, &b); suppressed(s, a, b); continue;
     }
     if (n->type == CMARK_NODE_TEXT && !n->len) continue;
+    if (n->flags & CMARK_NODE__GFM_AUTOLINK) {
+      text_part(s, l, n->first_child, n->last_child, offset, n->source_start, n->source_end, true, &first);
+      continue;
+    }
     if (s->d->gfm && !in_link && n->type == CMARK_NODE_TEXT) {
       n = text_nodes(s, l, n, offset, &first); continue;
     }
@@ -407,6 +400,7 @@ static cmark_node *inline_root(Semantic *s, Leaf *l, uint32_t body, bool observe
   root->data = (unsigned char *)l->text + body; root->len = l->n - body;
   root->start_line = 1; root->start_column = 1;
   s->defs->lookup_footnote = lookup_footnote; s->defs->footnote_context = s->root_footnotes;
+  s->defs->match_autolink = tsmd_gfm_autolink_match;
   cmark_reference_uses uses = {0};
   cmark_parse_inlines(cmark_get_default_mem_allocator(), root, s->defs,
                       (s->d->gfm ? CMARK_OPT_GFM : 0) | (s->d->cjk ? CMARK_OPT_CJK : 0) |

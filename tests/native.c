@@ -132,7 +132,81 @@ static void semantic_prefixes(Document *incremental, Document *fresh, const char
     presentation_equal(incremental, fresh);
   }
 }
+static void ordinary_text_runs(void) {
+  const char *fixtures[] = {"wwwwwwwwwwww", "WWW.invalid", "::::::::::::",
+    "https://example.test/a", "x www.example.test/a"};
+  for (uint32_t i = 0; i < sizeof(fixtures) / sizeof(fixtures[0]); i++) {
+    cmark_node *root = cmark_node_new(CMARK_NODE_PARAGRAPH);
+    cmark_reference_map *refs = cmark_reference_map_new(cmark_get_default_mem_allocator());
+    root->data = (unsigned char *)fixtures[i]; root->len = strlen(fixtures[i]);
+    root->start_line = 1; root->start_column = 1;
+    cmark_parse_inlines(cmark_get_default_mem_allocator(), root, refs, CMARK_OPT_GFM, NULL);
+    assert(root->first_child && root->first_child->type == CMARK_NODE_TEXT);
+    assert(!root->first_child->next && root->first_child->len == root->len);
+    root->data = NULL; root->len = 0;
+    cmark_node_free(root); cmark_reference_map_free(refs);
+  }
+}
+static void table_block_case(Document *d, const char *source, uint32_t rows) {
+  uint16_t text[256];
+  uint32_t length = strlen(source);
+  assert(length < 256);
+  for (uint32_t i = 0; i < length; i++) text[i] = (unsigned char)source[i];
+  if (text[length - 1] == '?') text[length - 1] = 0xd83e;
+  set(d, text, length);
+  TSNode section = ts_node_named_child(ts_tree_root_node(d->tree), 0);
+  assert(ts_node_named_child_count(section) == 1);
+  TSNode table = ts_node_named_child(section, 0);
+  assert(!strcmp(ts_node_type(table), "pipe_table"));
+  assert(ts_node_named_child_count(table) == rows + 1);
+  source_equal(d, text, length);
+}
+static void table_blocks(void) {
+  Document *d = tsmd_new(13, tree_sitter_markdown());
+  table_block_case(d, "`>a | b |\n|---|---|\n **see\r\n_ded", 3);
+  table_block_case(d, "`>a | b |\r\n|---|---|\r\n **see\r\n_ded", 3);
+  table_block_case(d, "``a|b\n-|-", 1);
+  table_block_case(d, "a|b\n-|-\n[x]: /url\nc|d\n-|-", 4);
+  table_block_case(d, "| a | b |\n|---|---|\n[x]:* [x]: /target\n| a | *b |\n|---|---|\n*/```\n&?", 6);
+  tsmd_free(d);
+}
+static void append_fence(uint16_t *text, uint32_t *length, char marker, uint32_t count) {
+  for (uint32_t i = 0; i < count; i++) text[(*length)++] = marker;
+}
+static void append_ascii(uint16_t *text, uint32_t *length, const char *source) {
+  while (*source) text[(*length)++] = (unsigned char)*source++;
+}
+static void long_fence_case(Document *d, char marker, uint32_t count) {
+  uint16_t *text = malloc((count * 3 + 32) * sizeof(uint16_t));
+  assert(text);
+  uint32_t length = 0;
+  append_fence(text, &length, marker, count);
+  append_ascii(text, &length, "a|b\n-|-\n");
+  append_fence(text, &length, marker, count - 1);
+  append_ascii(text, &length, "\nbody\n");
+  append_fence(text, &length, marker, count);
+  append_ascii(text, &length, "\ntail");
+  set(d, text, length);
+  TSNode section = ts_node_named_child(ts_tree_root_node(d->tree), 0);
+  assert(ts_node_named_child_count(section) == 2);
+  assert(!strcmp(ts_node_type(ts_node_named_child(section, 0)), "fenced_code_block"));
+  assert(!strcmp(ts_node_type(ts_node_named_child(section, 1)), "paragraph"));
+  source_equal(d, text, length);
+  free(text);
+}
+static void long_fences(void) {
+  Document *d = tsmd_new(13, tree_sitter_markdown());
+  const uint32_t lengths[] = {3, 255, 256, 257, 258, 259, 512, 65536};
+  for (unsigned i = 0; i < sizeof(lengths) / sizeof(lengths[0]); i++) {
+    long_fence_case(d, '`', lengths[i]);
+    long_fence_case(d, '~', lengths[i]);
+  }
+  tsmd_free(d);
+}
 int main(void) {
+  long_fences();
+  table_blocks();
+  ordinary_text_runs();
   source_ownership();
   deep_nesting();
   many_documents();
@@ -141,13 +215,19 @@ int main(void) {
     "- [ ] pending\n- [x](streamdown:incomplete-link)\n- [x] done",
     "> - first\n>\n> ```js\n> ?\n> ```",
     "a|b|c\n:-|--:|-\nx|![?](image)\n",
+    "`>a | b |\n|---|---|\n **see\r\n_ded",
+    "a|b\r\n-|-\r\n[x]: /url\r\nc|d\r\n-|-",
     "[^a]: **?**\n\n    - nested\n\n    [^b]: `?`\n\n[^a] [^b]\n",
     "&#xD83D; ? \x7f `?` ![?](x) ?\x01 \x01\n\n```\n?\n```\n\n<div>?</div>\n\n$$\n?\n$$",
     "    first\n    ",
     "[late][id] ![alt][id] [^n]\n\n[id]: /first\n[id]: /second\n\n[^n]: note",
     "> - [ ]\n> - x\n> -",
     "Title\n---\n\n| a | b |\n| --- | --- |\n| c | d |",
-    "$$same *line*\nnext\n$$"
+    "$$same *line*\nnext\n$$",
+    "A **see(https://exa**mple.test/a)ded** message.\n\n",
+    "**www.example.test/a**b** **https://example.test/a\\*b**",
+    "**www.** **www.!** **www.?**",
+    "[https://example.test/a](target) **[https://example.test/a](target)**"
   };
   for (uint32_t i = 0; i < sizeof(fixtures) / sizeof(fixtures[0]); i++)
     semantic_prefixes(incremental, fresh, fixtures[i]);

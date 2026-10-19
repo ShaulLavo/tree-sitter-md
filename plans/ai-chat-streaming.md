@@ -392,3 +392,33 @@ event-only output, a duplicate stream-session lifecycle, and a promise of a perm
 settled prefix. Full snapshots and possible terminal reinterpretation are accepted
 tradeoffs. Optimization follows the measured correct baseline; API changes should
 follow evidence rather than an assumed rendering bottleneck.
+
+## Remaining table header recognition gap
+
+Approved follow-up, bounded on 2026-10-19 while fixing the short-marker table
+headers in 0.1.13. The exact input is shown below. Both the baseline
+`ef1452f6f1167504b3a2d227536b7235d9b77e69` and the 0.1.13 candidate classify it
+as a paragraph. Unmodified cmark-gfm 0.29.0.gfm.13 at
+`587a12bb54d95ac37241377e6ddc93ea0e45439b`, run with `--extension table`,
+returns a two-column table with literal first header ```` ```a` ````. The later
+backtick makes the fence info invalid, so a valid fence must not take priority.
+
+```text
+```a`|b
+-|-
+```
+
+Reproduce by passing this input to `document.setText` and inspecting
+`document.semantics().root.children[0].type`. Send the same input to
+`cmark-gfm --extension table`.
+The block scanner's
+`parse_fenced_code_block` rejects an invalid info string after consuming part
+of the header and does not retry table recognition. That is the suspected
+owner; this observation does not establish the safe implementation.
+
+Add a failing exact and reduced regression before changing that path, then
+verify valid fences, mismatched cell counts, escapes, quote/list containers and
+LF/CRLF. Do not rewrite inline parsing or qualification comparisons. The r17
+report records direct before/after native trees and the pinned oracle output
+in `remaining-fence-info.log`; the 0.1.13 fix deliberately leaves this case
+unchanged.
