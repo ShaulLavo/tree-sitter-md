@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-md",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Markdown for editors: a tree-sitter block grammar and a CommonMark + GFM inline resolver that runs inside tree-sitter-x",
   "type": "module",
   "main": "./js/index.js",
@@ -52,7 +52,7 @@
     "spec": "cd bench && node spec.mjs",
     "corpus": "cd bench && node corpus.mjs",
     "bench": "cd bench && node keystroke.mjs",
-    "test": "node --test tests/*.mjs",
+    "test": "node --test tests/*.mjs tests/*.test.ts",
     "test:types": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext tests/types/presentation.ts",
     "streaming:check": "node scripts/check-streaming.mjs",
     "streaming:qualification": "node scripts/check-streaming-qualification.mjs",

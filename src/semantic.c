@@ -224,6 +224,8 @@ static uint32_t content_end(Document *d, TSNode n) {
   if (!ts_node_is_null(math)) return math_container_end(d, n, math);
   uint32_t b = end(n);
   while (b > start(n) && ws(d->text[b - 1])) b--;
+  /* A trailing container marker is owned even when its final leaf ends earlier. */
+  if (is(n, d->ids.block_quote) || is(n, d->ids.list)) return b;
   for (uint32_t i = ts_node_named_child_count(n); i > 0; i--) {
     TSNode c = ts_node_named_child(n, i - 1);
     if (end(c) < b) break;
@@ -1093,10 +1095,7 @@ static void item(Semantic *s, TSNode n) {
 static void list(Semantic *s, TSNode n) {
   Document *d = s->d; TSNode marker = ts_node_named_child(ts_node_named_child(n, 0), 0);
   bool ordered = is(marker, d->ids.marker_dot) || is(marker, d->ids.marker_paren);
-  TSNode math = final_math(d, n);
-  uint32_t finish = ts_node_is_null(math) ? end(n) : math_container_end(d, n, math);
-  while (ts_node_is_null(math) && finish > start(n) && ws(d->text[finish - 1])) finish--;
-  begin(s, "list", start(n), finish); put(s, ordered ? ",\"ordered\":true,\"start\":" : ",\"ordered\":false,\"start\":");
+  begin(s, "list", start(n), content_end(d, n)); put(s, ordered ? ",\"ordered\":true,\"start\":" : ",\"ordered\":false,\"start\":");
   uint32_t value = 0, at = start(marker);
   while (at < end(marker) && ws(d->text[at])) at++;
   while (at < end(marker) && d->text[at] >= '0' && d->text[at] <= '9') value = value * 10 + d->text[at++] - '0';
@@ -1247,10 +1246,7 @@ static void block(Semantic *s, TSNode n, bool *first) {
   if (id != i->block_quote && id != i->list) { block_leaf(s, n, first); return; }
   separator(s, first);
   if (id == i->list) { list(s, n); return; }
-  TSNode math = final_math(d, n);
-  uint32_t quote_end = ts_node_is_null(math) ? end(n) : math_container_end(d, n, math);
-  while (ts_node_is_null(math) && quote_end > start(n) && ws(d->text[quote_end - 1])) quote_end--;
-  begin(s, "quote", start(n), quote_end); child_array(s, "children");
+  begin(s, "quote", start(n), content_end(d, n)); child_array(s, "children");
   bool child_first = true; block_children(s, n, &child_first); child_array_end(s);
 }
 static void block_children(Semantic *s, TSNode n, bool *first) {
