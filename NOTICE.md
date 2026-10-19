@@ -20,7 +20,7 @@ exceptions is in `llvm.txt`.
 
 The CHAT grammar derives from the same MIT block grammar listed above. Its local math
 rules, scanner profile, and native semantic adapter are described in the
-[CHAT math source inventory](docs/chat-math.md#source-inventory). The pinned remark-math
+[CHAT math source inventory](https://github.com/ShaulLavo/tree-sitter-md/blob/0eca7c03eda2545cef04ebd63436ef17fcb97340/docs/chat-math.md#source-inventory). The pinned remark-math
 and Streamdown sources establish behavior only; no code from those projects is copied
 into this implementation.
 
