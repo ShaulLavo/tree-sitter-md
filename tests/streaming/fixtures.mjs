@@ -9,7 +9,6 @@ const item = (start, end, children, checked = null) => node('listItem', start, e
 const list = (start, end, items) => node('list', start, end, { ordered: false, start: null, spread: false, items })
 const code = (start, end, value, language = null) => node('code', start, end, { value, language, meta: null, fence: 'open' })
 const link = (start, end, children, url) => node('link', start, end, { children, url, title: null, origin: 'markdown' })
-const autolink = (start, end, children, url) => node('link', start, end, { children, url, title: null, origin: 'gfm-autolink', sourceUrl: url, sourceValue: url })
 const definition = (start, end, identifier, url) => node('definition', start, end, { identifier, url, title: null })
 const provisional = (path, reason) => ({ path, reason })
 const inlinePath = ['children', 0, 'children', 0]
@@ -106,11 +105,11 @@ export default {
       children: [paragraph(0, 4, [node('pendingLink', 0, 4, { children: [text('par', 1, 4)] })])],
       provisional: [provisional(inlinePath, 'unclosed-link')],
     }),
-    fixture('pending-link-destination', ['pending-link'], '[label](https://exa', [paragraph(0, 19, [text('[label](', 0, 8), autolink(8, 19, [text('https://exa', 8, 19)], 'https://exa')])], {
+    fixture('pending-link-destination', ['pending-link'], '[label](https://exa', [paragraph(0, 19, [text('[label](https://exa', 0, 19)])], {
       children: [paragraph(0, 19, [node('pendingLink', 0, 19, { children: [text('label', 1, 6)] })])],
       provisional: [provisional(inlinePath, 'unclosed-link')],
     }),
-    fixture('pending-image-destination', ['pending-image'], '![alt](https://exa', [paragraph(0, 18, [text('![alt](', 0, 7), autolink(7, 18, [text('https://exa', 7, 18)], 'https://exa')])], {
+    fixture('pending-image-destination', ['pending-image'], '![alt](https://exa', [paragraph(0, 18, [text('![alt](https://exa', 0, 18)])], {
       children: [paragraph(0, 18, [node('pendingImage', 0, 18, { alt: 'alt' })])],
       provisional: [provisional(inlinePath, 'unclosed-image')],
     }),
