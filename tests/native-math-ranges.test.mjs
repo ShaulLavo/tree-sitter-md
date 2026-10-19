@@ -363,3 +363,102 @@ for (const [source, value] of [['> $$x\n> ', ''], ['> $$x\n> y\n> ', 'y'], ['- >
     assert.equal(open.provisional.length, 1)
   })
 }
+
+const reviewClosedCases = [
+  ['>\t-  $$\n>\t    x\n>\t      $$', ' x'],
+  [' - $$\n   x\n   $$', 'x'],
+  ['  - $$\n    x\n    $$', 'x'],
+  ['  - > $$\n    > x\n    > $$', 'x'],
+  ['>  - $$\n>    x\n>    $$', 'x'],
+  [' -\t$$\n\tx\n\t$$', 'x'],
+  ['$$\n\tx\n$$', '\tx'],
+  ['> $$\n> \tx\n> $$', '\tx'],
+  ['- $$\n  \tx\n  $$', '\tx'],
+  ['- > $$\n  > \tx\n  > $$', '\tx'],
+  [' $$\n\tx\n $$', '   x'],
+  ['> \t$$\n> \t\tx\n> \t$$', '\tx'],
+]
+
+for (const eol of ['\n', '\r\n']) {
+  for (const [lf, value] of reviewClosedCases) {
+    const source = lf.replaceAll('\n', eol)
+    test('r42 closed math exact payload and range: ' + JSON.stringify(source), () => {
+      const { semantic, open } = snapshot(source)
+      assert.deepEqual(descendants(semantic.root, 'math'), [math(source.indexOf('$$'), source.length, value)])
+      assert.deepEqual(open.root, semantic.root)
+      assert.deepEqual(open.provisional, [])
+      assertOwnership(semantic.root)
+    })
+    test('r42 closed math incremental prefixes: ' + JSON.stringify(source), () => {
+      const document = new MarkdownDocument(options)
+      let received = ''
+      try {
+        for (const unit of source.split('')) {
+          document.edit(received.length, received.length, unit)
+          received += unit
+          assertFresh(document, received, options)
+        }
+        assert.deepEqual(descendants(document.semantics().root, 'math'), [math(source.indexOf('$$'), source.length, value)])
+      } finally { document.dispose() }
+    })
+  }
+  for (const [opening, continuation] of [['-  $$', '  '], ['-   $$', '  '], ['> -  $$', '>   '], ['-\t $$', '   ']]) {
+    const source = opening + eol + continuation + 'x'
+    const boundary = opening.length
+    test('r42 failed continuation excludes sibling whitespace: ' + JSON.stringify(source), () => {
+      const { semantic, open } = snapshot(source)
+      const expected = math(source.indexOf('$$'), boundary)
+      assert.deepEqual(descendants(semantic.root, 'math'), [expected])
+      assert.deepEqual(descendants(semantic.root, 'list').map(n => n.range.end), [boundary])
+      assert.deepEqual(descendants(semantic.root, 'listItem').map(n => n.range.end), [boundary])
+      assert.deepEqual(descendants(semantic.root, 'text'), [text('x', source.length - 1, source.length)])
+      assert.deepEqual(open.provisional, [])
+      assertOwnership(semantic.root)
+    })
+    test('r42 failed continuation incremental prefixes: ' + JSON.stringify(source), () => {
+      const document = new MarkdownDocument(options)
+      let received = ''
+      try {
+        for (const unit of source.split('')) {
+          document.edit(received.length, received.length, unit)
+          received += unit
+          assertFresh(document, received, options)
+        }
+        assert.deepEqual(descendants(document.semantics().root, 'math'), [math(source.indexOf('$$'), boundary)])
+      } finally { document.dispose() }
+    })
+  }
+}
+
+for (const eol of ['\n', '\r\n']) {
+  const source = '>\t- $$meta\n>\t  x\n>\t      $$\n\nend'.replaceAll('\n', eol)
+  test('r42 nested tab prefixes remove each container once: ' + JSON.stringify(source), () => {
+    const document = new MarkdownDocument(options)
+    const expected = math(4, source.indexOf(eol + eol), 'x\n    $$', 'meta')
+    let received = ''
+    try {
+      document.setText(source)
+      assert.deepEqual(descendants(document.semantics().root, 'math'), [expected])
+      document.setText('')
+      for (const unit of source.split('')) {
+        document.edit(received.length, received.length, unit)
+        received += unit
+        assertFresh(document, received, options)
+      }
+      assert.deepEqual(descendants(document.semantics().root, 'math'), [expected])
+    } finally { document.dispose() }
+  })
+}
+
+for (const eol of ['\n', '\r\n']) {
+  for (const [opening, prefix] of [['-  $$', '   '], ['>\t- $$', '>\t  ']]) {
+    const source = opening + eol + prefix
+    test('r42 preserves full-prefix EOF ownership: ' + JSON.stringify(source), () => {
+      const { semantic, open } = snapshot(source)
+      assert.deepEqual(descendants(semantic.root, 'math'), [math(source.indexOf('$$'), opening.length + eol.length)])
+      assert.equal(semantic.root.children[0].range.end, source.length)
+      assert.equal(open.provisional.length, 1)
+      assertOwnership(semantic.root)
+    })
+  }
+}
