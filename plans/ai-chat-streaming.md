@@ -426,24 +426,40 @@ unchanged.
 
 ## Separate container-range investigation
 
-Status: Approved for a separate bounded investigation by the root coordinator, not
-resolved by the 0.1.15 math change. A new broad ownership assertion in
-`tests/native-math-ranges.test.mjs` reported quote `[2,16]` outside listItem `[0,11]`
-during UTF-16 prefix appends. Both profile-isolation test variants encountered the
-math-disabled document, either as the edited document or its interleaved sibling.
-The exact full source is this JavaScript string, including the lone high surrogate:
+Status: Approved. The bounded r51 follow-up implements the correction in 0.1.16,
+separately from the merged 0.1.15 code/math fixes. Review and merge remain required.
 
-```js
+The retained r42 review independently reproduced the first failing UTF-16 prefix
+`"- > \t$$meta\r\n  >"`, length 16, on immutable main
+`1eaac42cc3a737356f69ab1ae8464f462e2d23e0` and PR28 head
+`6eba578d77dd9273bfb059e273422d2dcf3082f0`. All 39 prefix snapshots matched.
+The defect is pre-existing. The complete disclosed source is:
+
+```ts
 '- > \t$$meta\r\n  > \ty\r\n  > \t$$\r\n\r\n# tail\ud83d'
 ```
 
-The failing transient prefix was not logged. No immutable-main reproduction or
-cause is established. To recover it, temporarily add `assertOwnership(exact.root)`
-inside `comparable()` after `document.semantics()`, log the current source before
-the assertion, and run `node --test tests/native-math-ranges.test.mjs`. Compare
-that exact prefix with immutable main before classifying this as pre-existing.
-The broad assertion was removed only from the new incremental comparator; its
-incremental/fresh and sibling-isolation comparisons remain. Exact authored math
-ownership assertions and all pre-existing tests remain. The original failure is
-retained in the pickup report's `boundaries.log`, lines 260-289. No fix or waiver
-of a confirmed regression is claimed.
+r51 reproduced it again from merged main
+`cec82135c2a3a2b68808100b11a5174e61434a03`. The raw grammar tree owns the final
+quote marker in list_item `[0,16]`, block_quote `[2,16]`, and a trailing
+block_continuation `[13,16]` inside indented_code_block. Quote serialization kept
+its marker, but `content_end()` recursed through it to the code endpoint `[4,11]`
+when calculating the parent item. That emitted quote `[2,16]` outside item `[0,11]`.
+
+`content_end()` now keeps quote/list marker extents, and their serializers use
+that same endpoint calculation. Its existing math-specific branch still runs
+first. Code ranges, failed math continuation boundaries, and full-prefix EOF
+ownership retain their dedicated tests. No delimiter or public-policy change.
+
+`tests/container-ranges.test.ts` covers exact LF/CRLF endpoints, every disclosed
+UTF-16 append and deletion, fresh equality, opposite-profile isolation, source
+preservation, exact/open/ended snapshots, records, folds, injections, and nested
+quote/list owners. `tests/presentation-inline.c` locks the exact native JSON and
+incremental endpoint under ASan/UBSan. Both public and native regressions failed
+at item end 11 before the source correction.
+
+Evidence and exact commands are retained at
+`/work/reports/chat-markdown-q5-20261018/qualification/native-containment-r51/`.
+The immutable-main comparison changes only item endpoints at prefix lengths
+16–18 and 24–26 in both profiles. No Q5, freeze, qualification, or consumer-pin
+acceptance is part of this follow-up.

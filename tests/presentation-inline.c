@@ -8,6 +8,7 @@ const TSLanguage *tree_sitter_markdown(void);
 void tsmd_free(Document *);
 uint16_t *tsmd_input(Document *, uint32_t);
 void tsmd_set_text(Document *);
+void tsmd_edit(Document *, uint32_t, uint32_t);
 uint32_t tsmd_semantics(Document *);
 uint32_t tsmd_presentation(Document *, uint32_t);
 char *tsmd_semantic_out(Document *);
@@ -86,7 +87,28 @@ static void pending_destination(Document *document) {
   expect_modes(document, root, open_root, metadata);
 }
 
+static void trailing_quote_owner(void) {
+  Document *document = test_document(5);
+  const uint16_t source[] = {'-', ' ', '>', ' ', '\t', '$', '$', 'm', 'e', 't', 'a', '\r', '\n', ' ', ' ', '>'};
+  const char *root =
+      "{\"type\":\"root\",\"range\":{\"start\":0,\"end\":16},\"children\":["
+      "{\"type\":\"list\",\"range\":{\"start\":0,\"end\":16},\"ordered\":false,\"start\":null,\"spread\":false,\"items\":["
+      "{\"type\":\"listItem\",\"range\":{\"start\":0,\"end\":16},\"spread\":false,\"checked\":null,\"children\":["
+      "{\"type\":\"quote\",\"range\":{\"start\":2,\"end\":16},\"children\":["
+      "{\"type\":\"code\",\"range\":{\"start\":4,\"end\":11},\"value\":\"$$meta\",\"language\":null,\"meta\":null,\"fence\":\"indented\"}]}]}]}]}";
+  set(document, source, 16);
+  expect_modes(document, root, root, "[]");
+  set(document, source, 0);
+  for (uint32_t i = 0; i < 16; i++) {
+    tsmd_input(document, 1)[0] = source[i];
+    tsmd_edit(document, i, i);
+  }
+  expect_modes(document, root, root, "[]");
+  tsmd_free(document);
+}
+
 int main(void) {
+  trailing_quote_owner();
   Document *nested = test_document(13);
   Document *link = test_document(13);
   nested_source_mapping(nested);
