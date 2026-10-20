@@ -6,8 +6,10 @@ continue to describe their own content.
 
 Table-cell ranges include padding and pipe delimiters. A separator pipe starts the
 following cell; the first and last cells own optional edge pipes. Leading table
-indentation belongs outside the table. Cell text ranges and values stay trimmed,
-escaped pipes remain literal content, and missing cells retain a null range.
+indentation belongs outside the table and each row. Rows start at their first
+authored pipe or content and retain their authored horizontal suffix. Cell text
+ranges and values stay trimmed, escaped pipes remain literal content, and missing
+cells retain a null range.
 
 An empty nested list marker is literal paragraph content when its parent list
 interrupts a paragraph. Standalone lists and lists after blank lines retain empty

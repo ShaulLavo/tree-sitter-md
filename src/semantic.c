@@ -1154,7 +1154,9 @@ static void table_cell(Semantic *s, uint32_t a, uint32_t b, uint32_t from, uint3
 }
 static void table_row(Semantic *s, TSNode row, uint32_t columns) {
   Words positions = {0}; cells(s->d, row, &positions);
-  begin(s, "tableRow", start(row), content_end(s->d, row)); child_array(s, "cells");
+  uint32_t from = start(row);
+  while (from < end(row) && (s->d->text[from] == ' ' || s->d->text[from] == '\t')) from++;
+  begin(s, "tableRow", from, content_end(s->d, row)); child_array(s, "cells");
   bool first = true;
   for (uint32_t i = 0; i < columns; i++) {
     separator(s, &first);
