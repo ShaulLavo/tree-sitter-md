@@ -675,8 +675,8 @@ static void code_single_witness(Semantic *s, Leaf *leaf, cmark_node *node,
     int32_t scalar; int bytes = cmark_utf8proc_iterate((unsigned char *)leaf->text + from, end - from, &scalar);
     if (bytes <= 0) abort();
     uint32_t a = leaf->starts.v[from], b = leaf->ends.v[from + bytes - 1];
-    bool atom = b - a != (scalar > 0xffff ? 2u : 1u) || s->d->text[a] == 0;
     if (!footnotes_map_range(s->footnotes, a, b, &a, &b)) abort();
+    bool atom = b - a != (scalar > 0xffff ? 2u : 1u) || s->root_footnotes->document->source[a] == 0;
     code_run(witness, scalar > 0xffff ? 2 : 1, a, b, atom); from += bytes;
   }
 }
@@ -691,11 +691,11 @@ static void code_map_run(Semantic *s, FootnoteSourceRun run, uint32_t token_star
   if (run.atom) { put(s, ",\"sourceLength\":"); number(s, run.source_length); }
   put(s, "}");
 }
-static void code_copy_runs(Semantic *s, const FootnoteSource *witness, FootnoteSourceRun run,
+static void code_copy_runs(Semantic *s, FootnoteSourceRun run,
                            uint32_t token_start, bool *first) {
   uint32_t from = run.value_start, end = from + run.value_length;
   for (uint32_t at = from; at < end; at++) {
-    if (!witness->text || witness->text[at] != 0) continue;
+    if (s->root_footnotes->document->source[run.source_start + at - run.value_start] != 0) continue;
     code_map_run(s, (FootnoteSourceRun){from, at - from, run.source_start + from - run.value_start, at - from, false}, token_start, first);
     code_map_run(s, (FootnoteSourceRun){at, 1, run.source_start + at - run.value_start, 1, true}, token_start, first);
     from = at + 1;
@@ -712,7 +712,7 @@ static void code_source_map(Semantic *s, const FootnoteSource *witness,
   for (uint32_t i = 0; i < witness->run_count; i++) {
     FootnoteSourceRun run = witness->runs[i];
     if (run.atom) code_map_run(s, run, token_start, &first);
-    else code_copy_runs(s, witness, run, token_start, &first);
+    else code_copy_runs(s, run, token_start, &first);
   }
   put(s, "]}");
 }
