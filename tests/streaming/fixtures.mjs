@@ -51,10 +51,10 @@ const lateChildren = [
 const lateUse = (resolution) => [{ kind: 'link', identifier: 'id', range: range(0, 10), resolution }]
 const tableSource = '| a | b |\n| --- | --- |\n| c | d |'
 const tableEnd = tableSource.length
-const cell = (value, start, end) => node('tableCell', start, end, { children: [text(value, start, end)] })
+const cell = (value, start, end, ownerStart, ownerEnd) => node('tableCell', ownerStart, ownerEnd, { children: [text(value, start, end)] })
 const table = node('table', 0, tableEnd, { align: [null, null], rows: [
-  node('tableRow', 0, 9, { cells: [cell('a', 2, 3), cell('b', 6, 7)] }),
-  node('tableRow', 24, tableEnd, { cells: [cell('c', 26, 27), cell('d', 30, 31)] }),
+  node('tableRow', 0, 9, { cells: [cell('a', 2, 3, 0, 4), cell('b', 6, 7, 4, 9)] }),
+  node('tableRow', 24, tableEnd, { cells: [cell('c', 26, 27, 24, 28), cell('d', 30, 31, 28, 33)] }),
 ] })
 
 export default {
