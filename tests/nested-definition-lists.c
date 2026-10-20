@@ -57,11 +57,50 @@ static void check_spread(uint32_t flags) {
   check_modes(document, "\"value\":\"code\"", false);
   tsmd_free(document);
 }
+static void check_authored_prefix(uint32_t flags, const char *opening, const char *indent,
+                                  const char *expected, uint32_t padding, const char *ending) {
+  char source[256];
+  snprintf(source, sizeof(source), "%s[x]: /target%s%s[y]: /second%s%s[x] [y]",
+           opening, ending, indent, ending, ending);
+  Document *document = test_document(flags);
+  set_ascii(document, source);
+  uint32_t label = (uint32_t)(strstr(source, "[y]") - source);
+  TSNode paragraph = ts_node_descendant_for_byte_range(ts_tree_root_node(document->tree),
+                                                      label * 2, (label + 1) * 2);
+  while (!ts_node_is_null(paragraph) && !is(paragraph, document->ids.paragraph))
+    paragraph = ts_node_parent(paragraph);
+  assert(!ts_node_is_null(paragraph));
+  leaf_build(document, paragraph, PARAGRAPH);
+  uint32_t prefix = (uint32_t)strlen(expected), line = (uint32_t)(strstr(source, ending) - source) + strlen(ending);
+  assert(document->leaf.n > prefix);
+  assert(!memcmp(document->leaf.text, expected, prefix));
+  assert(document->leaf.text[prefix] == '[');
+  for (uint32_t i = 0; i < padding; i++) {
+    assert(document->leaf.starts.v[i] == line);
+    assert(document->leaf.ends.v[i] == line + 1);
+    assert(document->source[line] == '\t');
+  }
+  uint32_t authored = label - (prefix - padding);
+  for (uint32_t i = padding; i <= prefix; i++) {
+    assert(document->leaf.starts.v[i] == authored + i - padding);
+    assert(document->leaf.ends.v[i] == authored + i - padding + 1);
+  }
+  tsmd_free(document);
+}
+static void check_authored_prefixes(uint32_t flags, const char *ending) {
+  check_authored_prefix(flags, "- > ", "\t ", "   ", 2, ending);
+  check_authored_prefix(flags, "- > ", "\t\t", "  \t", 2, ending);
+  check_authored_prefix(flags, "- - > ", "\t ", " ", 0, ending);
+  check_authored_prefix(flags, "- - > ", "\t\t", "\t", 0, ending);
+  check_authored_prefix(flags, "> - > ", "\t", "\t", 0, ending);
+}
 int main(void) {
   const uint32_t flags[] = {0, 1, 8, 9};
   for (uint32_t i = 0; i < sizeof(flags) / sizeof(*flags); i++) {
     check_padding(flags[i]);
     check_spread(flags[i]);
+    check_authored_prefixes(flags[i], "\n");
+    check_authored_prefixes(flags[i], "\r\n");
   }
   puts("Nested definition lists: virtual tab mapping, separator ownership and exact/open/ended modes passed");
   return 0;
