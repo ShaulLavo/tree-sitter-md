@@ -245,21 +245,23 @@ for (const row of cases.filter(row => row.kind === 'list')) test('saved empty ma
   }
 })
 
+function checkDefinitionRoot(root: Root, source: string): void {
+  assert.deepEqual(root.children.map(node => node.type), ['list', 'quote', 'paragraph'])
+  const quote = root.children[1]
+  assert.ok(quote?.type === 'quote')
+  assert.deepEqual(quote.range, { start: source.indexOf('>\tcode'), end: source.indexOf('code') + 4 })
+  const paragraph = quote.children[0]
+  assert.ok(paragraph?.type === 'paragraph')
+  assert.equal(paragraph.children.map(node => inlineSource(source, node)).join(''), 'code')
+}
+
 function checkDefinitionClosure(source: string, math: boolean, gfm: boolean): void {
   const document = new MarkdownDocument({ math, gfm })
   const fresh = new MarkdownDocument({ math, gfm })
   try {
     document.setText(source)
     const initial = state(document, source)
-    for (const root of [initial.exact.root, initial.open.root, initial.ended.root]) {
-      assert.deepEqual(root.children.map(node => node.type), ['list', 'quote', 'paragraph'])
-      const quote = root.children[1]
-      assert.ok(quote?.type === 'quote')
-      assert.deepEqual(quote.range, { start: source.indexOf('>\tcode'), end: source.indexOf('code') + 4 })
-      const paragraph = quote.children[0]
-      assert.ok(paragraph?.type === 'paragraph')
-      assert.equal(paragraph.children.map(node => inlineSource(source, node)).join(''), 'code')
-    }
+    for (const root of [initial.exact.root, initial.open.root, initial.ended.root]) checkDefinitionRoot(root, source)
     const at = source.indexOf('  >\tcode')
     document.edit(at, at, ' ')
     const changed = source.slice(0, at) + ' ' + source.slice(at)
@@ -309,6 +311,10 @@ test('wide table ownership keeps every inline source slice separate', () => {
   } finally { document.dispose() }
 })
 
+function cellRanges(row: SemanticTableRow) {
+  return row.cells.map(cell => cell.range)
+}
+
 test('table classification edits keep ownership and undo to the original paragraph', () => {
   const document = new MarkdownDocument()
   const fresh = new MarkdownDocument()
@@ -322,7 +328,7 @@ test('table classification edits keep ownership and undo to the original paragra
     assert.deepEqual(state(document, source + suffix), state(fresh, source + suffix))
     const table = document.semantics().root.children[0]
     assert.ok(table?.type === 'table')
-    assert.deepEqual(table.rows.map(row => row.cells.map(cell => cell.range)), [
+    assert.deepEqual(table.rows.map(cellRanges), [
       [{ start: 0, end: 4 }, { start: 4, end: 9 }], [{ start: 24, end: 28 }, { start: 28, end: 33 }],
     ])
     document.edit(source.length, source.length + suffix.length, '')
