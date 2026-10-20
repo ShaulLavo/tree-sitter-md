@@ -129,6 +129,7 @@ static void push_lines(Document *d, uint32_t a, uint32_t b, bool *line_start) {
 }
 void leaf_single(Document *d, uint32_t a, uint32_t b) {
   leaf_clear(&d->leaf);
+  d->leaf.source = d->text;
   d->leaf.source_end = b;
   bool line_start = true;
   push_lines(d, a, b, &line_start);
@@ -198,6 +199,7 @@ bool leaf_lazy_definition_line(Document *d, TSNode paragraph) {
 
 void leaf_build(Document *d, TSNode node, int kind) {
   leaf_clear(&d->leaf);
+  d->leaf.source = d->text;
   d->leaf.source_end = end(node);
   TSNode in = {0};
   uint32_t count = ts_node_named_child_count(node);
@@ -355,9 +357,10 @@ void inline_resolve(Leaf *leaf, int kind, bool gfm, bool cjk, bool math, cmark_r
   defs->match_autolink = tsmd_gfm_autolink_match;
   defs->lookup_label = dependency;
   defs->lookup_context = deps;
+  cmark_inline_source source = {l->source, l->starts.v + body};
   cmark_parse_inlines(cmark_get_default_mem_allocator(), root, defs,
                       (gfm ? CMARK_OPT_GFM : 0) | (cjk ? CMARK_OPT_CJK : 0) |
-                        (math ? CMARK_OPT_MATH : 0), NULL);
+                        (math ? CMARK_OPT_MATH : 0), NULL, &source);
   defs->lookup_label = NULL;
   defs->lookup_context = NULL;
   inline_nodes(leaf, gfm, root->first_child, body, out, false, cjk);

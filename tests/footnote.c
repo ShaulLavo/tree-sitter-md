@@ -36,7 +36,7 @@ static void inline_references(Document *document, Footnotes *notes) {
   document->defs->lookup_footnote = lookup;
   document->defs->footnote_context = notes;
   cmark_parse_inlines(cmark_get_default_mem_allocator(), root, document->defs,
-                      CMARK_OPT_GFM | CMARK_OPT_FOOTNOTES, NULL);
+                      CMARK_OPT_GFM | CMARK_OPT_FOOTNOTES, NULL, NULL);
   uint32_t found = 0;
   for (cmark_node *node = root->first_child; node; node = node->next) {
     if (node->type != CMARK_NODE_FOOTNOTE_REFERENCE) continue;

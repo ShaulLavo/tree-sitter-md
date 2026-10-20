@@ -17,6 +17,7 @@ typedef struct {
 } Labels;
 typedef struct {
   char *text;
+  const uint16_t *source;
   uint32_t n, cap;
   uint32_t source_end;
   Words starts, ends;

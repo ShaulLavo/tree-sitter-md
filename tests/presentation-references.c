@@ -14,7 +14,7 @@ static cmark_node *parse(const char *source, cmark_reference_map *map,
   assert(root->data);
   root->len = strlen(source);
   root->start_line = root->start_column = 1;
-  cmark_parse_inlines(mem, root, map, options, uses);
+  cmark_parse_inlines(mem, root, map, options, uses, NULL);
   free(root->data); root->data = NULL; root->len = 0;
   assert(cmark_node_check(root, NULL) == 0);
   return root;
