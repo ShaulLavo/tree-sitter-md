@@ -88,11 +88,10 @@ static bool strip_container(Document *d, uint32_t *at, uint32_t b, Container con
                             SourcePadding *padding) {
   for (uint32_t i = 0; i < container.count; i++) {
     uint32_t indent = container.steps[i];
-    if (indent) {
-      uint32_t width = padding ? source_indentation(d, at, b, indent, padding) : indentation(d, at, b, indent);
-      if (width < indent) return false;
-      continue;
-    }
+    if (indent &&
+        (padding ? source_indentation(d, at, b, indent, padding) : indentation(d, at, b, indent)) < indent)
+      return false;
+    if (indent) continue;
     if (padding) source_indentation(d, at, b, 3, padding);
     else indentation(d, at, b, 3);
     if (*at == b || d->text[*at] != '>') return false;
