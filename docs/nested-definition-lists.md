@@ -6,6 +6,13 @@ spaces to the authored tab. List spread uses the last content boundary owned by
 the child container, so a blank after an empty quote makes the item loose while
 a blank quote marker inside that quote keeps it tight.
 
+Spread analysis passes quote depth downward and returns each child's owned boundary
+to its parent. Each extraction retains one internal summary per container, so list
+and item output reuse the same analysis. Quote ownership checks stop at the first
+non-prefix character when scanning from the boundary. `tests/quote-spread.c`
+checks the six reviewed size/depth combinations and summary reuse without a timing
+allowance.
+
 The scanner and both grammar WASMs are unchanged. The original resolver changes
 are in `src/leaf.c`, `src/document.c`, `src/resolver.h` and `src/semantic.c`.
 Source-column and list-indent calculations moved unchanged from the semantic

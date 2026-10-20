@@ -14,6 +14,8 @@ clang $flags tests/presentation-inline.c src/*.c vendor/cmark/*.c $runtime -o ta
 ASAN_OPTIONS=detect_leaks=1 target/c/check-presentation-inline
 clang $flags tests/nested-definition-lists.c src/*.c vendor/cmark/*.c $runtime -o target/c/check-nested-definition-lists
 ASAN_OPTIONS=detect_leaks=1 target/c/check-nested-definition-lists
+clang $flags tests/quote-spread.c $(ls src/*.c | grep -v '^src/semantic\.c$') vendor/cmark/*.c $runtime -o target/c/check-quote-spread
+ASAN_OPTIONS=detect_leaks=1 target/c/check-quote-spread
 clang $flags tests/presentation-resolver.c vendor/cmark/*.c -o target/c/check-presentation-resolver
 ASAN_OPTIONS=detect_leaks=1 target/c/check-presentation-resolver
 clang $flags tests/presentation-references.c vendor/cmark/*.c -o target/c/check-presentation-references

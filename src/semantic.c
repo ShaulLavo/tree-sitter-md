@@ -11,8 +11,12 @@ typedef struct {
   unsigned char *identifier;
   bool footnote, resolved;
 } SemanticReference;
+typedef struct { uint32_t end; bool spread; } Spread;
+typedef struct { TSNode node; Spread value; } SpreadEntry;
+typedef struct { SpreadEntry *entries; uint32_t count, cap; } Spreads;
 typedef struct {
   Document *d;
+  Spreads spreads;
   cmark_strbuf json;
   cmark_strbuf provisional, suppressed;
   SemanticPath *path;
@@ -1028,65 +1032,89 @@ static bool suppress_empty_block(Semantic *s, TSNode node) {
   suppressed(s, start(node), finish);
   return true;
 }
-static bool owned_quote_line(Document *d, uint32_t a, uint32_t b, uint32_t depth) {
+static uint32_t spread_slot(Spreads *spreads, TSNode node) {
+  uintptr_t key = (uintptr_t)node.id;
+  uint32_t slot = (uint32_t)((key >> 4) * UINT64_C(11400714819323198485)) & (spreads->cap - 1);
+  while (!ts_node_is_null(spreads->entries[slot].node)) {
+    if (ts_node_eq(spreads->entries[slot].node, node)) break;
+    slot = (slot + 1) & (spreads->cap - 1);
+  }
+  return slot;
+}
+static void spread_grow(Spreads *spreads) {
+  Spreads grown = {0};
+  reserve((void **)&grown.entries, &grown.cap, spreads->cap ? spreads->cap * 2 : 32, sizeof(SpreadEntry));
+  memset(grown.entries, 0, grown.cap * sizeof(SpreadEntry));
+  for (uint32_t i = 0; i < spreads->cap; i++) {
+    SpreadEntry entry = spreads->entries[i];
+    if (ts_node_is_null(entry.node)) continue;
+    grown.entries[spread_slot(&grown, entry.node)] = entry;
+  }
+  free(spreads->entries); grown.count = spreads->count; *spreads = grown;
+}
+static void spread_store(Spreads *spreads, TSNode node, Spread value) {
+  if ((spreads->count + 1) * 2 > spreads->cap) spread_grow(spreads);
+  spreads->entries[spread_slot(spreads, node)] = (SpreadEntry){node, value};
+  spreads->count++;
+}
+static bool owned_quote_line(Document *d, uint32_t *line, uint32_t depth) {
   uint32_t quotes = 0;
-  for (; a < b; a++) {
-    if (d->text[a] == '>') { quotes++; continue; }
-    if (d->text[a] != ' ' && d->text[a] != '\t') return true;
+  while (*line && d->text[*line - 1] != '\n' && d->text[*line - 1] != '\r') {
+    uint16_t unit = d->text[--*line];
+    if (unit == '>') { quotes++; continue; }
+    if (unit != ' ' && unit != '\t') return true;
   }
   return quotes >= depth;
 }
-static uint32_t quote_spread_end(Document *d, TSNode quote) {
-  uint32_t depth = 0;
-  for (TSNode n = quote; !ts_node_is_null(n); n = ts_node_parent(n)) {
-    if (is(n, d->ids.block_quote)) depth++;
-  }
+static uint32_t quote_spread_end(Document *d, TSNode quote, uint32_t depth) {
   uint32_t b = content_end(d, quote);
   while (b > start(quote)) {
     uint32_t line = b;
-    while (line && d->text[line - 1] != '\n' && d->text[line - 1] != '\r') line--;
-    if (owned_quote_line(d, line, b, depth)) return b;
+    if (owned_quote_line(d, &line, depth)) return b;
     b = line;
     while (b > start(quote) && ws(d->text[b - 1])) b--;
   }
   return b;
 }
-static uint32_t spread_end(Document *d, TSNode node) {
-  if (is(node, d->ids.block_quote)) return quote_spread_end(d, node);
-  if (!is(node, d->ids.list) && !is(node, d->ids.list_item)) return content_end(d, node);
-  for (uint32_t i = ts_node_named_child_count(node); i > 0; i--) {
-    TSNode child = ts_node_named_child(node, i - 1);
+static Spread collect_spread(Semantic *s, TSNode node, uint32_t depth) {
+  Document *d = s->d;
+  bool quote = is(node, d->ids.block_quote), list = is(node, d->ids.list);
+  bool item = is(node, d->ids.list_item);
+  if (!quote && !list && !item) return (Spread){content_end(d, node), false};
+  if (quote) depth++;
+  TSNode task = item ? task_marker(d, node) : (TSNode){0};
+  uint32_t previous = ts_node_is_null(task) ? 0 : end(task), tail = 0;
+  bool found = !ts_node_is_null(task), child_found = false;
+  Spread result = {0};
+  for (uint32_t i = 0; i < ts_node_named_child_count(node); i++) {
+    TSNode child = ts_node_named_child(node, i);
     if (!block_kind(d, child) && !is(child, d->ids.list_item)) continue;
-    return spread_end(d, child);
+    Spread value = collect_spread(s, child, depth);
+    tail = value.end; child_found = true;
+    if (quote || (list && !is(child, d->ids.list_item))) continue;
+    if (item && !block_kind(d, child)) continue;
+    if (found && blank_between(d, previous, start(child))) result.spread = true;
+    if (list && value.spread) result.spread = true;
+    previous = value.end; found = true;
   }
-  return content_end(d, node);
+  result.end = child_found ? tail : content_end(d, node);
+  if (quote) result.end = quote_spread_end(d, node, depth);
+  spread_store(&s->spreads, node, result);
+  return result;
 }
-static bool item_spread(Document *d, TSNode item) {
-  TSNode task = task_marker(d, item);
-  uint32_t previous = ts_node_is_null(task) ? 0 : end(task);
-  bool found = !ts_node_is_null(task);
-  for (uint32_t i = 0; i < ts_node_named_child_count(item); i++) {
-    TSNode c = ts_node_named_child(item, i);
-    if (!block_kind(d, c)) continue;
-    if (found && blank_between(d, previous, start(c))) return true;
-    previous = spread_end(d, c); found = true;
+static bool container_spread(Semantic *s, TSNode node) {
+  if (s->spreads.cap) {
+    SpreadEntry entry = s->spreads.entries[spread_slot(&s->spreads, node)];
+    if (!ts_node_is_null(entry.node)) return entry.value.spread;
   }
-  return false;
-}
-static bool list_spread(Document *d, TSNode list) {
-  uint32_t previous = 0; bool found = false;
-  for (uint32_t i = 0; i < ts_node_named_child_count(list); i++) {
-    TSNode item = ts_node_named_child(list, i);
-    if (!is(item, d->ids.list_item)) continue;
-    if (item_spread(d, item) || (found && blank_between(d, previous, start(item)))) return true;
-    previous = spread_end(d, item);
-    found = true;
-  }
-  return false;
+  uint32_t depth = 0;
+  for (TSNode parent = ts_node_parent(node); !ts_node_is_null(parent); parent = ts_node_parent(parent))
+    if (is(parent, s->d->ids.block_quote)) depth++;
+  return collect_spread(s, node, depth).spread;
 }
 static void item(Semantic *s, TSNode n) {
   Document *d = s->d; begin(s, "listItem", start(n), content_end(d, n));
-  put(s, item_spread(d, n) ? ",\"spread\":true" : ",\"spread\":false");
+  put(s, container_spread(s, n) ? ",\"spread\":true" : ",\"spread\":false");
   put(s, ",\"checked\":");
   TSNode task = task_marker(d, n);
   TSNode paragraph = find_child(d, n, d->ids.paragraph);
@@ -1109,7 +1137,7 @@ static void list(Semantic *s, TSNode n) {
   while (at < end(marker) && ws(d->text[at])) at++;
   while (at < end(marker) && d->text[at] >= '0' && d->text[at] <= '9') value = value * 10 + d->text[at++] - '0';
   if (ordered) number(s, value); else put(s, "null");
-  put(s, list_spread(d, n) ? ",\"spread\":true" : ",\"spread\":false"); child_array(s, "items");
+  put(s, container_spread(s, n) ? ",\"spread\":true" : ",\"spread\":false"); child_array(s, "items");
   bool first = true;
   for (uint32_t i = 0; i < ts_node_named_child_count(n); i++) {
     TSNode c = ts_node_named_child(n, i); if (!is(c, d->ids.list_item)) continue;
@@ -1298,7 +1326,7 @@ static uint32_t semantic_result(Document *d, bool presentation, uint32_t ended) 
   }
   d->semantic_len = s.json.size; d->semantic = (char *)cmark_strbuf_detach(&s.json);
   for (uint32_t i = 0; i < s.reference_count; i++) free(s.references[i].identifier);
-  free(s.references);
+  free(s.references); free(s.spreads.entries);
   footnotes_free(s.footnotes);
   cmark_reference_map_free(s.defs);
   cmark_strbuf_free(&s.provisional); cmark_strbuf_free(&s.suppressed); free(s.path);
