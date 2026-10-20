@@ -107,7 +107,84 @@ static void trailing_quote_owner(void) {
   tsmd_free(document);
 }
 
+static void continuation_leaf(uint32_t flags, const char *opening, const char *prefix,
+                              uint32_t padding, const char *ending) {
+  char source[64], expected[64];
+  snprintf(source, sizeof(source), "%s`a%s%sb`", opening, ending, prefix);
+  uint32_t length = strlen(source), tab = (uint32_t)(strchr(source, '\t') - source);
+  uint16_t input[64];
+  for (uint32_t i = 0; i < length; i++) input[i] = (unsigned char)source[i];
+  Document *document = test_document(flags);
+  set(document, input, length);
+  uint32_t content = (uint32_t)(strchr(source, '`') - source);
+  TSNode paragraph = ts_node_descendant_for_byte_range(ts_tree_root_node(document->tree),
+                                                      content * 2, (content + 1) * 2);
+  while (!ts_node_is_null(paragraph) && !is(paragraph, document->ids.paragraph))
+    paragraph = ts_node_parent(paragraph);
+  assert(!ts_node_is_null(paragraph));
+  leaf_build(document, paragraph, PARAGRAPH);
+  snprintf(expected, sizeof(expected), "`a%s%*sb`", ending, (int)padding, "");
+  assert(document->leaf.n == strlen(expected));
+  assert(!strcmp(document->leaf.text, expected));
+  uint32_t offset = 2 + strlen(ending);
+  for (uint32_t i = 0; i < padding; i++) {
+    assert(document->leaf.starts.v[offset + i] == tab);
+    assert(document->leaf.ends.v[offset + i] == tab + 1);
+    assert(document->source[tab] == '\t');
+  }
+  assert(!memcmp(document->source, input, length * sizeof(*input)));
+  tsmd_free(document);
+}
+
+static void continuation_leaves(uint32_t flags, const char *ending) {
+  continuation_leaf(flags, "- ", "\t", 2, ending);
+  continuation_leaf(flags, "> ", ">\t", 2, ending);
+  continuation_leaf(flags, "  > ", "  >\t", 0, ending);
+  continuation_leaf(flags, "   > ", "   >\t", 3, ending);
+}
+
+static void compacted_leaf(uint32_t flags, const char *source, const char *expected,
+                            uint32_t retained_tab) {
+  uint32_t length = strlen(source);
+  uint16_t input[128];
+  for (uint32_t i = 0; i < length; i++) input[i] = (unsigned char)source[i];
+  Document *document = test_document(flags);
+  set(document, input, length);
+  TSNode paragraph = ts_node_descendant_for_byte_range(ts_tree_root_node(document->tree), 4, 6);
+  while (!ts_node_is_null(paragraph) && !is(paragraph, document->ids.paragraph))
+    paragraph = ts_node_parent(paragraph);
+  assert(!ts_node_is_null(paragraph));
+  leaf_build(document, paragraph, PARAGRAPH);
+  assert(document->leaf.n == strlen(expected));
+  assert(!strcmp(document->leaf.text, expected));
+  uint32_t at = 2;
+  for (uint32_t i = 0; i < document->leaf.n; i++) {
+    if (source[at] == '\t' && at != retained_tab) at++;
+    uint32_t origin = document->leaf.starts.v[i];
+    assert(origin == at);
+    assert(document->leaf.ends.v[i] == at + 1);
+    if (at != retained_tab || document->leaf.text[i + 1] != ' ') at++;
+  }
+  assert(at == length);
+  assert(!memcmp(document->source, input, length * sizeof(*input)));
+  tsmd_free(document);
+}
+
+static void compacted_leaves(uint32_t flags) {
+  compacted_leaf(flags, "- a\n\tb", "a\nb", 0);
+  compacted_leaf(flags, "- `a\n\tb", "`a\nb", 0);
+  compacted_leaf(flags, "- \\`a\n\tb`", "\\`a\nb`", 0);
+  compacted_leaf(flags, "- <x title=\"`a\n\tb`\">", "<x title=\"`a\nb`\">", 0);
+  compacted_leaf(flags, "- a\n\tb and `c\n\td`\n\te", "a\nb and `c\n  d`\ne", 14);
+}
+
 int main(void) {
+  const uint32_t flags[] = {1, 9};
+  const char *endings[] = {"\n", "\r\n", "\r"};
+  for (uint32_t i = 0; i < 2; i++) {
+    for (uint32_t j = 0; j < 3; j++) continuation_leaves(flags[i], endings[j]);
+    compacted_leaves(flags[i]);
+  }
   trailing_quote_owner();
   Document *nested = test_document(13);
   Document *link = test_document(13);
