@@ -1,0 +1,30 @@
+[
+  {
+    "id": "219/completed/63",
+    "mode": "completed",
+    "family": "F07-empty-bullet-after-definition-quote",
+    "source": "&amp;\u05d0\u05d1\u05d2\ud83e\uddd1\u200d\ud83d`\udcbb``>a$\u05d0\u05d1\u05d2x$ | b *|\n|---|-x]: /target\n*| a | b |\n|---|---`|\ns`ee\n$x$\n\r\n> [x]: /target\n- \n\n_de||\n|[x]: /target\n--**| a | b |\n|---|---|\n-|--",
+    "utf16LeSha256": "c1e59bef68d0f96b639e5e67eb5f1e66255fdac51c144d349ea796ea252fc15f"
+  },
+  {
+    "id": "219/completed/64",
+    "mode": "completed",
+    "family": "F07-empty-bullet-after-definition-quote",
+    "source": "&amp;\u05d0\u05d1\u05d2\ud83e\uddd1\u200d\ud83d`\udcbb``>a$\u05d0\u05d1\u05d2x$ | b *|\n|---|-x]: /targe```\nt\n*| a | b |\n|---|---`|\ns`ee\n$x$\n\r\n> [x]: /target\n- \n\n_de||\n|[x]: /target\n--**| a | b |\n|---|---|\n-|--",
+    "utf16LeSha256": "b075253d0dece10b00d5a8bb26deead002f0c2f37658b6a5b7fb7f97c21b066b"
+  },
+  {
+    "id": "219/live/63",
+    "mode": "live",
+    "family": "F07-empty-bullet-after-definition-quote",
+    "source": "&amp;\u05d0\u05d1\u05d2\ud83e\uddd1\u200d\ud83d`\udcbb``>a$\u05d0\u05d1\u05d2x$ | b *|\n|---|-x]: /target\n*| a | b |\n|---|---`|\ns`ee\n$x$\n\r\n> [x]: /target\n- \n\n_de||\n|[x]: /target\n--**| a | b |\n|---|---|\n-|--",
+    "utf16LeSha256": "c1e59bef68d0f96b639e5e67eb5f1e66255fdac51c144d349ea796ea252fc15f"
+  },
+  {
+    "id": "219/live/64",
+    "mode": "live",
+    "family": "F07-empty-bullet-after-definition-quote",
+    "source": "&amp;\u05d0\u05d1\u05d2\ud83e\uddd1\u200d\ud83d`\udcbb``>a$\u05d0\u05d1\u05d2x$ | b *|\n|---|-x]: /targe```\nt\n*| a | b |\n|---|---`|\ns`ee\n$x$\n\r\n> [x]: /target\n- \n\n_de||\n|[x]: /target\n--**| a | b |\n|---|---|\n-|--",
+    "utf16LeSha256": "b075253d0dece10b00d5a8bb26deead002f0c2f37658b6a5b7fb7f97c21b066b"
+  }
+]

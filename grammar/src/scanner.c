@@ -268,7 +268,7 @@ static bool push_block(Scanner *s, Block b) {
 }
 
 static inline Block pop_block(Scanner *s) {
-    s->state &= ~STATE_TABLE_REJECTED;
+    s->state &= ~(STATE_TABLE_REJECTED | STATE_AFTER_DEFINITION);
     return s->open_blocks.items[--s->open_blocks.size];
 }
 
