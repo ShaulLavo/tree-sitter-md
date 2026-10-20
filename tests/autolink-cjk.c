@@ -25,17 +25,22 @@ static void fallback(const char *source, const char *expected, bool cjk) {
   free(links.v);
 }
 
-static void match(const char *source, const char *expected, bool cjk) {
+static void match_with_fallback(const char *source, const char *expected,
+                                const char *expected_fallback, bool cjk) {
   size_t begin = 999, end = 999;
   size_t at = !strncmp(source, "www.", 4) ? 0 : 5;
   bool found = tsmd_gfm_autolink_match((const uint8_t *)source, strlen(source), at,
                                        &begin, &end, cjk);
   assert(found == (expected != NULL));
-  fallback(source, expected, cjk);
+  fallback(source, expected_fallback, cjk);
   if (!expected) return;
   assert(begin == 0);
   assert(end == strlen(expected));
   assert(!memcmp(source, expected, end));
+}
+
+static void match(const char *source, const char *expected, bool cjk) {
+  match_with_fallback(source, expected, expected, cjk);
 }
 
 static void prefixed_match(void) {
@@ -50,7 +55,7 @@ static void prefixed_match(void) {
 }
 
 void test_cjk_terminal_dots(void) {
-  match("https://dotless.。", "https://dotless", true);
+  match_with_fallback("https://dotless.。", "https://dotless", NULL, true);
   match("https://foo_bar.test.。", NULL, true);
   match("www.。", NULL, true);
   match("https://example.test.!。tail", "https://example.test", true);

@@ -32,25 +32,24 @@ function linkDecorationCount(document: MarkdownDocument, length: number): number
   return count
 }
 
-function expectDocument(document: MarkdownDocument, source: string, expected: readonly string[], openExpected = expected): void {
+function expectDocument(document: MarkdownDocument, source: string, expected: readonly string[]): void {
   const exact = document.semantics().root
   const open = document.presentation({ input: 'open' })
   const ended = document.presentation({ input: 'ended' })
   assert.equal(open.source, source)
   assert.equal(ended.source, source)
-  for (const root of [exact, ended.root]) {
+  for (const root of [exact, open.root, ended.root]) {
     assert.deepEqual(links(root).map(link => link.url), expected, JSON.stringify(source))
   }
-  assert.deepEqual(links(open.root).map(link => link.url), openExpected, JSON.stringify(source))
   assert.equal(linkDecorationCount(document, source.length), expected.length,
     'decoration agreement: ' + JSON.stringify(source))
 }
 
-function check(source: string, expected: readonly string[], cjk = false, openExpected = expected): void {
+function check(source: string, expected: readonly string[], cjk = false): void {
   const document = new MarkdownDocument({ gfm: true, cjk })
   try {
     document.setText(source)
-    expectDocument(document, source, expected, openExpected)
+    expectDocument(document, source, expected)
   } finally { document.dispose() }
 }
 
@@ -90,24 +89,24 @@ const valid = [
 for (const [source, url] of valid) test('valid link control: ' + source, () => check(source, [url]))
 
 const saved = [
-  { id: "181/completed/39", expected: ["https://examarget"], openExpected: [], units: 58,
+  { id: "181/completed/39", units: 58,
     sha256: "8ba08a9c8efd285760aa2b76691f25b7c2bd0295b4c01d84c7e05447370de272",
     source: "&am`p;Ax]see$x$d* \ud83e--\u05d0\u05d1\u05d2([get\n[x]https://examarget\n/a*)-|\n" },
-  { id: "216/completed/20", expected: ["https://exast/a/target"], units: 83,
+  { id: "216/completed/20", units: 83,
     sha256: "743fe233acc2221678851b408cf6b6af59b007061f3b803d74e9d18b44c0d9be",
     source: "A **see&amp([(https://exast/a/target\nh\u05d0\u05d1\u05d2ttpample.tes\r\n*t/d** m| a | b |\n|---|---|\n" },
-  { id: "196/completed/63", expected: [], units: 98,
+  { id: "196/completed/63", units: 98,
     sha256: "69929756996a5393b65e04117f407f62864d20cf2e21f00bb5ef270cf1ef2a4b",
     source: "_A *- *\n *\u05d2\u05d1&amp;\u05d0_\u05d1\u05d2_\u05d0\u05d1|* \n\u05d0\u05d1(https://ex\ud83e\uddd1\u200d\ud83d\udcbbam_ple.test/a)\u05d2\na ```\n| |\n--|-[x]: /target\n\u05d0\u05d1\u05d2\u05d0\u05d1\u05d2--|" },
-  { id: "212/completed/20", expected: [], units: 83,
+  { id: "212/completed/20", units: 83,
     sha256: "15217a5ef52c90804ce2ef61783f9f6b71ef890f7b8fdaafb2af67f1a29afc2c",
     source: "A > **see$x$ded_** mes(https://e\ud83e\uddd1\ud83e\uddd1_\u200d\ud83d\udcbb\u200d\ud83d\udcbb[xxample.te\ud83e\uddd1\u200d\ud83d\udcbbst/a)s[x]: /target\nage.\n" },
 ]
 for (const item of saved) test('saved r68 domain witness ' + item.id, () => {
   assert.equal(item.source.length, item.units)
   assert.equal(createHash('sha256').update(Buffer.from(item.source, 'utf16le')).digest('hex'), item.sha256)
-  check(item.source, item.expected, false, 'openExpected' in item ? item.openExpected : item.expected)
-  check(item.source, item.expected, true, 'openExpected' in item ? item.openExpected : item.expected)
+  check(item.source, [], false)
+  check(item.source, [], true)
 })
 
 test('an underscore edit after Unicode invalidates and restores the native link', () => {

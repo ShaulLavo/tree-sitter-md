@@ -159,3 +159,53 @@ for (const [source, url] of [['user@example.test', 'mailto:user@example.test'],
     } finally { document.dispose() }
   })
 }
+
+function checkReviewBoundary(source: string, value: string | null, cjk: boolean,
+  expectedAttention?: readonly { type: string, range: { start: number, end: number } }[],
+  openValue = value): void {
+  const document = new MarkdownDocument({ gfm: true, cjk, math: true })
+  const start = source.indexOf('https://')
+  const expected = value === null ? [] : [{ value, href: encodeURI(value), range: { start, end: start + value.length } }]
+  try {
+    document.setText(source)
+    const [exact, open, ended] = roots(document, source)
+    assert.deepEqual(links(exact), expected)
+    assert.deepEqual(links(ended), expected)
+    const openExpected = openValue === null ? [] : expected
+    assert.deepEqual(links(open), openExpected)
+    if (expectedAttention === undefined) return
+    for (const root of [exact, open, ended]) assert.deepEqual(attention(root), expectedAttention)
+  } finally { document.dispose() }
+}
+
+for (const cjk of [false, true]) {
+  test('a complete dotted URL precedes separate emphasis, CJK=' + cjk, () => {
+    checkReviewBoundary('https://example.test._a_', 'https://example.test', cjk,
+      [{ type: 'emphasis', range: { start: 21, end: 24 } }])
+  })
+}
+
+const fallbackBoundaries = [
+  ['https://ex', 'https://ex'],
+  ['[https://ex', null],
+  ['[https://example.test', 'https://example.test'],
+  ['[https://example.test>>>', 'https://example.test'],
+  ['[https://example.test/a>b>>>', 'https://example.test/a>b'],
+  ['[https://example.test/a(b))>>>', 'https://example.test/a(b)'],
+  ['[https://example.test/a>!>?.>>>', 'https://example.test/a'],
+  ['https://example.test/a>b', 'https://example.test/a>b'],
+  ['[https://foo.bar_baz/a', null],
+  ['[https://foo.test_>>>', null],
+  ['[https://foo._bar.test/a', null],
+  ['[https://例子󠄀/a', null],
+] satisfies readonly (readonly [string, string | null])[]
+
+function checkFallbackBoundary(source: string, value: string | null): void {
+  // A live unmatched bracket retains the existing pendingLink ownership.
+  const openValue = source.startsWith('[') ? null : value
+  for (const cjk of [false, true]) checkReviewBoundary(source, value, cjk, undefined, openValue)
+}
+
+for (const [source, value] of fallbackBoundaries) {
+  test('tokenizer/text fallback boundary ' + source, () => checkFallbackBoundary(source, value))
+}
