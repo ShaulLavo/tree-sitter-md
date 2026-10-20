@@ -56,8 +56,10 @@ static uint64_t leaf_key(Document *d, TSNode node, int kind) {
   }
   for (; i < b; i++)
     h = mix(h, d->text[i]);
-  if (kind == PARAGRAPH)
+  if (kind == PARAGRAPH) {
     h = mix(h, leaf_lazy_definition_line(d, node));
+    h = mix(h, leaf_definition_padding(d, node));
+  }
   return layout_key(d, node, a, mix(h, b - a));
 }
 static void trim(Document *d, uint32_t *a, uint32_t *b) {
