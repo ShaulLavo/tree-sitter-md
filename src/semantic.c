@@ -412,12 +412,11 @@ static cmark_node *text_nodes(Semantic *s, Leaf *l, cmark_node *n, uint32_t offs
          last->next->presentation != CMARK_PRESENTATION_SUPPRESSED && last->source_end == last->next->source_start)
     last = last->next;
   uint32_t a = n->source_start, b = last->source_end, at = a;
-  Words links = {0}; autolinks(l, offset + a, offset + b, &links);
+  Words links = {0}; autolinks(l, offset + a, offset + b, &links, s->d->cjk);
   for (uint32_t i = 0; i < links.n; i += 4) {
     uint32_t x = leaf_byte(l, links.v[i], offset + at, offset + b) - offset;
     uint32_t y = x;
     while (offset + y < l->n && l->ends.v[offset + y] <= links.v[i + 1]) y++;
-    if (s->d->cjk) y = tsmd_cjk_autolink_end((unsigned char *)l->text, offset + x, offset + y) - offset;
     text_part(s, l, n, last, offset, at, x, false, first);
     text_part(s, l, n, last, offset, x, y, true, first); at = y;
   }
