@@ -230,7 +230,10 @@ static void gfm_domains(void) {
   }
 }
 
+void test_cjk_terminal_dots(void);
+
 int main(void) {
+  test_cjk_terminal_dots();
   gfm_domains();
   long_fences();
   table_blocks();
