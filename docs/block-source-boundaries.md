@@ -9,10 +9,11 @@ following cell; the first and last cells own optional edge pipes. Leading table
 indentation belongs outside the table. Cell text ranges and values stay trimmed,
 escaped pipes remain literal content, and missing cells retain a null range.
 
-An empty list marker on the opening line of another list item is literal paragraph
-content. A populated marker on that line can start a nested list, and empty nested
-items on later indented lines remain valid. This scanner state survives incremental
-parsing in both grammar profiles.
+An empty nested list marker is literal paragraph content when its parent list
+interrupts a paragraph. Standalone lists and lists after blank lines retain empty
+nested items, including items on the parent's opening line. Populated nested items
+remain valid in either context. The scanner records paragraph interruption across
+tokens on the same line and serializes it for incremental parsing in both profiles.
 
 After a reference definition, a failed list-container match must return its consumed
 indentation before emitting a zero-width close token. Otherwise the next match counts
@@ -23,7 +24,9 @@ and CR inputs, open and ended reads, and incremental edits.
 `tests/block-boundaries.test.ts` uses the 28 saved block witnesses from r122. The
 fixtures retain original UTF-16 source hashes, independent expected positions and
 source-line metadata. These are focused native checks, not a full qualification run.
-Live table tests check the corrected table start and complete header-cell ranges.
-Fregat's prepared live source can remove a final unmatched delimiter, so its table
-end offset requires the separate application-level comparison. The original strict
-whole-row mismatches remain RED. The product is NOT VERIFIED.
+All six table witnesses check exact native ranges, including their end points.
+The two seed187 live inputs explicitly expect raw table ranges 26..94 and 26..107.
+Their saved prepared HAST expectations remain 26..93 and 26..106. Fregat's live
+preparation removes a final unmatched delimiter, so those two application-level
+comparisons remain RED. The original strict whole-row mismatches remain RED.
+The product is NOT VERIFIED.

@@ -97,18 +97,21 @@ function checkTable(source: string, block: Block, expected: Expected): void {
   }
 }
 
+const rawTablePositions: ReadonlyMap<string, { start: Point; end: Point }> = new Map([
+  ['187/54/live', { start: { line: 2, column: 2, offset: 26 }, end: { line: 6, column: 7, offset: 94 } }],
+  ['187/55/live', { start: { line: 2, column: 2, offset: 26 }, end: { line: 7, column: 7, offset: 107 } }],
+])
+
+function rawExpected(row: Fixture): Expected {
+  const position = rawTablePositions.get(row.id)
+  return position ? { ...row.expected, position } : row.expected
+}
+
 function checkFixture(row: Fixture, root: Root): void {
   assert.ok(row.expected.position)
   const block = root.children.find(node => node.type === row.kind && node.range.start === row.expected.position?.start.offset)
   assert.ok(block, row.id)
-  if (row.kind === 'table') {
-    // Live Fregat preparation changes the final unmatched delimiter outside this native range fix.
-    assert.equal(block.range.start, row.expected.position.start.offset)
-    assert.deepEqual(point(row.source, block.range.start), row.expected.position.start)
-    assert.equal(point(row.source, block.range.end).line, row.expected.properties?.dataSourceEndLine)
-  } else {
-    checkRange(row.source, block, row.expected)
-  }
+  checkRange(row.source, block, rawExpected(row))
   if (row.kind === 'list') checkList(row.source, block, row.expected)
   if (row.kind === 'table') checkTable(row.source, block, row.expected)
   if (block.type === 'quote') assert.deepEqual(block.children, [])
@@ -123,9 +126,9 @@ function checkFixture(row: Fixture, root: Root): void {
 }
 
 function state(document: MarkdownDocument, source: string) {
-  const { revision, ...exact } = document.semantics()
-  const { revision: openRevision, ...open } = document.presentation({ input: 'open' })
-  const { revision: endedRevision, ...ended } = document.presentation({ input: 'ended' })
+  const { revision: _revision, ...exact } = document.semantics()
+  const { revision: _openRevision, ...open } = document.presentation({ input: 'open' })
+  const { revision: _endedRevision, ...ended } = document.presentation({ input: 'ended' })
   assert.equal(open.source, source)
   assert.equal(ended.source, source)
   return { exact, open, ended, decorations: Array.from(document.decorations(0, source.length)),
@@ -174,20 +177,86 @@ for (const eol of ['\n', '\r\n', '\r']) test('nested marker and thematic control
   }
 })
 
-function checkNested(source: string, math: boolean, child: 'list' | 'paragraph'): void {
-  const document = new MarkdownDocument({ gfm: true, cjk: true, math })
-  try {
-    document.setText(source)
-    const list = document.semantics().root.children[0]
-    assert.ok(list?.type === 'list')
-    assert.equal(list.items[0].children[0]?.type, child)
-  } finally { document.dispose() }
+function blockKinds(node: Root | Block | SemanticListItem | PresentationListItem): string[] {
+  const kinds: string[] = [node.type]
+  if (node.type === 'list') return kinds.concat(node.items.flatMap(blockKinds))
+  if (node.type === 'root' || node.type === 'quote' || node.type === 'listItem')
+    return kinds.concat(node.children.flatMap(blockKinds))
+  return kinds
 }
 
-for (const eol of ['\n', '\r\n', '\r']) test('empty marker owns literal content ' + JSON.stringify(eol), () => {
-  for (const math of [false, true]) {
-    for (const marker of ['-', '*', '+', '1.', '2)']) checkNested(`${marker} ${marker}${eol}  text`, math, 'paragraph')
-    for (const source of [`- - x${eol}`, `* * x${eol}`, `-${eol}  -${eol}`]) checkNested(source, math, 'list')
+const emptyNested = ['root', 'list', 'listItem', 'list', 'listItem']
+const literalMarker = ['root', 'paragraph', 'list', 'listItem', 'paragraph']
+const markerContexts = [
+  { source: '- -', kinds: emptyNested, lists: 2 },
+  { source: '- - x\n', kinds: emptyNested.concat(['paragraph']), lists: 2 },
+  { source: '* * x\n', kinds: emptyNested.concat(['paragraph']), lists: 2 },
+  { source: '-\n  -\n', kinds: emptyNested, lists: 2 },
+  { source: '- -\n', kinds: emptyNested, lists: 2 },
+  { source: '- -\n  x', kinds: emptyNested.concat(['paragraph']), lists: 2 },
+  { source: '- -\n\nx', kinds: emptyNested.concat(['paragraph']), lists: 2 },
+  { source: 'a\n- -', kinds: literalMarker, lists: 1 },
+  { source: 'a\n\n- -', kinds: ['root', 'paragraph'].concat(emptyNested.slice(1)), lists: 2 },
+  { source: '+ +', kinds: emptyNested, lists: 2 },
+  { source: '1. 2.', kinds: emptyNested, lists: 2 },
+  { source: '- -\n    -', kinds: emptyNested.concat(['list', 'listItem']), lists: 3 },
+  { source: '> - -', kinds: ['root', 'quote'].concat(emptyNested.slice(1)), lists: 2 },
+  { source: '-\t-', kinds: emptyNested, lists: 2 },
+  { source: '- +', kinds: emptyNested, lists: 2 },
+  { source: '* *\n  text', kinds: emptyNested.concat(['paragraph']), lists: 2 },
+  { source: 'a\n+ +', kinds: literalMarker, lists: 1 },
+  { source: 'a\n1. 2.', kinds: literalMarker, lists: 1 },
+]
+
+function checkMarkerContext(source: string, kinds: readonly string[], math: boolean): void {
+  const document = new MarkdownDocument({ gfm: true, cjk: true, math })
+  const fresh = new MarkdownDocument({ gfm: true, cjk: true, math })
+  try {
+    document.setText(source)
+    const initial = state(document, source)
+    assert.deepEqual(blockKinds(initial.exact.root), kinds)
+    assert.deepEqual(initial.ended.root, initial.exact.root)
+    document.edit(0, 0, 'a\n\n')
+    fresh.setText('a\n\n' + source)
+    assert.deepEqual(state(document, 'a\n\n' + source), state(fresh, 'a\n\n' + source))
+    document.edit(0, 3, '')
+    assert.deepEqual(state(document, source), initial)
+    document.reparse()
+    assert.deepEqual(state(document, source), initial)
+  } finally { document.dispose(); fresh.dispose() }
+}
+
+for (const row of markerContexts) test('empty nested marker paragraph context ' + JSON.stringify(row.source), () => {
+  for (const eol of ['\n', '\r\n', '\r']) {
+    const source = row.source.replaceAll('\n', eol)
+    for (const math of [false, true]) checkMarkerContext(source, row.kinds, math)
+  }
+})
+
+function checkInterruptionEdit(markers: string, eol: string, math: boolean): void {
+  const source = 'a' + eol + markers
+  const at = 1 + eol.length
+  const changed = source.slice(0, at) + eol + source.slice(at)
+  const document = new MarkdownDocument({ gfm: true, math })
+  const fresh = new MarkdownDocument({ gfm: true, math })
+  try {
+    document.setText(source)
+    const initial = state(document, source)
+    assert.deepEqual(blockKinds(initial.exact.root), literalMarker)
+    document.edit(at, at, eol)
+    fresh.setText(changed)
+    assert.deepEqual(state(document, changed), state(fresh, changed))
+    assert.deepEqual(blockKinds(document.semantics().root), ['root', 'paragraph'].concat(emptyNested.slice(1)))
+    document.edit(at, at + eol.length, '')
+    assert.deepEqual(state(document, source), initial)
+    document.reparse()
+    assert.deepEqual(state(document, source), initial)
+  } finally { document.dispose(); fresh.dispose() }
+}
+
+for (const markers of ['- -', '* *', '+ +', '1. 2.']) test('blank-line edits change empty nested marker context ' + markers, () => {
+  for (const eol of ['\n', '\r\n', '\r']) {
+    for (const math of [false, true]) checkInterruptionEdit(markers, eol, math)
   }
 })
 
@@ -232,6 +301,24 @@ for (const eol of ['\n', '\r\n', '\r']) test('cell ownership preserves escaped p
 
 const languages = await Promise.all(['../tree-sitter-markdown.wasm', '../tree-sitter-markdown-chat.wasm'].map(path =>
   Language.load(readFileSync(new URL(path, import.meta.url)))))
+
+function checkMarkerCst(source: string, lists: number): void {
+  for (const language of languages) {
+    const parser = new Parser()
+    parser.setLanguage(language)
+    const tree = parser.parse(source)
+    assert.ok(tree)
+    try {
+      assert.equal(tree.rootNode.hasError, false)
+      assert.equal(tree.rootNode.descendantsOfType('list').length, lists)
+    } finally { tree.delete(); parser.delete() }
+  }
+}
+
+for (const row of markerContexts) test('empty nested marker CST context ' + JSON.stringify(row.source), () => {
+  for (const eol of ['\n', '\r\n', '\r']) checkMarkerCst(row.source.replaceAll('\n', eol), row.lists)
+})
+
 for (const row of cases.filter(row => row.kind === 'list')) test('saved empty marker CST ' + row.id, () => {
   for (const language of languages) {
     const parser = new Parser()
@@ -337,3 +424,28 @@ test('table classification edits keep ownership and undo to the original paragra
     assert.deepEqual(state(document, source), initial)
   } finally { document.dispose(); fresh.dispose() }
 })
+
+for (const [id, nativeEnd, preparedEnd] of [['187/54/live', 94, 93], ['187/55/live', 107, 106]] satisfies readonly [string, number, number][]) {
+  test('raw live table end remains separate from saved prepared HAST ' + id, () => {
+    const row = cases.find(row => row.id === id)
+    assert.ok(row?.expected.position)
+    assert.equal(row.expected.position.end.offset, preparedEnd)
+    assert.equal(row.source.length, nativeEnd)
+    assert.equal(row.source.at(-1), '`')
+    assert.equal(rawExpected(row).position?.end.offset, nativeEnd)
+  })
+}
+
+function rejectShiftedTableEnd(row: Fixture): void {
+  const document = new MarkdownDocument()
+  try {
+    document.setText(row.source)
+    const root = document.semantics().root
+    const children = root.children.map(block => block.type === 'table'
+      ? { ...block, range: { start: block.range.start, end: block.range.end - 1 } } : block)
+    assert.throws(() => checkFixture(row, { ...root, children }))
+  } finally { document.dispose() }
+}
+
+for (const row of cases.filter(row => row.kind === 'table'))
+  test('table ownership rejects shifted final offsets ' + row.id, () => rejectShiftedTableEnd(row))

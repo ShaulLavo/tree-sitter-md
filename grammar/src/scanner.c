@@ -204,8 +204,7 @@ static const uint8_t STATE_MATCHING = 0x1 << 0;
 static const uint8_t STATE_WAS_SOFT_LINE_BREAK = 0x1 << 1;
 // Block should be closed after next line break
 static const uint8_t STATE_AFTER_DEFINITION = 0x1 << 2;
-// A list item was opened on the current line.
-static const uint8_t STATE_LIST_ITEM_START = 0x1 << 3;
+static const uint8_t STATE_LIST_INTERRUPTS_PARAGRAPH = 0x1 << 3;
 static const uint8_t STATE_CLOSE_BLOCK = 0x1 << 4;
 static const uint8_t STATE_TABLE_REJECTED = 0x1 << 5;
 
@@ -266,8 +265,6 @@ static bool push_block(Scanner *s, Block b) {
     }
 
     s->open_blocks.items[s->open_blocks.size++] = b;
-    if (b >= LIST_ITEM && b <= LIST_ITEM_MAX_INDENTATION)
-        s->state |= STATE_LIST_ITEM_START;
     return true;
 }
 
@@ -377,7 +374,7 @@ static bool error(TSLexer *lexer) {
 // 4 See https://github.github.com/gfm/#tabs
 static size_t advance(Scanner *s, TSLexer *lexer) {
     if (lexer->lookahead == '\n' || lexer->lookahead == '\r')
-        s->state &= ~STATE_LIST_ITEM_START;
+        s->state &= ~STATE_LIST_INTERRUPTS_PARAGRAPH;
     size_t size = 1;
     if (lexer->lookahead == '\t') {
         size = 4 - s->column;
@@ -755,7 +752,7 @@ static bool parse_fenced_code_block(Scanner *s, const char delimiter,
 }
 
 static bool empty_list_marker_allowed(const Scanner *s) {
-    if (!(s->state & STATE_LIST_ITEM_START) || !s->open_blocks.size)
+    if (!(s->state & STATE_LIST_INTERRUPTS_PARAGRAPH) || !s->open_blocks.size)
         return true;
     Block parent = s->open_blocks.items[s->open_blocks.size - 1];
     return parent < LIST_ITEM || parent > LIST_ITEM_MAX_INDENTATION;
@@ -1595,8 +1592,13 @@ static bool parse_pipe_table(Scanner *s, TSLexer *lexer, bool header_prefix) {
 }
 
 static bool scan_continuation_interrupt(Scanner *s, TSLexer *lexer, bool table) {
-    if (!table)
-        return scan(s, lexer, paragraph_interrupt_symbols);
+    if (!table) {
+        bool interrupted = scan(s, lexer, paragraph_interrupt_symbols);
+        if (interrupted && lexer->result_symbol >= LIST_MARKER_MINUS &&
+            lexer->result_symbol <= LIST_MARKER_DOT)
+            s->state |= STATE_LIST_INTERRUPTS_PARAGRAPH;
+        return interrupted;
+    }
     bool symbols[sizeof(paragraph_interrupt_symbols) / sizeof(bool)];
     memcpy(symbols, paragraph_interrupt_symbols, sizeof(symbols));
     symbols[PIPE_TABLE_START] = false;
