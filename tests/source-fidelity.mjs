@@ -160,3 +160,47 @@ test('lazy footnote literal mapping retains the accepted referenced definition',
     assert.deepEqual(code.range, { start: 6, end: 12 })
   }
 })
+
+function assertCodeSourceMap(source, code) {
+  const map = code.sourceMap
+  assert.ok(map, 'inline code requires a producer-owned sourceMap')
+  assert.equal(map.value, code.sourceValue)
+  assert.equal(map.tokenLength, code.range.end - code.range.start)
+  assert.ok(Array.isArray(map.runs))
+  let valueEnd = 0, sourceEnd = 0
+  for (const run of map.runs) {
+    assert.equal(run.valueStart, valueEnd)
+    assert.ok(Number.isSafeInteger(run.tokenOffset) && run.tokenOffset >= sourceEnd)
+    const valueLength = run.kind === 'copy' ? run.length : run.valueLength
+    const sourceLength = run.kind === 'copy' ? run.length : run.sourceLength
+    assert.ok(Number.isSafeInteger(valueLength) && valueLength > 0)
+    assert.ok(Number.isSafeInteger(sourceLength) && sourceLength > 0)
+    assert.ok(run.tokenOffset + sourceLength <= map.tokenLength)
+    assert.ok(run.kind === 'copy' || run.kind === 'atom')
+    if (run.kind === 'copy') {
+      assert.equal(map.value.slice(run.valueStart, run.valueStart + run.length),
+        source.slice(code.range.start + run.tokenOffset, code.range.start + run.tokenOffset + run.length))
+    }
+    valueEnd += valueLength; sourceEnd = run.tokenOffset + sourceLength
+  }
+  assert.equal(valueEnd, map.value.length)
+}
+
+for (const eol of ['\n', '\r\n', '\r']) test('producer witness distinguishes inline code EOL placement ' + JSON.stringify(eol), () => {
+  for (const source of ['`one' + eol + 'two three`', '`one two' + eol + 'three`']) {
+    for (const input of [undefined, 'open', 'ended']) {
+      const code = nodes(read(source, input), 'code')[0]
+      assertCodeSourceMap(source, code)
+      assert.deepEqual(code.sourceMap.runs, [{ kind: 'copy', valueStart: 0, length: source.length - 2, tokenOffset: 1 }])
+    }
+  }
+})
+
+test('footnote producer witnesses retained lazy spaces and local virtual tabs', () => {
+  for (const source of ['[^x]: `a\n b`', '- [^x]: `a\n\t   b`', '[^x]: [^y]: `a\n     b`']) {
+    for (const input of [undefined, 'open', 'ended']) {
+      const code = nodes(read(source, input), 'code')[0]
+      assertCodeSourceMap(source, code)
+    }
+  }
+})
