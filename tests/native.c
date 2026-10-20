@@ -168,6 +168,9 @@ static void table_blocks(void) {
   table_block_case(d, "`>a | b |\n|---|---|\n **see\r\n_ded", 3);
   table_block_case(d, "`>a | b |\r\n|---|---|\r\n **see\r\n_ded", 3);
   table_block_case(d, "``a|b\n-|-", 1);
+  table_block_case(d, "b\n|---|", 1);
+  table_block_case(d, "|b\r\n|---|", 1);
+  table_block_case(d, "b\\|c\n|---|", 1);
   table_block_case(d, "a|b\n-|-\n[x]: /url\nc|d\n-|-", 4);
   table_block_case(d, "| a | b |\n|---|---|\n[x]:* [x]: /target\n| a | *b |\n|---|---|\n*/```\n&?", 6);
   tsmd_free(d);
@@ -240,6 +243,14 @@ int main(void) {
   many_documents();
   Document *incremental = test_document(13), *fresh = test_document(13);
   const char *fixtures[] = {
+    "> a|b\n|---\n> c|d\n> -|-\n",
+    "> a|b\n---|\n> c|d\n> -|-\n",
+    "b\n|---|",
+    "b\n||",
+    "a|b\n|-||",
+    "a|b\n|---\nb\n|---|",
+    "a|b\n|---\n\nb\n|---|",
+    "> a|b\n> |---\n\nb\n|---|",
     "- [ ] pending\n- [x](streamdown:incomplete-link)\n- [x] done",
     "> - first\n>\n> ```js\n> ?\n> ```",
     "a|b|c\n:-|--:|-\nx|![?](image)\n",

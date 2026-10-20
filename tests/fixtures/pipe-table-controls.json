@@ -1,0 +1,58 @@
+[
+  {
+    "source": "|---\n|---|",
+    "html": "<table>\n<thead>\n<tr>\n<th>---</th>\n</tr>\n</thead>\n</table>\n"
+  },
+  {
+    "source": "a|b\n|---\n|---|",
+    "html": "<p>a|b\n|---\n|---|</p>\n"
+  },
+  {
+    "source": "a|b\n|---\nb\n|---|",
+    "html": "<p>a|b\n|---\nb\n|---|</p>\n"
+  },
+  {
+    "source": "a|b\nx\nb\n|---|",
+    "html": "<p>a|b\nx</p>\n<table>\n<thead>\n<tr>\n<th>b</th>\n</tr>\n</thead>\n</table>\n"
+  },
+  {
+    "source": "a|b\n|---\n\nb\n|---|",
+    "html": "<p>a|b\n|---</p>\n<table>\n<thead>\n<tr>\n<th>b</th>\n</tr>\n</thead>\n</table>\n"
+  },
+  {
+    "source": "a\nb\n|---|",
+    "html": "<p>a</p>\n<table>\n<thead>\n<tr>\n<th>b</th>\n</tr>\n</thead>\n</table>\n"
+  },
+  {
+    "source": "b\n|---|",
+    "html": "<table>\n<thead>\n<tr>\n<th>b</th>\n</tr>\n</thead>\n</table>\n"
+  },
+  {
+    "source": "b\n|---",
+    "html": "<table>\n<thead>\n<tr>\n<th>b</th>\n</tr>\n</thead>\n</table>\n"
+  },
+  {
+    "source": "a\n|b\n|---|",
+    "html": "<p>a</p>\n<table>\n<thead>\n<tr>\n<th>b</th>\n</tr>\n</thead>\n</table>\n"
+  },
+  {
+    "source": "``\n|---|",
+    "html": "<table>\n<thead>\n<tr>\n<th>``</th>\n</tr>\n</thead>\n</table>\n"
+  },
+  {
+    "source": "|\n|---|",
+    "html": "<p>|\n|---|</p>\n"
+  },
+  {
+    "source": " \n|---|",
+    "html": "<p>|---|</p>\n"
+  },
+  {
+    "source": "b\n|x|",
+    "html": "<p>b\n|x|</p>\n"
+  },
+  {
+    "source": "b|c\n|---|",
+    "html": "<p>b|c\n|---|</p>\n"
+  }
+]
