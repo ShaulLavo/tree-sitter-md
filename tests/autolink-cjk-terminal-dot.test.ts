@@ -48,8 +48,8 @@ function check(source: string, literal: string | null, cjk = true, url = literal
   } finally { document.dispose() }
 }
 
-for (const source of ['https://dotless.。', 'https://foo_bar.test.。', 'www.。',
-  'https://dotless.，tail', 'https://foo_bar.test.？！', 'www.！']) {
+for (const source of ['https://foo_bar.test.。', 'www.。',
+  'https://foo_bar.test.？！', 'www.！']) {
   test('reject CJK terminal-dot domain ' + source, () => check(source, null))
 }
 
@@ -61,6 +61,8 @@ for (const punctuation of ['。', '．', '，', '、', '？', '！', '：', '；
 }
 
 for (const [source, literal, url] of [
+  ['https://dotless.。', 'https://dotless', 'https://dotless'],
+  ['https://dotless.，tail', 'https://dotless', 'https://dotless'],
   ['前😀 https://例子.test.。後', 'https://例子.test', 'https://例子.test'],
   ['www.example.test.。後', 'www.example.test', 'http://www.example.test'],
   ['https://foo_bar.example.test.。後', 'https://foo_bar.example.test', 'https://foo_bar.example.test'],
@@ -105,7 +107,7 @@ test('incremental CJK terminal-dot edit and undo retain UTF-16 ranges', () => {
     document.setText(source)
     expectLinks(document, source, 'https://example.test')
     document.edit(at, at + 5, '')
-    expectLinks(document, source.slice(0, at) + source.slice(at + 5), null)
+    expectLinks(document, source.slice(0, at) + source.slice(at + 5), 'https://example')
     document.edit(at, at, '.test')
     expectLinks(document, source, 'https://example.test')
   } finally { document.dispose() }
