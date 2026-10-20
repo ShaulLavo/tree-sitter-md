@@ -39,3 +39,5 @@ concatenated and cut at 1,000,143 characters, the files Plan 176 measured.
 The adapted GFM domain validator retains the cmark-gfm attribution above.
 Its local changes and original regression evidence are classified in
 [the 0.1.17 source inventory](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/RELEASE-0.1.17.md#source-inventory).
+The CJK boundary integration and original terminal-dot controls are classified in
+[the 0.1.18 source inventory](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/RELEASE-0.1.18.md#source-inventory).
