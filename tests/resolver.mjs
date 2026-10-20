@@ -75,11 +75,11 @@ test('the resolver imports only what the tree-sitter-x runtime exports',async()=
 });
 
 
-test('literal autolinks require dotted hosts and preserve case and bracket boundaries',()=>{
+test('literal HTTP hosts accept prefixes and preserve case and bracket boundaries',()=>{
   for(const [text,expected] of [
-    ['http://a',[]],
-    ['https://a',[]],
-    ['http://a ',[]],
+    ['http://a',['http://a']],
+    ['https://a',['https://a']],
+    ['http://a ',['http://a']],
     ['WWW.example.com',['WWW.example.com']],
     ['[www.example.com]',['www.example.com']],
     [']www.example.com',['www.example.com']],

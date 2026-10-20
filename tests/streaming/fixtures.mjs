@@ -9,6 +9,7 @@ const item = (start, end, children, checked = null) => node('listItem', start, e
 const list = (start, end, items) => node('list', start, end, { ordered: false, start: null, spread: false, items })
 const code = (start, end, value, language = null) => node('code', start, end, { value, language, meta: null, fence: 'open' })
 const link = (start, end, children, url) => node('link', start, end, { children, url, title: null, origin: 'markdown' })
+const autolink = (value, start, end) => node('link', start, end, { children: [text(value, start, end)], url: value, title: null, origin: 'gfm-autolink', sourceUrl: value, sourceValue: value })
 const definition = (start, end, identifier, url) => node('definition', start, end, { identifier, url, title: null })
 const provisional = (path, reason) => ({ path, reason })
 const inlinePath = ['children', 0, 'children', 0]
@@ -89,7 +90,7 @@ export default {
     ]),
     fixture('escaped-and-nonflanking-markers', ['literal-delimiters'], '\\*safe* foo_bar', [paragraph(0, 15, [text('*safe* foo_bar', 0, 15)])]),
     fixture('unclosed-code-content', ['unclosed-code'], '`x * y', [paragraph(0, 6, [text('`x * y', 0, 6)])], {
-      children: [paragraph(0, 6, [node('code', 0, 6, { value: 'x * y', sourceValue: 'x * y' })])],
+      children: [paragraph(0, 6, [node('code', 0, 6, { value: 'x * y', sourceValue: 'x * y', sourceMap: { value: 'x * y', tokenLength: 6, runs: [{ kind: 'copy', valueStart: 0, length: 5, tokenOffset: 1 }] } })])],
       provisional: [provisional(inlinePath, 'unclosed-code')],
     }),
     fixture('bare-backtick', ['bare-delimiters'], '`', [paragraph(0, 1, [text('`', 0, 1)])], {
@@ -105,11 +106,11 @@ export default {
       children: [paragraph(0, 4, [node('pendingLink', 0, 4, { children: [text('par', 1, 4)] })])],
       provisional: [provisional(inlinePath, 'unclosed-link')],
     }),
-    fixture('pending-link-destination', ['pending-link'], '[label](https://exa', [paragraph(0, 19, [text('[label](https://exa', 0, 19)])], {
+    fixture('pending-link-destination', ['pending-link'], '[label](https://exa', [paragraph(0, 19, [text('[label](', 0, 8), autolink('https://exa', 8, 19)])], {
       children: [paragraph(0, 19, [node('pendingLink', 0, 19, { children: [text('label', 1, 6)] })])],
       provisional: [provisional(inlinePath, 'unclosed-link')],
     }),
-    fixture('pending-image-destination', ['pending-image'], '![alt](https://exa', [paragraph(0, 18, [text('![alt](https://exa', 0, 18)])], {
+    fixture('pending-image-destination', ['pending-image'], '![alt](https://exa', [paragraph(0, 18, [text('![alt](', 0, 7), autolink('https://exa', 7, 18)])], {
       children: [paragraph(0, 18, [node('pendingImage', 0, 18, { alt: 'alt' })])],
       provisional: [provisional(inlinePath, 'unclosed-image')],
     }),
@@ -183,7 +184,7 @@ export default {
       children: [quote(0, 10, [list(2, 10, [item(2, 10, [paragraph(4, 10, [strong(4, 10, [text('bold', 6, 10)])])])])])],
       provisional: [provisional(['children', 0, 'children', 0, 'items', 0, 'children', 0, 'children', 0], 'unclosed-delimiter')],
     }),
-    fixture('completed-code-span', ['unclosed-code'], '`a * b`', [paragraph(0, 7, [node('code', 0, 7, { value: 'a * b', sourceValue: 'a * b' })])]),
+    fixture('completed-code-span', ['unclosed-code'], '`a * b`', [paragraph(0, 7, [node('code', 0, 7, { value: 'a * b', sourceValue: 'a * b', sourceMap: { value: 'a * b', tokenLength: 7, runs: [{ kind: 'copy', valueStart: 0, length: 5, tokenOffset: 1 }] } })])]),
     fixture('completed-link-and-image', ['pending-link', 'pending-image'], '[x](/go) ![a](/img)', [paragraph(0, 19, [
       link(0, 8, [text('x', 1, 2)], '/go'), text(' ', 8, 9), node('image', 9, 19, { alt: 'a', url: '/img', title: null }),
     ])]),

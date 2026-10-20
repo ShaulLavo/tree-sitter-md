@@ -77,92 +77,73 @@ static int sd_autolink_issafe(const uint8_t *link, size_t link_len) {
   return 0;
 }
 
-static size_t autolink_delim(uint8_t *data, size_t link_end) {
-  size_t i;
-  size_t closing = 0;
-  size_t opening = 0;
+static size_t autolink_entity_end(uint8_t *data, size_t link_end) {
+  if (link_end < 2)
+    return 0;
+  size_t new_end = link_end - 2;
+  while (new_end > 0 && cmark_isalpha(data[new_end]))
+    new_end--;
+  if (new_end < link_end - 2 && data[new_end] == '&')
+    return new_end;
+  return link_end - 1;
+}
 
-  for (i = 0; i < link_end; ++i) {
+static size_t autolink_trim_end(uint8_t *data, size_t link_end, size_t opening,
+                                size_t *closing, bool text_fallback) {
+  switch (data[link_end - 1]) {
+  case ')':
+    if (*closing <= opening)
+      return link_end;
+    (*closing)--;
+    return link_end - 1;
+  case ']':
+  case '?':
+  case '!':
+  case '.':
+  case ',':
+  case ':':
+  case '*':
+  case '_':
+  case '~':
+  case '\'':
+  case '"':
+    return link_end - 1;
+  case ';':
+    return autolink_entity_end(data, link_end);
+  case '>':
+    return text_fallback ? link_end - 1 : link_end;
+  default:
+    return link_end;
+  }
+}
+
+static size_t autolink_delim(uint8_t *data, size_t link_end, bool text_fallback) {
+  size_t closing = 0, opening = 0;
+  for (size_t i = 0; i < link_end; ++i) {
     const uint8_t c = data[i];
     if (c == '<') {
       link_end = i;
       break;
-    } else if (c == '(') {
+    }
+    if (c == '(')
       opening++;
-    } else if (c == ')') {
+    if (c == ')')
       closing++;
-    }
   }
-
+  /* Count parentheses once; each trim consumes a disjoint suffix. */
   while (link_end > 0) {
-    switch (data[link_end - 1]) {
-    case ')':
-      /* Allow any number of matching brackets (as recognised in copen/cclose)
-       * at the end of the URL.  If there is a greater number of closing
-       * brackets than opening ones, we remove one character from the end of
-       * the link.
-       *
-       * Examples (input text => output linked portion):
-       *
-       *        http://www.pokemon.com/Pikachu_(Electric)
-       *                => http://www.pokemon.com/Pikachu_(Electric)
-       *
-       *        http://www.pokemon.com/Pikachu_((Electric)
-       *                => http://www.pokemon.com/Pikachu_((Electric)
-       *
-       *        http://www.pokemon.com/Pikachu_(Electric))
-       *                => http://www.pokemon.com/Pikachu_(Electric)
-       *
-       *        http://www.pokemon.com/Pikachu_((Electric))
-       *                => http://www.pokemon.com/Pikachu_((Electric))
-       */
-      if (closing <= opening) {
-        return link_end;
-      }
-      closing--;
-      link_end--;
-      break;
-    case ']':
-    case '?':
-    case '!':
-    case '.':
-    case ',':
-    case ':':
-    case '*':
-    case '_':
-    case '~':
-    case '\'':
-    case '"':
-      link_end--;
-      break;
-    case ';': {
-      if (link_end < 2)
-        return 0;
-      size_t new_end = link_end - 2;
-
-      while (new_end > 0 && cmark_isalpha(data[new_end]))
-        new_end--;
-
-      if (new_end < link_end - 2 && data[new_end] == '&')
-        link_end = new_end;
-      else
-        link_end--;
-      break;
-    }
-
-    default:
+    size_t new_end = autolink_trim_end(data, link_end, opening, &closing, text_fallback);
+    if (new_end == link_end)
       return link_end;
-    }
+    link_end = new_end;
   }
-
   return link_end;
 }
 
-static size_t check_domain(const uint8_t *data, size_t size) {
+static size_t check_domain(const uint8_t *data, size_t size, bool explicit_scheme) {
   size_t i = 0, np = 0, uscore1 = 0, uscore2 = 0;
 
-  /* GFM 6.9 requires a dot and no underscores in the last two labels.
-   * Advance by decoded scalar width, never through UTF-8 continuation bytes. */
+  /* Decode scalars to retain final-label underscore checks after Unicode. */
   while (i < size) {
     if (data[i] == '\\' && i + 1 < size)
       i++;
@@ -185,7 +166,7 @@ static size_t check_domain(const uint8_t *data, size_t size) {
    * https://github.com/github/cmark-gfm/security/advisories/GHSA-29g3-96g3-jg6c */
   if (np <= 10 && (uscore1 || uscore2))
     return 0;
-  return np ? i : 0;
+  return (np || explicit_scheme) ? i : 0;
 }
 
 static bool email_protocol(uint8_t *data, size_t at, const char *protocol) {
@@ -252,13 +233,14 @@ static size_t url_end(uint8_t *data, size_t size, size_t begin, size_t finish, b
     finish++;
   }
   if (cjk) finish = cjk_autolink_end(data, begin, finish);
-  finish = begin + autolink_delim(data + begin, finish - begin);
+  finish = begin + autolink_delim(data + begin, finish - begin, false);
   return finish;
 }
-bool tsmd_gfm_autolink_match(const uint8_t *data, size_t size, size_t at,
-                             size_t *begin, size_t *end, bool cjk) {
+static bool autolink_match(const uint8_t *data, size_t size, size_t at,
+                           size_t *begin, size_t *end, bool cjk, bool text_fallback) {
   size_t start = at, finish = 0;
   size_t domain = at;
+  bool explicit_scheme = false;
 
   if (at >= size)
     return false;
@@ -272,6 +254,7 @@ bool tsmd_gfm_autolink_match(const uint8_t *data, size_t size, size_t at,
       return false;
     finish = at + 3;
     domain = finish;
+    explicit_scheme = true;
   } else {
     return false;
   }
@@ -279,11 +262,27 @@ bool tsmd_gfm_autolink_match(const uint8_t *data, size_t size, size_t at,
   finish = url_end((uint8_t *)data, size, start, finish, cjk);
   if (finish <= start)
     return false;
-  if (finish <= domain || !check_domain(data + domain, finish - domain))
+  if (finish <= domain || !check_domain(data + domain, finish - domain, explicit_scheme && !text_fallback))
     return false;
+  /* Validate the authored host before text-only terminal punctuation is removed. */
+  if (text_fallback && explicit_scheme)
+    finish = start + autolink_delim((uint8_t *)data + start, finish - start, true);
   *begin = start;
   *end = finish;
   return true;
+}
+bool tsmd_gfm_autolink_match(const uint8_t *data, size_t size, size_t at,
+                             size_t *begin, size_t *end, bool cjk) {
+  /* The inline tokenizer accepts dotless HTTP hosts; text fallback requires a dot. */
+  return autolink_match(data, size, at, begin, end, cjk, false);
+}
+static bool truncated_invalid_url(const uint8_t *data, size_t size, size_t source_size,
+                                  size_t at, bool cjk) {
+  if (data[at] != ':' || size == source_size)
+    return false;
+  size_t begin, end;
+  /* An unterminated candidate can be a host split before an underscore. */
+  return !tsmd_gfm_autolink_match(data, source_size, at, &begin, &end, cjk);
 }
 void autolinks(Leaf *l, uint32_t a, uint32_t b, Words *out, bool cjk) {
   uint8_t *data = (uint8_t *)l->text + a;
@@ -293,8 +292,10 @@ void autolinks(Leaf *l, uint32_t a, uint32_t b, Words *out, bool cjk) {
     if (data[i] == '@')
       finish = email_end(data, size, i, consumed, &begin);
     if (data[i] != '@')
-      tsmd_gfm_autolink_match(data, size, i, &begin, &finish, cjk);
+      autolink_match(data, size, i, &begin, &finish, cjk, true);
     if (!finish)
+      continue;
+    if (finish == size && truncated_invalid_url(data, size, l->n - a, i, cjk))
       continue;
     if (finish <= begin)
       continue;

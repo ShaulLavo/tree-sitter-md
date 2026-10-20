@@ -28,7 +28,22 @@ struct Footnotes {
   uint32_t owner_index;
 };
 
-typedef struct { uint16_t *text; uint32_t len, cap; } FootnoteSource;
+typedef struct {
+  uint32_t value_start, value_length, source_start, source_length;
+  bool atom;
+} FootnoteSourceRun;
+typedef struct {
+  uint16_t *text;
+  uint32_t len, cap;
+  FootnoteSourceRun *runs;
+  uint32_t run_count, run_cap;
+} FootnoteSource;
+
+void footnotes_source_slice(FootnoteSource *out, const FootnoteSource *source,
+                           uint32_t start, uint32_t end);
+void footnotes_source_spaces(FootnoteSource *out, const FootnoteSource *source,
+                            uint32_t at, uint32_t count);
+void footnotes_source_free(FootnoteSource *source);
 
 bool footnotes_source_range(const Footnotes *notes, uint32_t start, uint32_t end,
                             FootnoteSource *source);

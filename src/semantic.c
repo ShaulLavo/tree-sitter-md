@@ -11,8 +11,12 @@ typedef struct {
   unsigned char *identifier;
   bool footnote, resolved;
 } SemanticReference;
+typedef struct { uint32_t end; bool spread; } Spread;
+typedef struct { TSNode node; Spread value; } SpreadEntry;
+typedef struct { SpreadEntry *entries; uint32_t count, cap; } Spreads;
 typedef struct {
   Document *d;
+  Spreads spreads;
   cmark_strbuf json;
   cmark_strbuf provisional, suppressed;
   SemanticPath *path;
@@ -241,7 +245,7 @@ static uint32_t content_end(Document *d, TSNode n) {
   return authored_end(d, start(n), b);
 }
 static void inline_children(Semantic *, Leaf *, cmark_node *, uint32_t, bool);
-static void code_source_value(Semantic *, cmark_node *, uint32_t, uint32_t);
+static void code_source_value(Semantic *, Leaf *, cmark_node *, uint32_t, uint32_t, uint32_t);
 
 static void inline_range(Leaf *l, cmark_node *n, uint32_t offset, uint32_t *a, uint32_t *b) {
   *a = mapped_start(l, offset + n->source_start);
@@ -329,7 +333,7 @@ static void inline_node(Semantic *s, Leaf *l, cmark_node *n, uint32_t offset, bo
         l->starts.v + offset + n->source_start : NULL;
       mapped_string(s, n->data, n->len, positions);
     }
-    if (n->type == CMARK_NODE_CODE) code_source_value(s, n, a, b);
+    if (n->type == CMARK_NODE_CODE) code_source_value(s, l, n, offset, a, b);
     put(s, "}");
     return;
   }
@@ -579,24 +583,8 @@ static void append_utf16(cmark_strbuf *out, Document *d, uint32_t a, uint32_t b)
     cmark_utf8proc_encode_char(c, out);
   }
 }
-static uint32_t column_at(Document *d, uint32_t a) {
-  uint32_t line = a, column = 0;
-  while (line && d->text[line - 1] != '\n' && d->text[line - 1] != '\r') line--;
-  for (; line < a; line++) column += d->text[line] == '\t' ? 4 - column % 4 : 1;
-  return column;
-}
-static uint32_t item_indent(Document *d, TSNode item) {
-  TSNode marker = ts_node_named_child(item, 0); uint32_t a = start(marker), b = end(marker);
-  uint32_t original = column_at(d, a), column = original;
-  while (a < b && ws(d->text[a])) { column += d->text[a] == '\t' ? 4 - column % 4 : 1; a++; }
-  while (a < b && !ws(d->text[a])) { column++; a++; }
-  uint32_t padding = column;
-  while (a < b && ws(d->text[a])) { column += d->text[a] == '\t' ? 4 - column % 4 : 1; a++; }
-  uint32_t spaces = column - padding;
-  return padding - original + (spaces == 0 || spaces > 4 ? 1 : spaces);
-}
 static void append_line(cmark_strbuf *out, Document *d, uint32_t a, uint32_t b) {
-  uint32_t column = column_at(d, a);
+  uint32_t column = source_column(d, a);
   while (a < b && (d->text[a] == ' ' || d->text[a] == '\t')) {
     uint32_t width = d->text[a++] == '\t' ? 4 - column % 4 : 1;
     column += width;
@@ -604,36 +592,41 @@ static void append_line(cmark_strbuf *out, Document *d, uint32_t a, uint32_t b) 
   }
   append_utf16(out, d, a, b);
 }
-static uint32_t container_prefix(Document *d, Document *context, TSNode parent, uint32_t a, uint32_t b, cmark_strbuf *out, bool literal) {
+typedef struct { const FootnoteSource *source; FootnoteSource value; } CodeWitness;
+static uint32_t container_prefix(Document *d, Document *context, TSNode parent, uint32_t a, uint32_t b, cmark_strbuf *out, bool literal, CodeWitness *witness) {
   TSNode path[200]; uint32_t count = 0;
   for (; !ts_node_is_null(parent); parent = ts_node_parent(parent)) {
     if (count == 200) break;
     if (is(parent, context->ids.block_quote) || is(parent, context->ids.list_item)) path[count++] = parent;
   }
-  uint32_t virtual_spaces = 0;
+  uint32_t virtual_spaces = 0, virtual_from = 0;
   while (count) {
-    TSNode n = path[--count]; uint32_t column = column_at(d, a), width = 0;
-    uint32_t saved = a, saved_virtual = virtual_spaces;
+    TSNode n = path[--count]; uint32_t column = source_column(d, a), width = 0;
+    uint32_t saved = a, saved_virtual = virtual_spaces, saved_from = virtual_from;
     bool list = is(n, context->ids.list_item);
-    uint32_t required = list ? item_indent(context, n) : (literal ? UINT32_MAX : 3);
+    uint32_t required = list ? list_item_indent(context, n) : (literal ? UINT32_MAX : 3);
     if (literal) { width = virtual_spaces < required ? virtual_spaces : required; virtual_spaces -= width; }
     while (a < b && width < required && (d->text[a] == ' ' || d->text[a] == '\t')) {
       uint32_t added = d->text[a] == '\t' ? 4 - column % 4 : 1;
       column += added; width += added; a++;
     }
     bool matched = list ? width >= required : a < b && d->text[a] == '>';
-    if (literal && !matched) { a = saved; virtual_spaces = saved_virtual; break; }
-    if (list) { virtual_spaces = (literal ? virtual_spaces : 0) + (width > required ? width - required : 0); continue; }
+    if (literal && !matched) { a = saved; virtual_spaces = saved_virtual; virtual_from = saved_from; break; }
+    if (list && width > required) virtual_from = a - 1;
+    if (list) {
+      virtual_spaces = (literal ? virtual_spaces : 0) + (width > required ? width - required : 0); continue;
+    }
     if (!matched) break;
     column++; a++;
     if (a < b && d->text[a] == ' ') a++;
-    else if (a < b && d->text[a] == '\t') { virtual_spaces = 3 - column % 4; a++; }
+    else if (a < b && d->text[a] == '\t') { virtual_spaces = 3 - column % 4; virtual_from = a; a++; }
   }
+  if (witness) footnotes_source_spaces(&witness->value, witness->source, virtual_from, virtual_spaces);
   while (virtual_spaces) { cmark_strbuf_putc(out, ' '); virtual_spaces--; }
   return a;
 }
 static bool source_padding(unsigned char c) { return c == ' ' || c == '\r' || c == '\n'; }
-static void trim_source_padding(cmark_strbuf *value) {
+static void trim_source_padding(cmark_strbuf *value, FootnoteSource *witness) {
   uint32_t a = 0, b = value->size;
   if (b < 2 || !source_padding(value->ptr[0]) || !source_padding(value->ptr[b - 1])) return;
   bool content = false;
@@ -641,6 +634,9 @@ static void trim_source_padding(cmark_strbuf *value) {
   if (!content) return;
   a += value->ptr[0] == '\r' && value->ptr[1] == '\n' ? 2 : 1;
   b -= value->ptr[b - 1] == '\n' && value->ptr[b - 2] == '\r' ? 2 : 1;
+  FootnoteSource trimmed = {0};
+  footnotes_source_slice(&trimmed, witness, a, witness->len - (value->size - b));
+  footnotes_source_free(witness); *witness = trimmed;
   cmark_strbuf_drop(value, a); cmark_strbuf_truncate(value, b - a);
 }
 static void append_source(cmark_strbuf *out, Document *d, uint32_t a, uint32_t b) {
@@ -652,12 +648,77 @@ static void append_source(cmark_strbuf *out, Document *d, uint32_t a, uint32_t b
     cmark_utf8proc_encode_char(c, out);
   }
 }
-static void code_source_value(Semantic *s, cmark_node *node, uint32_t a, uint32_t b) {
+static void code_run(FootnoteSource *out, uint32_t length, uint32_t a, uint32_t b, bool atom) {
+  FootnoteSourceRun *last = out->run_count ? &out->runs[out->run_count - 1] : NULL;
+  if (last && !last->atom && !atom && last->source_start + last->source_length == a) {
+    last->value_length += length; last->source_length += b - a; out->len += length; return;
+  }
+  reserve((void **)&out->runs, &out->run_cap, out->run_count + 1, sizeof(*out->runs));
+  out->runs[out->run_count++] = (FootnoteSourceRun){out->len, length, a, b - a, atom};
+  out->len += length;
+}
+static void code_single_witness(Semantic *s, Leaf *leaf, cmark_node *node,
+                                uint32_t offset, FootnoteSource *witness) {
+  uint32_t from = offset + node->source_start, end = offset + node->source_end, ticks = 0;
+  while (from + ticks < end && leaf->text[from + ticks] == '`') ticks++;
+  from += ticks;
+  if (node->presentation != CMARK_PRESENTATION_CODE) end -= ticks;
+  if (end - from != node->len) { from++; end--; }
+  if (end - from != node->len || memcmp(leaf->text + from, node->data, node->len)) abort();
+  while (from < end) {
+    int32_t scalar; int bytes = cmark_utf8proc_iterate((unsigned char *)leaf->text + from, end - from, &scalar);
+    if (bytes <= 0) abort();
+    uint32_t a = leaf->starts.v[from], b = leaf->ends.v[from + bytes - 1];
+    if (!footnotes_map_range(s->footnotes, a, b, &a, &b)) abort();
+    bool atom = b - a != (scalar > 0xffff ? 2u : 1u) || s->root_footnotes->document->source[a] == 0;
+    code_run(witness, scalar > 0xffff ? 2 : 1, a, b, atom); from += bytes;
+  }
+}
+static void code_map_run(Semantic *s, FootnoteSourceRun run, uint32_t token_start, bool *first) {
+  if (!run.value_length) return;
+  if (!*first) put(s, ",");
+  *first = false;
+  put(s, run.atom ? "{\"kind\":\"atom\",\"valueStart\":" : "{\"kind\":\"copy\",\"valueStart\":");
+  number(s, run.value_start);
+  put(s, run.atom ? ",\"valueLength\":" : ",\"length\":"); number(s, run.value_length);
+  put(s, ",\"tokenOffset\":"); number(s, run.source_start - token_start);
+  if (run.atom) { put(s, ",\"sourceLength\":"); number(s, run.source_length); }
+  put(s, "}");
+}
+static void code_copy_runs(Semantic *s, FootnoteSourceRun run,
+                           uint32_t token_start, bool *first) {
+  uint32_t from = run.value_start, end = from + run.value_length;
+  for (uint32_t at = from; at < end; at++) {
+    if (s->root_footnotes->document->source[run.source_start + at - run.value_start] != 0) continue;
+    code_map_run(s, (FootnoteSourceRun){from, at - from, run.source_start + from - run.value_start, at - from, false}, token_start, first);
+    code_map_run(s, (FootnoteSourceRun){at, 1, run.source_start + at - run.value_start, 1, true}, token_start, first);
+    from = at + 1;
+  }
+  code_map_run(s, (FootnoteSourceRun){from, end - from, run.source_start + from - run.value_start, end - from, false}, token_start, first);
+}
+static void code_source_map(Semantic *s, const FootnoteSource *witness,
+                            const unsigned char *value, uint32_t length, uint32_t a, uint32_t b) {
+  uint32_t token_start, token_end;
+  if (!footnotes_map_range(s->footnotes, a, b, &token_start, &token_end)) abort();
+  put(s, ",\"sourceMap\":{\"value\":"); literal_string(s, value, length, a, b);
+  put(s, ",\"tokenLength\":"); number(s, token_end - token_start); put(s, ",\"runs\":[");
+  bool first = true;
+  for (uint32_t i = 0; i < witness->run_count; i++) {
+    FootnoteSourceRun run = witness->runs[i];
+    if (run.atom) code_map_run(s, run, token_start, &first);
+    else code_copy_runs(s, run, token_start, &first);
+  }
+  put(s, "]}");
+}
+static void code_source_value(Semantic *s, Leaf *leaf, cmark_node *node, uint32_t offset, uint32_t a, uint32_t b) {
   Document *d = s->d;
   uint32_t line = a;
   while (line < b && d->text[line] != '\r' && d->text[line] != '\n') line++;
   if (line == b) {
-    put(s, ",\"sourceValue\":"); literal_string(s, node->data, node->len, a, b); return;
+    FootnoteSource witness = {0}; code_single_witness(s, leaf, node, offset, &witness);
+    put(s, ",\"sourceValue\":"); literal_string(s, node->data, node->len, a, b);
+    code_source_map(s, &witness, node->data, node->len, a, b);
+    footnotes_source_free(&witness); return;
   }
   TSNode context = ts_node_descendant_for_byte_range(ts_tree_root_node(d->tree), a * 2, a * 2);
   FootnoteSource source = {0};
@@ -671,19 +732,21 @@ static void code_source_value(Semantic *s, cmark_node *node, uint32_t a, uint32_
   if (node->presentation != CMARK_PRESENTATION_CODE) b -= ticks;
   uint32_t from = a;
   cmark_strbuf value = CMARK_BUF_INIT(cmark_get_default_mem_allocator());
+  CodeWitness witness = {.source = &source};
   while (from < b) {
     uint32_t stop = from;
     while (stop < b && d->text[stop] != '\r' && d->text[stop] != '\n') stop++;
-    append_source(&value, d, from, stop);
+    append_source(&value, d, from, stop); footnotes_source_slice(&witness.value, &source, from, stop);
     if (stop == b) break;
     uint32_t next = stop + 1;
     if (d->text[stop] == '\r' && next < b && d->text[next] == '\n') next++;
-    append_source(&value, d, stop, next);
-    from = container_prefix(d, s->d, context, next, b, &value, true);
+    append_source(&value, d, stop, next); footnotes_source_slice(&witness.value, &source, stop, next);
+    from = container_prefix(d, s->d, context, next, b, &value, true, &witness);
   }
-  trim_source_padding(&value);
+  trim_source_padding(&value, &witness.value);
   put(s, ",\"sourceValue\":"); literal_string(s, value.ptr, value.size, source_a, source_b);
-  cmark_strbuf_free(&value); free(source.text);
+  code_source_map(s, &witness.value, value.ptr, value.size, source_a, source_b);
+  cmark_strbuf_free(&value); footnotes_source_free(&witness.value); footnotes_source_free(&source);
 }
 static void block_value(Document *d, TSNode n, uint32_t a, uint32_t b, cmark_strbuf *out,
                         bool preserve_whitespace) {
@@ -691,7 +754,7 @@ static void block_value(Document *d, TSNode n, uint32_t a, uint32_t b, cmark_str
   while (a < b) {
     uint32_t stop = a;
     while (stop < b && d->text[stop] != '\r' && d->text[stop] != '\n') stop++;
-    uint32_t from = first ? a : container_prefix(d, d, ts_node_parent(n), a, stop, out, false);
+    uint32_t from = first ? a : container_prefix(d, d, ts_node_parent(n), a, stop, out, false, NULL);
     if (preserve_whitespace) append_utf16(out, d, from, stop);
     else append_line(out, d, from, stop);
     first = false;
@@ -735,7 +798,7 @@ static uint32_t math_spaces(Document *d, uint32_t stop, uint32_t *at, uint32_t *
   uint32_t count = *virtual < limit ? *virtual : limit;
   *virtual -= count;
   while (*at < stop && count < limit && (d->text[*at] == ' ' || d->text[*at] == '\t')) {
-    uint32_t width = d->text[*at] == '\t' ? 4 - column_at(d, *at) % 4 : 1;
+    uint32_t width = d->text[*at] == '\t' ? 4 - source_column(d, *at) % 4 : 1;
     (*at)++;
     uint32_t used = width < limit - count ? width : limit - count;
     count += used; *virtual += width - used;
@@ -747,10 +810,10 @@ static bool math_prefix_item(Document *d, TSNode item, uint32_t required, uint32
                              uint32_t *at, uint32_t *virtual) {
   TSNode marker = ts_node_named_child(item, 0);
   if (*at != start(marker)) return math_spaces(d, stop, at, virtual, required) == required;
-  uint32_t before = column_at(d, *at);
+  uint32_t before = source_column(d, *at);
   while (*at < end(marker) && ws(d->text[*at])) (*at)++;
   while (*at < stop && !ws(d->text[*at])) (*at)++;
-  required -= column_at(d, *at) - before + *virtual;
+  required -= source_column(d, *at) - before + *virtual;
   *virtual = 0;
   return math_spaces(d, stop, at, virtual, required) == required;
 }
@@ -783,7 +846,7 @@ static bool math_prefix(Document *d, TSNode n, uint32_t row, uint32_t stop, uint
     TSNode marker = ts_node_named_child(item, 0);
     uint32_t marker_at, marker_virtual;
     math_prefix_path(d, path + i, count - i, start(marker), start(marker), &marker_at, &marker_virtual);
-    path[i - 1].indent = item_indent(d, item) + marker_virtual;
+    path[i - 1].indent = list_item_indent(d, item) + marker_virtual;
   }
   return math_prefix_path(d, path, count, row, stop, at, virtual);
 }
@@ -902,14 +965,14 @@ static void code(Semantic *s, TSNode n, bool fenced) {
       bool only_indent = true;
       for (uint32_t at = line; at < start(n); at++)
         if (d->text[at] != ' ' && d->text[at] != '\t') only_indent = false;
-      uint32_t columns = column_at(d, start(n));
+      uint32_t columns = source_column(d, start(n));
       if (only_indent && columns > 4) first_padding = columns - 4;
     }
     if (is(parent, d->ids.list_item)) {
       TSNode marker = ts_node_named_child(parent, 0);
       if (end(marker) == start(n)) {
-        uint32_t marker_width = column_at(d, end(marker)) - column_at(d, start(marker));
-        uint32_t required = item_indent(d, parent) + 4;
+        uint32_t marker_width = source_column(d, end(marker)) - source_column(d, start(marker));
+        uint32_t required = list_item_indent(d, parent) + 4;
         if (marker_width > required) first_padding = marker_width - required;
       }
       for (uint32_t i = 0; i < ts_node_named_child_count(parent); i++) {
@@ -919,7 +982,7 @@ static void code(Semantic *s, TSNode n, bool fenced) {
         uint32_t width = 0;
         for (uint32_t at = start(child); at < end(child); at++)
           width += d->text[at] == '\t' ? 4 - width % 4 : 1;
-        if (width > item_indent(d, parent)) first_padding = width - item_indent(d, parent);
+        if (width > list_item_indent(d, parent)) first_padding = width - list_item_indent(d, parent);
       }
     }
     if (is(parent, d->ids.block_quote)) {
@@ -1050,39 +1113,89 @@ static bool suppress_empty_block(Semantic *s, TSNode node) {
   suppressed(s, start(node), finish);
   return true;
 }
-static bool item_spread(Document *d, TSNode item) {
-  TSNode task = task_marker(d, item);
-  uint32_t previous = ts_node_is_null(task) ? 0 : end(task);
-  bool found = !ts_node_is_null(task);
-  for (uint32_t i = 0; i < ts_node_named_child_count(item); i++) {
-    TSNode c = ts_node_named_child(item, i);
-    if (!block_kind(d, c)) continue;
-    if (found && blank_between(d, previous, start(c))) return true;
-    previous = is(c, d->ids.block_quote) ? end(c) : content_end(d, c); found = true;
+static uint32_t spread_slot(Spreads *spreads, TSNode node) {
+  uintptr_t key = (uintptr_t)node.id;
+  uint32_t slot = (uint32_t)((key >> 4) * UINT64_C(11400714819323198485)) & (spreads->cap - 1);
+  while (!ts_node_is_null(spreads->entries[slot].node)) {
+    if (ts_node_eq(spreads->entries[slot].node, node)) break;
+    slot = (slot + 1) & (spreads->cap - 1);
   }
-  return false;
+  return slot;
 }
-static bool list_spread(Document *d, TSNode list) {
-  uint32_t previous = 0; bool found = false;
-  for (uint32_t i = 0; i < ts_node_named_child_count(list); i++) {
-    TSNode item = ts_node_named_child(list, i);
-    if (!is(item, d->ids.list_item)) continue;
-    if (item_spread(d, item) || (found && blank_between(d, previous, start(item)))) return true;
-    previous = content_end(d, item);
-    uint32_t count = ts_node_named_child_count(item);
-    for (uint32_t j = count; j > 0; j--) {
-      TSNode child = ts_node_named_child(item, j - 1);
-      if (!block_kind(d, child)) continue;
-      if (is(child, d->ids.block_quote)) previous = end(child);
-      break;
-    }
-    found = true;
+static void spread_grow(Spreads *spreads) {
+  Spreads grown = {0};
+  reserve((void **)&grown.entries, &grown.cap, spreads->cap ? spreads->cap * 2 : 32, sizeof(SpreadEntry));
+  memset(grown.entries, 0, grown.cap * sizeof(SpreadEntry));
+  for (uint32_t i = 0; i < spreads->cap; i++) {
+    SpreadEntry entry = spreads->entries[i];
+    if (ts_node_is_null(entry.node)) continue;
+    grown.entries[spread_slot(&grown, entry.node)] = entry;
   }
-  return false;
+  free(spreads->entries); grown.count = spreads->count; *spreads = grown;
+}
+static void spread_store(Spreads *spreads, TSNode node, Spread value) {
+  if ((spreads->count + 1) * 2 > spreads->cap) spread_grow(spreads);
+  spreads->entries[spread_slot(spreads, node)] = (SpreadEntry){node, value};
+  spreads->count++;
+}
+static bool owned_quote_line(Document *d, uint32_t *line, uint32_t depth) {
+  uint32_t quotes = 0;
+  while (*line && d->text[*line - 1] != '\n' && d->text[*line - 1] != '\r') {
+    uint16_t unit = d->text[--*line];
+    if (unit == '>') { quotes++; continue; }
+    if (unit != ' ' && unit != '\t') return true;
+  }
+  return quotes >= depth;
+}
+static uint32_t quote_spread_end(Document *d, TSNode quote, uint32_t depth) {
+  uint32_t b = content_end(d, quote);
+  while (b > start(quote)) {
+    uint32_t line = b;
+    if (owned_quote_line(d, &line, depth)) return b;
+    b = line;
+    while (b > start(quote) && ws(d->text[b - 1])) b--;
+  }
+  return b;
+}
+static Spread collect_spread(Semantic *s, TSNode node, uint32_t depth) {
+  Document *d = s->d;
+  bool quote = is(node, d->ids.block_quote), list = is(node, d->ids.list);
+  bool item = is(node, d->ids.list_item);
+  if (!quote && !list && !item) return (Spread){content_end(d, node), false};
+  if (quote) depth++;
+  TSNode task = item ? task_marker(d, node) : (TSNode){0};
+  uint32_t previous = ts_node_is_null(task) ? 0 : end(task), tail = 0;
+  bool found = !ts_node_is_null(task), child_found = false;
+  Spread result = {0};
+  for (uint32_t i = 0; i < ts_node_named_child_count(node); i++) {
+    TSNode child = ts_node_named_child(node, i);
+    if (!block_kind(d, child) && !is(child, d->ids.list_item)) continue;
+    Spread value = collect_spread(s, child, depth);
+    tail = value.end; child_found = true;
+    if (quote || (list && !is(child, d->ids.list_item))) continue;
+    if (item && !block_kind(d, child)) continue;
+    if (found && blank_between(d, previous, start(child))) result.spread = true;
+    if (list && value.spread) result.spread = true;
+    previous = value.end; found = true;
+  }
+  result.end = child_found ? tail : content_end(d, node);
+  if (quote) result.end = quote_spread_end(d, node, depth);
+  spread_store(&s->spreads, node, result);
+  return result;
+}
+static bool container_spread(Semantic *s, TSNode node) {
+  if (s->spreads.cap) {
+    SpreadEntry entry = s->spreads.entries[spread_slot(&s->spreads, node)];
+    if (!ts_node_is_null(entry.node)) return entry.value.spread;
+  }
+  uint32_t depth = 0;
+  for (TSNode parent = ts_node_parent(node); !ts_node_is_null(parent); parent = ts_node_parent(parent))
+    if (is(parent, s->d->ids.block_quote)) depth++;
+  return collect_spread(s, node, depth).spread;
 }
 static void item(Semantic *s, TSNode n) {
   Document *d = s->d; begin(s, "listItem", start(n), content_end(d, n));
-  put(s, item_spread(d, n) ? ",\"spread\":true" : ",\"spread\":false");
+  put(s, container_spread(s, n) ? ",\"spread\":true" : ",\"spread\":false");
   put(s, ",\"checked\":");
   TSNode task = task_marker(d, n);
   TSNode paragraph = find_child(d, n, d->ids.paragraph);
@@ -1105,7 +1218,7 @@ static void list(Semantic *s, TSNode n) {
   while (at < end(marker) && ws(d->text[at])) at++;
   while (at < end(marker) && d->text[at] >= '0' && d->text[at] <= '9') value = value * 10 + d->text[at++] - '0';
   if (ordered) number(s, value); else put(s, "null");
-  put(s, list_spread(d, n) ? ",\"spread\":true" : ",\"spread\":false"); child_array(s, "items");
+  put(s, container_spread(s, n) ? ",\"spread\":true" : ",\"spread\":false"); child_array(s, "items");
   bool first = true;
   for (uint32_t i = 0; i < ts_node_named_child_count(n); i++) {
     TSNode c = ts_node_named_child(n, i); if (!is(c, d->ids.list_item)) continue;
@@ -1304,7 +1417,7 @@ static uint32_t semantic_result(Document *d, bool presentation, uint32_t ended) 
   }
   d->semantic_len = s.json.size; d->semantic = (char *)cmark_strbuf_detach(&s.json);
   for (uint32_t i = 0; i < s.reference_count; i++) free(s.references[i].identifier);
-  free(s.references);
+  free(s.references); free(s.spreads.entries);
   footnotes_free(s.footnotes);
   cmark_reference_map_free(s.defs);
   cmark_strbuf_free(&s.provisional); cmark_strbuf_free(&s.suppressed); free(s.path);

@@ -81,19 +81,19 @@ const cases = [
     paragraph(0, 5, [text('和', 0, 1), strong(1, 5, [text('「字', 3, 5)])]),
   ], [provisional(['children', 0, 'children', 1])]],
   ['code normalization trims one matching pair of spaces', '` a ', [
-    paragraph(0, 4, [node('code', 0, 4, { value: 'a', sourceValue: 'a' })]),
+    paragraph(0, 4, [node('code', 0, 4, { value: 'a', sourceValue: 'a', sourceMap: { value: 'a', tokenLength: 4, runs: [{ kind: 'copy', valueStart: 0, length: 1, tokenOffset: 2 }] } })]),
   ], [provisional(path, 'unclosed-code')]],
   ['all-space code content is received content', '`   ', [
-    paragraph(0, 4, [node('code', 0, 4, { value: '   ', sourceValue: '   ' })]),
+    paragraph(0, 4, [node('code', 0, 4, { value: '   ', sourceValue: '   ', sourceMap: { value: '   ', tokenLength: 4, runs: [{ kind: 'copy', valueStart: 0, length: 3, tokenOffset: 1 }] } })]),
   ], [provisional(path, 'unclosed-code')]],
   ['code normalization replaces received newlines', '` a\nb ', [
-    paragraph(0, 6, [node('code', 0, 6, { value: 'a b', sourceValue: 'a\nb' })]),
+    paragraph(0, 6, [node('code', 0, 6, { value: 'a b', sourceValue: 'a\nb', sourceMap: { value: 'a\nb', tokenLength: 6, runs: [{ kind: 'copy', valueStart: 0, length: 3, tokenOffset: 2 }] } })]),
   ], [provisional(path, 'unclosed-code')]],
   ['a trailing code newline remains received code content', '`a\n', [
-    paragraph(0, 3, [node('code', 0, 3, { value: 'a ', sourceValue: 'a\n' })]),
+    paragraph(0, 3, [node('code', 0, 3, { value: 'a ', sourceValue: 'a\n', sourceMap: { value: 'a\n', tokenLength: 3, runs: [{ kind: 'copy', valueStart: 0, length: 2, tokenOffset: 1 }] } })]),
   ], [provisional(path, 'unclosed-code')]],
   ['a mismatched backtick run stays inside received code', '``a`b', [
-    paragraph(0, 5, [node('code', 0, 5, { value: 'a`b', sourceValue: 'a`b' })]),
+    paragraph(0, 5, [node('code', 0, 5, { value: 'a`b', sourceValue: 'a`b', sourceMap: { value: 'a`b', tokenLength: 5, runs: [{ kind: 'copy', valueStart: 0, length: 3, tokenOffset: 2 }] } })]),
   ], [provisional(path, 'unclosed-code')]],
   ['a pending label retains nested formatting', '[**label', [
     paragraph(0, 8, [node('pendingLink', 0, 8, { children: [strong(1, 8, [text('label', 3, 8)])] })]),

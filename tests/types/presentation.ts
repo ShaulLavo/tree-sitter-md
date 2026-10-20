@@ -62,7 +62,32 @@ if (selected.input === 'ended') {
   const empty: readonly [] = selected.provisional
 }
 
-const sourceCode: SemanticInline = { type: 'code', range, value: 'a b', sourceValue: 'a\n b' }
+const sourceCode: SemanticInline = {
+  type: 'code', range: { start: 0, end: 6 }, value: 'a b', sourceValue: 'a\n b',
+  sourceMap: { value: 'a\n b', tokenLength: 6, runs: [{ kind: 'copy', valueStart: 0, length: 4, tokenOffset: 1 }] },
+}
+type CodeMap = Extract<SemanticInline, { type: 'code' }>['sourceMap']
+const atomMap: CodeMap = { value: '|', tokenLength: 4, runs: [{ kind: 'atom', valueStart: 0, valueLength: 1, tokenOffset: 1, sourceLength: 2 }] }
+// @ts-expect-error Inline code requires its producer map.
+const missingMap: SemanticInline = { type: 'code', range, value: 'a', sourceValue: 'a' }
+// @ts-expect-error Source maps are readonly.
+sourceCode.sourceMap.tokenLength = 9
+// @ts-expect-error Contribution arrays are readonly.
+atomMap.runs.push({ kind: 'copy', valueStart: 0, length: 1, tokenOffset: 1 })
+// @ts-expect-error Atoms require their local source contribution length.
+const incompleteAtom: CodeMap = { value: '|', tokenLength: 4, runs: [{ kind: 'atom', valueStart: 0, valueLength: 1, tokenOffset: 1 }] }
+function contributionLength(run: CodeMap['runs'][number]): number {
+  if (run.kind === 'copy') {
+    // @ts-expect-error Copy contributions are readonly.
+    run.length = 2
+    // @ts-expect-error Copy contributions have no atom length.
+    run.valueLength
+    return run.length
+  }
+  // @ts-expect-error Atom contributions have no copy length.
+  run.length
+  return run.sourceLength
+}
 const sourceLink: SemanticInline = {
   type: 'link', range, origin: 'gfm-autolink', url: 'https://a/?x&y', title: null,
   sourceUrl: 'https://a/?x&amp;y', sourceValue: 'https://a/?x&amp;y', children: [],
