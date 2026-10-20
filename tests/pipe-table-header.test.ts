@@ -141,3 +141,40 @@ for (const source of ['b\n||', 'b\n| |', 'b\n|:|', 'a|b\n|-||', 'a|b\n||-|']) {
     for (const math of [false, true]) assert.ok(fresh(source, math).exact.root.children.every(block => block.type !== 'table'))
   })
 }
+
+function expectQuotedTable(result: ReturnType<typeof snapshot>, table: boolean) {
+  for (const root of [result.exact.root, result.open.root, result.ended.root]) {
+    const quote = root.children[0]
+    assert.equal(quote?.type, 'quote')
+    if (quote?.type !== 'quote') continue
+    assert.deepEqual(quote.children.map(block => block.type), table ? ['paragraph', 'table'] : ['paragraph'])
+  }
+}
+
+function checkLazyDelimiter(source: string, math: boolean) {
+  const document = new MarkdownDocument({ gfm: true, cjk: true, math })
+  const at = source.indexOf('\n') + 1
+  const prefixed = source.slice(0, at) + '> ' + source.slice(at)
+  try {
+    document.setText(source)
+    expectQuotedTable(snapshot(document, source), true)
+    document.edit(at, at, '> ')
+    expectQuotedTable(snapshot(document, prefixed), false)
+    assert.deepEqual(snapshot(document, prefixed), fresh(prefixed, math))
+    document.reparse()
+    assert.deepEqual(snapshot(document, prefixed), fresh(prefixed, math))
+    document.edit(at, at + 2, '')
+    expectQuotedTable(snapshot(document, source), true)
+    assert.deepEqual(snapshot(document, source), fresh(source, math))
+    document.reparse()
+    assert.deepEqual(snapshot(document, source), fresh(source, math))
+  } finally { document.dispose() }
+}
+
+const lazySources = ['\n', '\r\n'].flatMap(eol =>
+  ['|---', '---|'].map(delimiter => ['> a|b', delimiter, '> c|d', '> -|-', ''].join(eol)))
+for (const source of lazySources) {
+  for (const math of [false, true]) test('lazy delimiter keeps later quoted table, profile ' + math + ' ' + JSON.stringify(source), () => {
+    checkLazyDelimiter(source, math)
+  })
+}

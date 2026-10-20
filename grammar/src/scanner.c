@@ -1222,7 +1222,8 @@ static bool parse_minus(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
         if (success) {
             return true;
         }
-        if (s->simulate && valid_symbols[PIPE_TABLE_START] && !minus_after_whitespace)
+        if (s->simulate && s->matched == s->open_blocks.size &&
+            valid_symbols[PIPE_TABLE_START] && !minus_after_whitespace)
             reject_table_delimiter_tail(s, lexer, whitespace_after_minus ? TABLE_CELL_END : TABLE_CELL_DASHES);
     }
     return false;
@@ -1534,7 +1535,7 @@ static bool parse_pipe_table(Scanner *s, TSLexer *lexer, bool header_prefix) {
     bool delimiter_header = delimiter != TABLE_CELL_INVALID &&
         (delimiter >= TABLE_CELL_DASHES || (delimiter == TABLE_CELL_START && ending_pipe)) &&
         (starting_pipe || cell_count > 0);
-    if (s->simulate && delimiter_header) {
+    if (s->simulate && s->matched == s->open_blocks.size && delimiter_header) {
         // A failed delimiter candidate disables table conversion for this paragraph.
         s->state |= STATE_TABLE_REJECTED;
         return false;

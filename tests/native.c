@@ -243,6 +243,8 @@ int main(void) {
   many_documents();
   Document *incremental = test_document(13), *fresh = test_document(13);
   const char *fixtures[] = {
+    "> a|b\n|---\n> c|d\n> -|-\n",
+    "> a|b\n---|\n> c|d\n> -|-\n",
     "b\n|---|",
     "b\n||",
     "a|b\n|-||",
