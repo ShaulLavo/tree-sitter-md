@@ -77,7 +77,15 @@ atomMap.runs.push({ kind: 'copy', valueStart: 0, length: 1, tokenOffset: 1 })
 // @ts-expect-error Atoms require their local source contribution length.
 const incompleteAtom: CodeMap = { value: '|', tokenLength: 4, runs: [{ kind: 'atom', valueStart: 0, valueLength: 1, tokenOffset: 1 }] }
 function contributionLength(run: CodeMap['runs'][number]): number {
-  if (run.kind === 'copy') return run.length
+  if (run.kind === 'copy') {
+    // @ts-expect-error Copy contributions are readonly.
+    run.length = 2
+    // @ts-expect-error Copy contributions have no atom length.
+    run.valueLength
+    return run.length
+  }
+  // @ts-expect-error Atom contributions have no copy length.
+  run.length
   return run.sourceLength
 }
 const sourceLink: SemanticInline = {

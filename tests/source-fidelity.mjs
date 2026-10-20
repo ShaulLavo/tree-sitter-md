@@ -255,3 +255,60 @@ test('decoder rejects missing, stale, partial, unordered and nonnumeric code map
     assert.throws(() => decodeSemanticRoot(JSON.stringify(root), source.length), TypeError)
   }
 })
+
+for (const [source, tabOffset] of [
+  ['- `a\n\tb`', 3], ['> `a\n>\tb`', 4],
+  ['> [^x]: `a\n>\t\tb`', 5], ['- [^x]: `a\n\t\tb`', 4],
+  ['[^x]: > `a\n    >\tb`', 8], ['> [^x]: [^y]: `a\n>\t\tb`', 5],
+]) test('virtual tab has one exact local contribution ' + JSON.stringify(source), () => {
+  for (const input of [undefined, 'open', 'ended']) {
+    const code = nodes(read(source, input), 'code')[0]
+    assert.equal(code.sourceValue, 'a\n  b')
+    assert.equal(code.value, 'a b')
+    assertCodeSourceMap(source, code)
+    assert.deepEqual(code.sourceMap.runs, [
+      { kind: 'copy', valueStart: 0, length: 2, tokenOffset: 1 },
+      { kind: 'atom', valueStart: 2, valueLength: 2, tokenOffset: tabOffset, sourceLength: 1 },
+      { kind: 'copy', valueStart: 4, length: 1, tokenOffset: tabOffset + 1 },
+    ])
+    assert.equal(source[code.range.start + tabOffset], '\t')
+  }
+})
+
+for (const eol of ['\n', '\r\n', '\r']) test('newline padding has no literal contribution ' + JSON.stringify(eol), () => {
+  const source = '`' + eol + '🙂' + eol + 'x' + eol + '`'
+  const code = nodes(read(source), 'code')[0]
+  assert.equal(code.sourceValue, '🙂' + eol + 'x')
+  assertCodeSourceMap(source, code)
+  assert.deepEqual(code.sourceMap.runs, [{ kind: 'copy', valueStart: 0, length: 3 + eol.length, tokenOffset: 1 + eol.length }])
+})
+
+test('local NUL atom and surrogate copies compose inside a footnote', () => {
+  const source = '[^x]: `🙂\n \ud800\0b`'
+  const code = nodes(read(source), 'code')[0]
+  assert.equal(code.sourceValue, '🙂\n \ud800�b')
+  assertCodeSourceMap(source, code)
+  assert.deepEqual(code.sourceMap.runs, [
+    { kind: 'copy', valueStart: 0, length: 5, tokenOffset: 1 },
+    { kind: 'atom', valueStart: 5, valueLength: 1, tokenOffset: 6, sourceLength: 1 },
+    { kind: 'copy', valueStart: 6, length: 1, tokenOffset: 7 },
+  ])
+})
+
+test('an edit before equal code occurrences shifts ranges without changing token maps', () => {
+  const document = new MarkdownDocument()
+  const source = '`one\ntwo three` and `one two\nthree`'
+  const prefix = '🙂\ud800 before\n\n'
+  try {
+    document.setText(source)
+    const before = nodes(document.semantics().root, 'code')
+    document.edit(0, 0, prefix)
+    const after = nodes(document.semantics().root, 'code')
+    assert.equal(after.length, before.length)
+    for (let i = 0; i < before.length; i++) {
+      assert.equal(after[i].range.start, before[i].range.start + prefix.length)
+      assert.deepEqual(after[i].sourceMap, before[i].sourceMap)
+      assertCodeSourceMap(prefix + source, after[i])
+    }
+  } finally { document.dispose() }
+})
