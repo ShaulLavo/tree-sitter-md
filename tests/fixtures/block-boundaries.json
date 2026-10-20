@@ -1,0 +1,4082 @@
+[
+  {
+    "id": "187/54/completed",
+    "kind": "table",
+    "source": "A (h\u05d0\u05d1- (https://exam```\n a | b |\n|---|---|\nps://eample.test/a)see\r[tps:/]t[x]: /target\n/a)$*`",
+    "sourceIdentity": {
+      "utf16Units": 94,
+      "utf16LeSha256": "81563ad9acf05b3323c844a7db1b56cb8da4b0aa0b411185b9cd88af8323a5c5",
+      "sourceJsonSha256": "d84054385dec469466513cb267ab2b6677560e73c355b86ae631977eddd8de51"
+    },
+    "rawPointer": "/cases/22/observations/54",
+    "expected": {
+      "type": "element",
+      "tagName": "table",
+      "properties": {
+        "dataSourceLine": 2,
+        "dataSourceEndLine": 6,
+        "className": [
+          "w-full"
+        ]
+      },
+      "children": [
+        {
+          "type": "element",
+          "tagName": "thead",
+          "properties": {
+            "dataSourceLine": 2,
+            "dataSourceEndLine": 2,
+            "className": [
+              "bg-muted/80"
+            ]
+          },
+          "children": [
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 2,
+                "dataSourceEndLine": 2
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "th",
+                  "properties": {
+                    "dataSourceLine": 2,
+                    "dataSourceEndLine": 2,
+                    "className": [
+                      "whitespace-nowrap",
+                      "px-4",
+                      "py-2",
+                      "text-left",
+                      "font-semibold",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "a",
+                      "position": {
+                        "start": {
+                          "line": 2,
+                          "column": 2,
+                          "offset": 26
+                        },
+                        "end": {
+                          "line": 2,
+                          "column": 3,
+                          "offset": 27
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 2,
+                      "column": 2,
+                      "offset": 26
+                    },
+                    "end": {
+                      "line": 2,
+                      "column": 4,
+                      "offset": 28
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "th",
+                  "properties": {
+                    "dataSourceLine": 2,
+                    "dataSourceEndLine": 2,
+                    "className": [
+                      "whitespace-nowrap",
+                      "px-4",
+                      "py-2",
+                      "text-left",
+                      "font-semibold",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "b",
+                      "position": {
+                        "start": {
+                          "line": 2,
+                          "column": 6,
+                          "offset": 30
+                        },
+                        "end": {
+                          "line": 2,
+                          "column": 7,
+                          "offset": 31
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 2,
+                      "column": 4,
+                      "offset": 28
+                    },
+                    "end": {
+                      "line": 2,
+                      "column": 9,
+                      "offset": 33
+                    }
+                  }
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 2,
+                  "column": 2,
+                  "offset": 26
+                },
+                "end": {
+                  "line": 2,
+                  "column": 9,
+                  "offset": 33
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 2,
+              "column": 2,
+              "offset": 26
+            },
+            "end": {
+              "line": 2,
+              "column": 9,
+              "offset": 33
+            }
+          }
+        },
+        {
+          "type": "element",
+          "tagName": "tbody",
+          "properties": {
+            "dataSourceLine": 4,
+            "dataSourceEndLine": 6,
+            "className": [
+              "[&>tr:nth-child(even)]:bg-muted/40"
+            ]
+          },
+          "children": [
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 4,
+                "dataSourceEndLine": 4
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 4,
+                    "dataSourceEndLine": 4,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "ps://eample.test/a)see",
+                      "position": {
+                        "start": {
+                          "line": 4,
+                          "column": 1,
+                          "offset": 44
+                        },
+                        "end": {
+                          "line": 4,
+                          "column": 23,
+                          "offset": 66
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 4,
+                      "column": 1,
+                      "offset": 44
+                    },
+                    "end": {
+                      "line": 4,
+                      "column": 23,
+                      "offset": 66
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 4,
+                  "column": 1,
+                  "offset": 44
+                },
+                "end": {
+                  "line": 4,
+                  "column": 23,
+                  "offset": 66
+                }
+              }
+            },
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 5,
+                "dataSourceEndLine": 5
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 5,
+                    "dataSourceEndLine": 5,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "[tps:/]t[x]: /target",
+                      "position": {
+                        "start": {
+                          "line": 5,
+                          "column": 1,
+                          "offset": 67
+                        },
+                        "end": {
+                          "line": 5,
+                          "column": 21,
+                          "offset": 87
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 5,
+                      "column": 1,
+                      "offset": 67
+                    },
+                    "end": {
+                      "line": 5,
+                      "column": 21,
+                      "offset": 87
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 5,
+                  "column": 1,
+                  "offset": 67
+                },
+                "end": {
+                  "line": 5,
+                  "column": 21,
+                  "offset": 87
+                }
+              }
+            },
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 6,
+                "dataSourceEndLine": 6
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 6,
+                    "dataSourceEndLine": 6,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "/a)$*`",
+                      "position": {
+                        "start": {
+                          "line": 6,
+                          "column": 1,
+                          "offset": 88
+                        },
+                        "end": {
+                          "line": 6,
+                          "column": 7,
+                          "offset": 94
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 6,
+                      "column": 1,
+                      "offset": 88
+                    },
+                    "end": {
+                      "line": 6,
+                      "column": 7,
+                      "offset": 94
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 6,
+                  "column": 1,
+                  "offset": 88
+                },
+                "end": {
+                  "line": 6,
+                  "column": 7,
+                  "offset": 94
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 4,
+              "column": 1,
+              "offset": 44
+            },
+            "end": {
+              "line": 6,
+              "column": 7,
+              "offset": 94
+            }
+          }
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 2,
+          "column": 2,
+          "offset": 26
+        },
+        "end": {
+          "line": 6,
+          "column": 7,
+          "offset": 94
+        }
+      }
+    }
+  },
+  {
+    "id": "187/55/completed",
+    "kind": "table",
+    "source": "A (h\u05d0\u05d1- (https://exam```\n a | b |\n|---|---|\nps://eample.test/a)see\r[tps:/]t[x]: /target\n[x]: /target\n/a)$*`",
+    "sourceIdentity": {
+      "utf16Units": 107,
+      "utf16LeSha256": "d32e4d1946e6fd7a2b0a7c36e9464e815dcc6efdddb1c19191130f9f3070dd7e",
+      "sourceJsonSha256": "0333ec5287ab7372eab1bc359a9548d8ff7f5bd604ca6df775e591407714199b"
+    },
+    "rawPointer": "/cases/22/observations/55",
+    "expected": {
+      "type": "element",
+      "tagName": "table",
+      "properties": {
+        "dataSourceLine": 2,
+        "dataSourceEndLine": 7,
+        "className": [
+          "w-full"
+        ]
+      },
+      "children": [
+        {
+          "type": "element",
+          "tagName": "thead",
+          "properties": {
+            "dataSourceLine": 2,
+            "dataSourceEndLine": 2,
+            "className": [
+              "bg-muted/80"
+            ]
+          },
+          "children": [
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 2,
+                "dataSourceEndLine": 2
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "th",
+                  "properties": {
+                    "dataSourceLine": 2,
+                    "dataSourceEndLine": 2,
+                    "className": [
+                      "whitespace-nowrap",
+                      "px-4",
+                      "py-2",
+                      "text-left",
+                      "font-semibold",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "a",
+                      "position": {
+                        "start": {
+                          "line": 2,
+                          "column": 2,
+                          "offset": 26
+                        },
+                        "end": {
+                          "line": 2,
+                          "column": 3,
+                          "offset": 27
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 2,
+                      "column": 2,
+                      "offset": 26
+                    },
+                    "end": {
+                      "line": 2,
+                      "column": 4,
+                      "offset": 28
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "th",
+                  "properties": {
+                    "dataSourceLine": 2,
+                    "dataSourceEndLine": 2,
+                    "className": [
+                      "whitespace-nowrap",
+                      "px-4",
+                      "py-2",
+                      "text-left",
+                      "font-semibold",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "b",
+                      "position": {
+                        "start": {
+                          "line": 2,
+                          "column": 6,
+                          "offset": 30
+                        },
+                        "end": {
+                          "line": 2,
+                          "column": 7,
+                          "offset": 31
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 2,
+                      "column": 4,
+                      "offset": 28
+                    },
+                    "end": {
+                      "line": 2,
+                      "column": 9,
+                      "offset": 33
+                    }
+                  }
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 2,
+                  "column": 2,
+                  "offset": 26
+                },
+                "end": {
+                  "line": 2,
+                  "column": 9,
+                  "offset": 33
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 2,
+              "column": 2,
+              "offset": 26
+            },
+            "end": {
+              "line": 2,
+              "column": 9,
+              "offset": 33
+            }
+          }
+        },
+        {
+          "type": "element",
+          "tagName": "tbody",
+          "properties": {
+            "dataSourceLine": 4,
+            "dataSourceEndLine": 7,
+            "className": [
+              "[&>tr:nth-child(even)]:bg-muted/40"
+            ]
+          },
+          "children": [
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 4,
+                "dataSourceEndLine": 4
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 4,
+                    "dataSourceEndLine": 4,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "ps://eample.test/a)see",
+                      "position": {
+                        "start": {
+                          "line": 4,
+                          "column": 1,
+                          "offset": 44
+                        },
+                        "end": {
+                          "line": 4,
+                          "column": 23,
+                          "offset": 66
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 4,
+                      "column": 1,
+                      "offset": 44
+                    },
+                    "end": {
+                      "line": 4,
+                      "column": 23,
+                      "offset": 66
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 4,
+                  "column": 1,
+                  "offset": 44
+                },
+                "end": {
+                  "line": 4,
+                  "column": 23,
+                  "offset": 66
+                }
+              }
+            },
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 5,
+                "dataSourceEndLine": 5
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 5,
+                    "dataSourceEndLine": 5,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "[tps:/]t[x]: /target",
+                      "position": {
+                        "start": {
+                          "line": 5,
+                          "column": 1,
+                          "offset": 67
+                        },
+                        "end": {
+                          "line": 5,
+                          "column": 21,
+                          "offset": 87
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 5,
+                      "column": 1,
+                      "offset": 67
+                    },
+                    "end": {
+                      "line": 5,
+                      "column": 21,
+                      "offset": 87
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 5,
+                  "column": 1,
+                  "offset": 67
+                },
+                "end": {
+                  "line": 5,
+                  "column": 21,
+                  "offset": 87
+                }
+              }
+            },
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 6,
+                "dataSourceEndLine": 6
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 6,
+                    "dataSourceEndLine": 6,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "[x]: /target",
+                      "position": {
+                        "start": {
+                          "line": 6,
+                          "column": 1,
+                          "offset": 88
+                        },
+                        "end": {
+                          "line": 6,
+                          "column": 13,
+                          "offset": 100
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 6,
+                      "column": 1,
+                      "offset": 88
+                    },
+                    "end": {
+                      "line": 6,
+                      "column": 13,
+                      "offset": 100
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 6,
+                  "column": 1,
+                  "offset": 88
+                },
+                "end": {
+                  "line": 6,
+                  "column": 13,
+                  "offset": 100
+                }
+              }
+            },
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 7,
+                "dataSourceEndLine": 7
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 7,
+                    "dataSourceEndLine": 7,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "/a)$*`",
+                      "position": {
+                        "start": {
+                          "line": 7,
+                          "column": 1,
+                          "offset": 101
+                        },
+                        "end": {
+                          "line": 7,
+                          "column": 7,
+                          "offset": 107
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 7,
+                      "column": 1,
+                      "offset": 101
+                    },
+                    "end": {
+                      "line": 7,
+                      "column": 7,
+                      "offset": 107
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 7,
+                  "column": 1,
+                  "offset": 101
+                },
+                "end": {
+                  "line": 7,
+                  "column": 7,
+                  "offset": 107
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 4,
+              "column": 1,
+              "offset": 44
+            },
+            "end": {
+              "line": 7,
+              "column": 7,
+              "offset": 107
+            }
+          }
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 2,
+          "column": 2,
+          "offset": 26
+        },
+        "end": {
+          "line": 7,
+          "column": 7,
+          "offset": 107
+        }
+      }
+    }
+  },
+  {
+    "id": "187/54/live",
+    "kind": "table",
+    "source": "A (h\u05d0\u05d1- (https://exam```\n a | b |\n|---|---|\nps://eample.test/a)see\r[tps:/]t[x]: /target\n/a)$*`",
+    "sourceIdentity": {
+      "utf16Units": 94,
+      "utf16LeSha256": "81563ad9acf05b3323c844a7db1b56cb8da4b0aa0b411185b9cd88af8323a5c5",
+      "sourceJsonSha256": "d84054385dec469466513cb267ab2b6677560e73c355b86ae631977eddd8de51"
+    },
+    "rawPointer": "/cases/23/observations/54",
+    "expected": {
+      "type": "element",
+      "tagName": "table",
+      "properties": {
+        "dataSourceLine": 2,
+        "dataSourceEndLine": 6,
+        "className": [
+          "w-full"
+        ]
+      },
+      "children": [
+        {
+          "type": "element",
+          "tagName": "thead",
+          "properties": {
+            "dataSourceLine": 2,
+            "dataSourceEndLine": 2,
+            "className": [
+              "bg-muted/80"
+            ]
+          },
+          "children": [
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 2,
+                "dataSourceEndLine": 2
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "th",
+                  "properties": {
+                    "dataSourceLine": 2,
+                    "dataSourceEndLine": 2,
+                    "className": [
+                      "whitespace-nowrap",
+                      "px-4",
+                      "py-2",
+                      "text-left",
+                      "font-semibold",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "a",
+                      "position": {
+                        "start": {
+                          "line": 2,
+                          "column": 2,
+                          "offset": 26
+                        },
+                        "end": {
+                          "line": 2,
+                          "column": 3,
+                          "offset": 27
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 2,
+                      "column": 2,
+                      "offset": 26
+                    },
+                    "end": {
+                      "line": 2,
+                      "column": 4,
+                      "offset": 28
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "th",
+                  "properties": {
+                    "dataSourceLine": 2,
+                    "dataSourceEndLine": 2,
+                    "className": [
+                      "whitespace-nowrap",
+                      "px-4",
+                      "py-2",
+                      "text-left",
+                      "font-semibold",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "b",
+                      "position": {
+                        "start": {
+                          "line": 2,
+                          "column": 6,
+                          "offset": 30
+                        },
+                        "end": {
+                          "line": 2,
+                          "column": 7,
+                          "offset": 31
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 2,
+                      "column": 4,
+                      "offset": 28
+                    },
+                    "end": {
+                      "line": 2,
+                      "column": 9,
+                      "offset": 33
+                    }
+                  }
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 2,
+                  "column": 2,
+                  "offset": 26
+                },
+                "end": {
+                  "line": 2,
+                  "column": 9,
+                  "offset": 33
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 2,
+              "column": 2,
+              "offset": 26
+            },
+            "end": {
+              "line": 2,
+              "column": 9,
+              "offset": 33
+            }
+          }
+        },
+        {
+          "type": "element",
+          "tagName": "tbody",
+          "properties": {
+            "dataSourceLine": 4,
+            "dataSourceEndLine": 6,
+            "className": [
+              "[&>tr:nth-child(even)]:bg-muted/40"
+            ]
+          },
+          "children": [
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 4,
+                "dataSourceEndLine": 4
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 4,
+                    "dataSourceEndLine": 4,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "ps://eample.test/a)see",
+                      "position": {
+                        "start": {
+                          "line": 4,
+                          "column": 1,
+                          "offset": 44
+                        },
+                        "end": {
+                          "line": 4,
+                          "column": 23,
+                          "offset": 66
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 4,
+                      "column": 1,
+                      "offset": 44
+                    },
+                    "end": {
+                      "line": 4,
+                      "column": 23,
+                      "offset": 66
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 4,
+                  "column": 1,
+                  "offset": 44
+                },
+                "end": {
+                  "line": 4,
+                  "column": 23,
+                  "offset": 66
+                }
+              }
+            },
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 5,
+                "dataSourceEndLine": 5
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 5,
+                    "dataSourceEndLine": 5,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "[tps:/]t[x]: /target",
+                      "position": {
+                        "start": {
+                          "line": 5,
+                          "column": 1,
+                          "offset": 67
+                        },
+                        "end": {
+                          "line": 5,
+                          "column": 21,
+                          "offset": 87
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 5,
+                      "column": 1,
+                      "offset": 67
+                    },
+                    "end": {
+                      "line": 5,
+                      "column": 21,
+                      "offset": 87
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 5,
+                  "column": 1,
+                  "offset": 67
+                },
+                "end": {
+                  "line": 5,
+                  "column": 21,
+                  "offset": 87
+                }
+              }
+            },
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 6,
+                "dataSourceEndLine": 6
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 6,
+                    "dataSourceEndLine": 6,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "/a)$*",
+                      "position": {
+                        "start": {
+                          "line": 6,
+                          "column": 1,
+                          "offset": 88
+                        },
+                        "end": {
+                          "line": 6,
+                          "column": 6,
+                          "offset": 93
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 6,
+                      "column": 1,
+                      "offset": 88
+                    },
+                    "end": {
+                      "line": 6,
+                      "column": 6,
+                      "offset": 93
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 6,
+                  "column": 1,
+                  "offset": 88
+                },
+                "end": {
+                  "line": 6,
+                  "column": 6,
+                  "offset": 93
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 4,
+              "column": 1,
+              "offset": 44
+            },
+            "end": {
+              "line": 6,
+              "column": 6,
+              "offset": 93
+            }
+          }
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 2,
+          "column": 2,
+          "offset": 26
+        },
+        "end": {
+          "line": 6,
+          "column": 6,
+          "offset": 93
+        }
+      }
+    }
+  },
+  {
+    "id": "187/55/live",
+    "kind": "table",
+    "source": "A (h\u05d0\u05d1- (https://exam```\n a | b |\n|---|---|\nps://eample.test/a)see\r[tps:/]t[x]: /target\n[x]: /target\n/a)$*`",
+    "sourceIdentity": {
+      "utf16Units": 107,
+      "utf16LeSha256": "d32e4d1946e6fd7a2b0a7c36e9464e815dcc6efdddb1c19191130f9f3070dd7e",
+      "sourceJsonSha256": "0333ec5287ab7372eab1bc359a9548d8ff7f5bd604ca6df775e591407714199b"
+    },
+    "rawPointer": "/cases/23/observations/55",
+    "expected": {
+      "type": "element",
+      "tagName": "table",
+      "properties": {
+        "dataSourceLine": 2,
+        "dataSourceEndLine": 7,
+        "className": [
+          "w-full"
+        ]
+      },
+      "children": [
+        {
+          "type": "element",
+          "tagName": "thead",
+          "properties": {
+            "dataSourceLine": 2,
+            "dataSourceEndLine": 2,
+            "className": [
+              "bg-muted/80"
+            ]
+          },
+          "children": [
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 2,
+                "dataSourceEndLine": 2
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "th",
+                  "properties": {
+                    "dataSourceLine": 2,
+                    "dataSourceEndLine": 2,
+                    "className": [
+                      "whitespace-nowrap",
+                      "px-4",
+                      "py-2",
+                      "text-left",
+                      "font-semibold",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "a",
+                      "position": {
+                        "start": {
+                          "line": 2,
+                          "column": 2,
+                          "offset": 26
+                        },
+                        "end": {
+                          "line": 2,
+                          "column": 3,
+                          "offset": 27
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 2,
+                      "column": 2,
+                      "offset": 26
+                    },
+                    "end": {
+                      "line": 2,
+                      "column": 4,
+                      "offset": 28
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "th",
+                  "properties": {
+                    "dataSourceLine": 2,
+                    "dataSourceEndLine": 2,
+                    "className": [
+                      "whitespace-nowrap",
+                      "px-4",
+                      "py-2",
+                      "text-left",
+                      "font-semibold",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "b",
+                      "position": {
+                        "start": {
+                          "line": 2,
+                          "column": 6,
+                          "offset": 30
+                        },
+                        "end": {
+                          "line": 2,
+                          "column": 7,
+                          "offset": 31
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 2,
+                      "column": 4,
+                      "offset": 28
+                    },
+                    "end": {
+                      "line": 2,
+                      "column": 9,
+                      "offset": 33
+                    }
+                  }
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 2,
+                  "column": 2,
+                  "offset": 26
+                },
+                "end": {
+                  "line": 2,
+                  "column": 9,
+                  "offset": 33
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 2,
+              "column": 2,
+              "offset": 26
+            },
+            "end": {
+              "line": 2,
+              "column": 9,
+              "offset": 33
+            }
+          }
+        },
+        {
+          "type": "element",
+          "tagName": "tbody",
+          "properties": {
+            "dataSourceLine": 4,
+            "dataSourceEndLine": 7,
+            "className": [
+              "[&>tr:nth-child(even)]:bg-muted/40"
+            ]
+          },
+          "children": [
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 4,
+                "dataSourceEndLine": 4
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 4,
+                    "dataSourceEndLine": 4,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "ps://eample.test/a)see",
+                      "position": {
+                        "start": {
+                          "line": 4,
+                          "column": 1,
+                          "offset": 44
+                        },
+                        "end": {
+                          "line": 4,
+                          "column": 23,
+                          "offset": 66
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 4,
+                      "column": 1,
+                      "offset": 44
+                    },
+                    "end": {
+                      "line": 4,
+                      "column": 23,
+                      "offset": 66
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 4,
+                  "column": 1,
+                  "offset": 44
+                },
+                "end": {
+                  "line": 4,
+                  "column": 23,
+                  "offset": 66
+                }
+              }
+            },
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 5,
+                "dataSourceEndLine": 5
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 5,
+                    "dataSourceEndLine": 5,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "[tps:/]t[x]: /target",
+                      "position": {
+                        "start": {
+                          "line": 5,
+                          "column": 1,
+                          "offset": 67
+                        },
+                        "end": {
+                          "line": 5,
+                          "column": 21,
+                          "offset": 87
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 5,
+                      "column": 1,
+                      "offset": 67
+                    },
+                    "end": {
+                      "line": 5,
+                      "column": 21,
+                      "offset": 87
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 5,
+                  "column": 1,
+                  "offset": 67
+                },
+                "end": {
+                  "line": 5,
+                  "column": 21,
+                  "offset": 87
+                }
+              }
+            },
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 6,
+                "dataSourceEndLine": 6
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 6,
+                    "dataSourceEndLine": 6,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "[x]: /target",
+                      "position": {
+                        "start": {
+                          "line": 6,
+                          "column": 1,
+                          "offset": 88
+                        },
+                        "end": {
+                          "line": 6,
+                          "column": 13,
+                          "offset": 100
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 6,
+                      "column": 1,
+                      "offset": 88
+                    },
+                    "end": {
+                      "line": 6,
+                      "column": 13,
+                      "offset": 100
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 6,
+                  "column": 1,
+                  "offset": 88
+                },
+                "end": {
+                  "line": 6,
+                  "column": 13,
+                  "offset": 100
+                }
+              }
+            },
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 7,
+                "dataSourceEndLine": 7
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 7,
+                    "dataSourceEndLine": 7,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "/a)$*",
+                      "position": {
+                        "start": {
+                          "line": 7,
+                          "column": 1,
+                          "offset": 101
+                        },
+                        "end": {
+                          "line": 7,
+                          "column": 6,
+                          "offset": 106
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 7,
+                      "column": 1,
+                      "offset": 101
+                    },
+                    "end": {
+                      "line": 7,
+                      "column": 6,
+                      "offset": 106
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 7,
+                  "column": 1,
+                  "offset": 101
+                },
+                "end": {
+                  "line": 7,
+                  "column": 6,
+                  "offset": 106
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 4,
+              "column": 1,
+              "offset": 44
+            },
+            "end": {
+              "line": 7,
+              "column": 6,
+              "offset": 106
+            }
+          }
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 2,
+          "column": 2,
+          "offset": 26
+        },
+        "end": {
+          "line": 7,
+          "column": 6,
+          "offset": 106
+        }
+      }
+    }
+  },
+  {
+    "id": "201/28/completed",
+    "kind": "table",
+    "source": "| a | b |\n|---|---|\nA(&amp;https://exttps:.",
+    "sourceIdentity": {
+      "utf16Units": 43,
+      "utf16LeSha256": "05eb37201b78e05d52d72933748adec92da09e5b640d994efbcf14ae177669f9",
+      "sourceJsonSha256": "7906ae61c7121bcabdd18e012d0cf50bc3c701a489cd7cfe94490f2a55b32600"
+    },
+    "rawPointer": "/cases/50/observations/28",
+    "expected": {
+      "type": "element",
+      "tagName": "table",
+      "properties": {
+        "dataSourceLine": 1,
+        "dataSourceEndLine": 3,
+        "className": [
+          "w-full"
+        ]
+      },
+      "children": [
+        {
+          "type": "element",
+          "tagName": "thead",
+          "properties": {
+            "dataSourceLine": 1,
+            "dataSourceEndLine": 1,
+            "className": [
+              "bg-muted/80"
+            ]
+          },
+          "children": [
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 1,
+                "dataSourceEndLine": 1
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "th",
+                  "properties": {
+                    "dataSourceLine": 1,
+                    "dataSourceEndLine": 1,
+                    "className": [
+                      "whitespace-nowrap",
+                      "px-4",
+                      "py-2",
+                      "text-left",
+                      "font-semibold",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "a",
+                      "position": {
+                        "start": {
+                          "line": 1,
+                          "column": 3,
+                          "offset": 2
+                        },
+                        "end": {
+                          "line": 1,
+                          "column": 4,
+                          "offset": 3
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 1,
+                      "column": 1,
+                      "offset": 0
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 5,
+                      "offset": 4
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "th",
+                  "properties": {
+                    "dataSourceLine": 1,
+                    "dataSourceEndLine": 1,
+                    "className": [
+                      "whitespace-nowrap",
+                      "px-4",
+                      "py-2",
+                      "text-left",
+                      "font-semibold",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "b",
+                      "position": {
+                        "start": {
+                          "line": 1,
+                          "column": 7,
+                          "offset": 6
+                        },
+                        "end": {
+                          "line": 1,
+                          "column": 8,
+                          "offset": 7
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 1,
+                      "column": 5,
+                      "offset": 4
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 10,
+                      "offset": 9
+                    }
+                  }
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 1,
+                  "column": 1,
+                  "offset": 0
+                },
+                "end": {
+                  "line": 1,
+                  "column": 10,
+                  "offset": 9
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 1,
+              "column": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 1,
+              "column": 10,
+              "offset": 9
+            }
+          }
+        },
+        {
+          "type": "element",
+          "tagName": "tbody",
+          "properties": {
+            "dataSourceLine": 3,
+            "dataSourceEndLine": 3,
+            "className": [
+              "[&>tr:nth-child(even)]:bg-muted/40"
+            ]
+          },
+          "children": [
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 3,
+                "dataSourceEndLine": 3
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 3,
+                    "dataSourceEndLine": 3,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "A(&",
+                      "position": {
+                        "start": {
+                          "line": 3,
+                          "column": 1,
+                          "offset": 20
+                        },
+                        "end": {
+                          "line": 3,
+                          "column": 8,
+                          "offset": 27
+                        }
+                      }
+                    },
+                    {
+                      "type": "element",
+                      "tagName": "a",
+                      "properties": {
+                        "href": "https://exttps",
+                        "dataSourceLine": 3,
+                        "dataSourceEndLine": 3,
+                        "className": [
+                          "wrap-anywhere",
+                          "font-medium",
+                          "text-primary",
+                          "underline"
+                        ]
+                      },
+                      "children": [
+                        {
+                          "type": "text",
+                          "value": "https://exttps",
+                          "position": {
+                            "start": {
+                              "line": 3,
+                              "column": 8,
+                              "offset": 27
+                            },
+                            "end": {
+                              "line": 3,
+                              "column": 22,
+                              "offset": 41
+                            }
+                          }
+                        }
+                      ],
+                      "position": {
+                        "start": {
+                          "line": 3,
+                          "column": 8,
+                          "offset": 27
+                        },
+                        "end": {
+                          "line": 3,
+                          "column": 22,
+                          "offset": 41
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "value": ":.",
+                      "position": {
+                        "start": {
+                          "line": 3,
+                          "column": 22,
+                          "offset": 41
+                        },
+                        "end": {
+                          "line": 3,
+                          "column": 24,
+                          "offset": 43
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 3,
+                      "column": 1,
+                      "offset": 20
+                    },
+                    "end": {
+                      "line": 3,
+                      "column": 24,
+                      "offset": 43
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 3,
+                  "column": 1,
+                  "offset": 20
+                },
+                "end": {
+                  "line": 3,
+                  "column": 24,
+                  "offset": 43
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 3,
+              "column": 1,
+              "offset": 20
+            },
+            "end": {
+              "line": 3,
+              "column": 24,
+              "offset": 43
+            }
+          }
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 1,
+          "column": 1,
+          "offset": 0
+        },
+        "end": {
+          "line": 3,
+          "column": 24,
+          "offset": 43
+        }
+      }
+    }
+  },
+  {
+    "id": "201/28/live",
+    "kind": "table",
+    "source": "| a | b |\n|---|---|\nA(&amp;https://exttps:.",
+    "sourceIdentity": {
+      "utf16Units": 43,
+      "utf16LeSha256": "05eb37201b78e05d52d72933748adec92da09e5b640d994efbcf14ae177669f9",
+      "sourceJsonSha256": "7906ae61c7121bcabdd18e012d0cf50bc3c701a489cd7cfe94490f2a55b32600"
+    },
+    "rawPointer": "/cases/51/observations/28",
+    "expected": {
+      "type": "element",
+      "tagName": "table",
+      "properties": {
+        "dataSourceLine": 1,
+        "dataSourceEndLine": 3,
+        "className": [
+          "w-full"
+        ]
+      },
+      "children": [
+        {
+          "type": "element",
+          "tagName": "thead",
+          "properties": {
+            "dataSourceLine": 1,
+            "dataSourceEndLine": 1,
+            "className": [
+              "bg-muted/80"
+            ]
+          },
+          "children": [
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 1,
+                "dataSourceEndLine": 1
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "th",
+                  "properties": {
+                    "dataSourceLine": 1,
+                    "dataSourceEndLine": 1,
+                    "className": [
+                      "whitespace-nowrap",
+                      "px-4",
+                      "py-2",
+                      "text-left",
+                      "font-semibold",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "a",
+                      "position": {
+                        "start": {
+                          "line": 1,
+                          "column": 3,
+                          "offset": 2
+                        },
+                        "end": {
+                          "line": 1,
+                          "column": 4,
+                          "offset": 3
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 1,
+                      "column": 1,
+                      "offset": 0
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 5,
+                      "offset": 4
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "th",
+                  "properties": {
+                    "dataSourceLine": 1,
+                    "dataSourceEndLine": 1,
+                    "className": [
+                      "whitespace-nowrap",
+                      "px-4",
+                      "py-2",
+                      "text-left",
+                      "font-semibold",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "b",
+                      "position": {
+                        "start": {
+                          "line": 1,
+                          "column": 7,
+                          "offset": 6
+                        },
+                        "end": {
+                          "line": 1,
+                          "column": 8,
+                          "offset": 7
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 1,
+                      "column": 5,
+                      "offset": 4
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 10,
+                      "offset": 9
+                    }
+                  }
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 1,
+                  "column": 1,
+                  "offset": 0
+                },
+                "end": {
+                  "line": 1,
+                  "column": 10,
+                  "offset": 9
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 1,
+              "column": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 1,
+              "column": 10,
+              "offset": 9
+            }
+          }
+        },
+        {
+          "type": "element",
+          "tagName": "tbody",
+          "properties": {
+            "dataSourceLine": 3,
+            "dataSourceEndLine": 3,
+            "className": [
+              "[&>tr:nth-child(even)]:bg-muted/40"
+            ]
+          },
+          "children": [
+            {
+              "type": "element",
+              "tagName": "tr",
+              "properties": {
+                "dataSourceLine": 3,
+                "dataSourceEndLine": 3
+              },
+              "children": [
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "dataSourceLine": 3,
+                    "dataSourceEndLine": 3,
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": [
+                    {
+                      "type": "text",
+                      "value": "A(&",
+                      "position": {
+                        "start": {
+                          "line": 3,
+                          "column": 1,
+                          "offset": 20
+                        },
+                        "end": {
+                          "line": 3,
+                          "column": 8,
+                          "offset": 27
+                        }
+                      }
+                    },
+                    {
+                      "type": "element",
+                      "tagName": "a",
+                      "properties": {
+                        "href": "https://exttps",
+                        "dataSourceLine": 3,
+                        "dataSourceEndLine": 3,
+                        "className": [
+                          "wrap-anywhere",
+                          "font-medium",
+                          "text-primary",
+                          "underline"
+                        ]
+                      },
+                      "children": [
+                        {
+                          "type": "text",
+                          "value": "https://exttps",
+                          "position": {
+                            "start": {
+                              "line": 3,
+                              "column": 8,
+                              "offset": 27
+                            },
+                            "end": {
+                              "line": 3,
+                              "column": 22,
+                              "offset": 41
+                            }
+                          }
+                        }
+                      ],
+                      "position": {
+                        "start": {
+                          "line": 3,
+                          "column": 8,
+                          "offset": 27
+                        },
+                        "end": {
+                          "line": 3,
+                          "column": 22,
+                          "offset": 41
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "value": ":.",
+                      "position": {
+                        "start": {
+                          "line": 3,
+                          "column": 22,
+                          "offset": 41
+                        },
+                        "end": {
+                          "line": 3,
+                          "column": 24,
+                          "offset": 43
+                        }
+                      }
+                    }
+                  ],
+                  "position": {
+                    "start": {
+                      "line": 3,
+                      "column": 1,
+                      "offset": 20
+                    },
+                    "end": {
+                      "line": 3,
+                      "column": 24,
+                      "offset": 43
+                    }
+                  }
+                },
+                {
+                  "type": "element",
+                  "tagName": "td",
+                  "properties": {
+                    "className": [
+                      "px-4",
+                      "py-2",
+                      "text-sm"
+                    ]
+                  },
+                  "children": []
+                }
+              ],
+              "position": {
+                "start": {
+                  "line": 3,
+                  "column": 1,
+                  "offset": 20
+                },
+                "end": {
+                  "line": 3,
+                  "column": 24,
+                  "offset": 43
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 3,
+              "column": 1,
+              "offset": 20
+            },
+            "end": {
+              "line": 3,
+              "column": 24,
+              "offset": 43
+            }
+          }
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 1,
+          "column": 1,
+          "offset": 0
+        },
+        "end": {
+          "line": 3,
+          "column": 24,
+          "offset": 43
+        }
+      }
+    }
+  },
+  {
+    "id": "205/64/completed",
+    "kind": "list",
+    "source": "A***\u05d0| \ud83e\uddd1\u200d\ud83d\udcbb-  |\n- -\r\n\u05d0\u05d1\u05d2**",
+    "sourceIdentity": {
+      "utf16Units": 27,
+      "utf16LeSha256": "3d144481442dc9848330f9a41985c628e11c7ad04429f756cb776632bea74246",
+      "sourceJsonSha256": "c630b951da535c2554f17f80d08bd8ebad4a256dac8d3361a94c6e9f52615016"
+    },
+    "rawPointer": "/cases/58/observations/64",
+    "expected": {
+      "type": "element",
+      "tagName": "ul",
+      "properties": {
+        "dataSourceLine": 2,
+        "dataSourceEndLine": 3,
+        "className": [
+          "list-inside",
+          "list-disc",
+          "whitespace-normal",
+          "[li_&]:pl-6"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "element",
+          "tagName": "li",
+          "properties": {
+            "dataSourceLine": 2,
+            "dataSourceEndLine": 3,
+            "className": [
+              "py-1",
+              "[&>p]:inline"
+            ]
+          },
+          "children": [
+            {
+              "type": "text",
+              "value": "-\r\n\u05d0\u05d1\u05d2**",
+              "position": {
+                "start": {
+                  "line": 2,
+                  "column": 3,
+                  "offset": 19
+                },
+                "end": {
+                  "line": 3,
+                  "column": 6,
+                  "offset": 27
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 2,
+              "column": 1,
+              "offset": 17
+            },
+            "end": {
+              "line": 3,
+              "column": 6,
+              "offset": 27
+            }
+          }
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 2,
+          "column": 1,
+          "offset": 17
+        },
+        "end": {
+          "line": 3,
+          "column": 6,
+          "offset": 27
+        }
+      }
+    }
+  },
+  {
+    "id": "205/64/live",
+    "kind": "list",
+    "source": "A***\u05d0| \ud83e\uddd1\u200d\ud83d\udcbb-  |\n- -\r\n\u05d0\u05d1\u05d2**",
+    "sourceIdentity": {
+      "utf16Units": 27,
+      "utf16LeSha256": "3d144481442dc9848330f9a41985c628e11c7ad04429f756cb776632bea74246",
+      "sourceJsonSha256": "c630b951da535c2554f17f80d08bd8ebad4a256dac8d3361a94c6e9f52615016"
+    },
+    "rawPointer": "/cases/59/observations/64",
+    "expected": {
+      "type": "element",
+      "tagName": "ul",
+      "properties": {
+        "dataSourceLine": 2,
+        "dataSourceEndLine": 3,
+        "className": [
+          "list-inside",
+          "list-disc",
+          "whitespace-normal",
+          "[li_&]:pl-6"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "element",
+          "tagName": "li",
+          "properties": {
+            "dataSourceLine": 2,
+            "dataSourceEndLine": 3,
+            "className": [
+              "py-1",
+              "[&>p]:inline"
+            ]
+          },
+          "children": [
+            {
+              "type": "text",
+              "value": "-\r\n\u05d0\u05d1\u05d2**",
+              "position": {
+                "start": {
+                  "line": 2,
+                  "column": 3,
+                  "offset": 19
+                },
+                "end": {
+                  "line": 3,
+                  "column": 6,
+                  "offset": 27
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 2,
+              "column": 1,
+              "offset": 17
+            },
+            "end": {
+              "line": 3,
+              "column": 6,
+              "offset": 27
+            }
+          }
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 2,
+          "column": 1,
+          "offset": 17
+        },
+        "end": {
+          "line": 3,
+          "column": 6,
+          "offset": 27
+        }
+      }
+    }
+  },
+  {
+    "id": "210/58/completed",
+    "kind": "paragraph",
+    "source": "|*>\r\n * \n\na&amp;| a b &amp;|\n|----|\n---|\n |--| a | b\n.[`| a | b |\n|`---|- (https://example. |\n|---|-|\n\n",
+    "sourceIdentity": {
+      "utf16Units": 103,
+      "utf16LeSha256": "823608e2bbf9198c6dd27817a4c647044ed2137b39596e7278d11b74ed876633",
+      "sourceJsonSha256": "dda92fe2f5d620d59888ec1f51884f66b859572667c5b4468b0cac71cd741107"
+    },
+    "rawPointer": "/cases/68/observations/58",
+    "expected": {
+      "type": "element",
+      "tagName": "p",
+      "properties": {
+        "dataSourceLine": 1,
+        "dataSourceEndLine": 2
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "|*>\r\n*",
+          "position": {
+            "start": {
+              "line": 1,
+              "column": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 2,
+              "column": 3,
+              "offset": 7
+            }
+          }
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 1,
+          "column": 1,
+          "offset": 0
+        },
+        "end": {
+          "line": 2,
+          "column": 4,
+          "offset": 8
+        }
+      }
+    }
+  },
+  {
+    "id": "210/58/live",
+    "kind": "paragraph",
+    "source": "|*>\r\n * \n\na&amp;| a b &amp;|\n|----|\n---|\n |--| a | b\n.[`| a | b |\n|`---|- (https://example. |\n|---|-|\n\n",
+    "sourceIdentity": {
+      "utf16Units": 103,
+      "utf16LeSha256": "823608e2bbf9198c6dd27817a4c647044ed2137b39596e7278d11b74ed876633",
+      "sourceJsonSha256": "dda92fe2f5d620d59888ec1f51884f66b859572667c5b4468b0cac71cd741107"
+    },
+    "rawPointer": "/cases/69/observations/58",
+    "expected": {
+      "type": "element",
+      "tagName": "p",
+      "properties": {
+        "dataSourceLine": 1,
+        "dataSourceEndLine": 2
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "|*>\r\n*",
+          "position": {
+            "start": {
+              "line": 1,
+              "column": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 2,
+              "column": 3,
+              "offset": 7
+            }
+          }
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 1,
+          "column": 1,
+          "offset": 0
+        },
+        "end": {
+          "line": 2,
+          "column": 4,
+          "offset": 8
+        }
+      }
+    }
+  },
+  {
+    "id": "231/16/completed",
+    "kind": "quote",
+    "source": "(https://exampl$x$e\u05d0\u05d1\u05d2.test/a)A ****se\n> \n\u200d",
+    "sourceIdentity": {
+      "utf16Units": 43,
+      "utf16LeSha256": "681299b25a9043ba2df0f34d2fb7e216a78c95b18fddc08f4edbed3f849701ce",
+      "sourceJsonSha256": "8fbeff014dec6592faa98c09d9df22e474f0b22c36186be7ff84dd28cd81a9f9"
+    },
+    "rawPointer": "/cases/110/observations/16",
+    "expected": {
+      "type": "element",
+      "tagName": "blockquote",
+      "properties": {
+        "dataSourceLine": 2,
+        "dataSourceEndLine": 2,
+        "className": [
+          "my-4",
+          "border-l-4",
+          "border-muted-foreground/30",
+          "pl-4",
+          "text-muted-foreground",
+          "italic"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 2,
+          "column": 1,
+          "offset": 39
+        },
+        "end": {
+          "line": 2,
+          "column": 3,
+          "offset": 41
+        }
+      }
+    }
+  },
+  {
+    "id": "231/17/completed",
+    "kind": "quote",
+    "source": "(https://exampl$x$e\u05d0\u05d1\u05d2.test/a)A ******se\n> \n\u200d",
+    "sourceIdentity": {
+      "utf16Units": 45,
+      "utf16LeSha256": "20d187a2b402a47ba2a92fffe9550d387057d17343f2605d0cbea228ee542b40",
+      "sourceJsonSha256": "787c2564a1644874c4cf1f85331c97603ea23e6a7edeb597c43582d71e238c7e"
+    },
+    "rawPointer": "/cases/110/observations/17",
+    "expected": {
+      "type": "element",
+      "tagName": "blockquote",
+      "properties": {
+        "dataSourceLine": 2,
+        "dataSourceEndLine": 2,
+        "className": [
+          "my-4",
+          "border-l-4",
+          "border-muted-foreground/30",
+          "pl-4",
+          "text-muted-foreground",
+          "italic"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 2,
+          "column": 1,
+          "offset": 41
+        },
+        "end": {
+          "line": 2,
+          "column": 3,
+          "offset": 43
+        }
+      }
+    }
+  },
+  {
+    "id": "231/18/completed",
+    "kind": "quote",
+    "source": "(https://examp\r\nl$x$e\u05d0\u05d1\u05d2.test/a)A ******se\n> \n\u200d",
+    "sourceIdentity": {
+      "utf16Units": 47,
+      "utf16LeSha256": "495237ba03017206dd9c212b742ee8409b98318f5f55d3045ca04e54215c2186",
+      "sourceJsonSha256": "f2fbbe12e51177a1680a8a4cf0f3d1da2573f428a16f4052b176058c0d488f44"
+    },
+    "rawPointer": "/cases/110/observations/18",
+    "expected": {
+      "type": "element",
+      "tagName": "blockquote",
+      "properties": {
+        "dataSourceLine": 3,
+        "dataSourceEndLine": 3,
+        "className": [
+          "my-4",
+          "border-l-4",
+          "border-muted-foreground/30",
+          "pl-4",
+          "text-muted-foreground",
+          "italic"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 3,
+          "column": 1,
+          "offset": 43
+        },
+        "end": {
+          "line": 3,
+          "column": 3,
+          "offset": 45
+        }
+      }
+    }
+  },
+  {
+    "id": "231/19/completed",
+    "kind": "quote",
+    "source": "(https://exampl$x$e\u05d0\u05d1\u05d2.test/a)A ******se\n> \n\u200d",
+    "sourceIdentity": {
+      "utf16Units": 45,
+      "utf16LeSha256": "20d187a2b402a47ba2a92fffe9550d387057d17343f2605d0cbea228ee542b40",
+      "sourceJsonSha256": "787c2564a1644874c4cf1f85331c97603ea23e6a7edeb597c43582d71e238c7e"
+    },
+    "rawPointer": "/cases/110/observations/19",
+    "expected": {
+      "type": "element",
+      "tagName": "blockquote",
+      "properties": {
+        "dataSourceLine": 2,
+        "dataSourceEndLine": 2,
+        "className": [
+          "my-4",
+          "border-l-4",
+          "border-muted-foreground/30",
+          "pl-4",
+          "text-muted-foreground",
+          "italic"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 2,
+          "column": 1,
+          "offset": 41
+        },
+        "end": {
+          "line": 2,
+          "column": 3,
+          "offset": 43
+        }
+      }
+    }
+  },
+  {
+    "id": "231/16/live",
+    "kind": "quote",
+    "source": "(https://exampl$x$e\u05d0\u05d1\u05d2.test/a)A ****se\n> \n\u200d",
+    "sourceIdentity": {
+      "utf16Units": 43,
+      "utf16LeSha256": "681299b25a9043ba2df0f34d2fb7e216a78c95b18fddc08f4edbed3f849701ce",
+      "sourceJsonSha256": "8fbeff014dec6592faa98c09d9df22e474f0b22c36186be7ff84dd28cd81a9f9"
+    },
+    "rawPointer": "/cases/111/observations/16",
+    "expected": {
+      "type": "element",
+      "tagName": "blockquote",
+      "properties": {
+        "dataSourceLine": 2,
+        "dataSourceEndLine": 2,
+        "className": [
+          "my-4",
+          "border-l-4",
+          "border-muted-foreground/30",
+          "pl-4",
+          "text-muted-foreground",
+          "italic"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 2,
+          "column": 1,
+          "offset": 39
+        },
+        "end": {
+          "line": 2,
+          "column": 3,
+          "offset": 41
+        }
+      }
+    }
+  },
+  {
+    "id": "231/17/live",
+    "kind": "quote",
+    "source": "(https://exampl$x$e\u05d0\u05d1\u05d2.test/a)A ******se\n> \n\u200d",
+    "sourceIdentity": {
+      "utf16Units": 45,
+      "utf16LeSha256": "20d187a2b402a47ba2a92fffe9550d387057d17343f2605d0cbea228ee542b40",
+      "sourceJsonSha256": "787c2564a1644874c4cf1f85331c97603ea23e6a7edeb597c43582d71e238c7e"
+    },
+    "rawPointer": "/cases/111/observations/17",
+    "expected": {
+      "type": "element",
+      "tagName": "blockquote",
+      "properties": {
+        "dataSourceLine": 2,
+        "dataSourceEndLine": 2,
+        "className": [
+          "my-4",
+          "border-l-4",
+          "border-muted-foreground/30",
+          "pl-4",
+          "text-muted-foreground",
+          "italic"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 2,
+          "column": 1,
+          "offset": 41
+        },
+        "end": {
+          "line": 2,
+          "column": 3,
+          "offset": 43
+        }
+      }
+    }
+  },
+  {
+    "id": "231/18/live",
+    "kind": "quote",
+    "source": "(https://examp\r\nl$x$e\u05d0\u05d1\u05d2.test/a)A ******se\n> \n\u200d",
+    "sourceIdentity": {
+      "utf16Units": 47,
+      "utf16LeSha256": "495237ba03017206dd9c212b742ee8409b98318f5f55d3045ca04e54215c2186",
+      "sourceJsonSha256": "f2fbbe12e51177a1680a8a4cf0f3d1da2573f428a16f4052b176058c0d488f44"
+    },
+    "rawPointer": "/cases/111/observations/18",
+    "expected": {
+      "type": "element",
+      "tagName": "blockquote",
+      "properties": {
+        "dataSourceLine": 3,
+        "dataSourceEndLine": 3,
+        "className": [
+          "my-4",
+          "border-l-4",
+          "border-muted-foreground/30",
+          "pl-4",
+          "text-muted-foreground",
+          "italic"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 3,
+          "column": 1,
+          "offset": 43
+        },
+        "end": {
+          "line": 3,
+          "column": 3,
+          "offset": 45
+        }
+      }
+    }
+  },
+  {
+    "id": "231/19/live",
+    "kind": "quote",
+    "source": "(https://exampl$x$e\u05d0\u05d1\u05d2.test/a)A ******se\n> \n\u200d",
+    "sourceIdentity": {
+      "utf16Units": 45,
+      "utf16LeSha256": "20d187a2b402a47ba2a92fffe9550d387057d17343f2605d0cbea228ee542b40",
+      "sourceJsonSha256": "787c2564a1644874c4cf1f85331c97603ea23e6a7edeb597c43582d71e238c7e"
+    },
+    "rawPointer": "/cases/111/observations/19",
+    "expected": {
+      "type": "element",
+      "tagName": "blockquote",
+      "properties": {
+        "dataSourceLine": 2,
+        "dataSourceEndLine": 2,
+        "className": [
+          "my-4",
+          "border-l-4",
+          "border-muted-foreground/30",
+          "pl-4",
+          "text-muted-foreground",
+          "italic"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 2,
+          "column": 1,
+          "offset": 41
+        },
+        "end": {
+          "line": 2,
+          "column": 3,
+          "offset": 43
+        }
+      }
+    }
+  },
+  {
+    "id": "236/60/completed",
+    "kind": "list",
+    "source": "A&am[x]p; *- \r\n*s(h> tt\ud83e\uddd1\u200d\ud83d\r\n\udcbbps:/(https://example.test/a)e.\nt/a)tps:/\r\n- /ex\r\nst/a)d\n\r\narge**t\n* *\n\nmessag`e.\n\n",
+    "sourceIdentity": {
+      "utf16Units": 112,
+      "utf16LeSha256": "559c9391e947ed880ee0f67aef023828670e13527434f7cc8ed70767bc2c2751",
+      "sourceJsonSha256": "99cb5637eac866a6e3e83d750180f20b2b982bf5ea24864daa34db362c50f2ff"
+    },
+    "rawPointer": "/cases/120/observations/60",
+    "expected": {
+      "type": "element",
+      "tagName": "ul",
+      "properties": {
+        "dataSourceLine": 9,
+        "dataSourceEndLine": 9,
+        "className": [
+          "list-inside",
+          "list-disc",
+          "whitespace-normal",
+          "[li_&]:pl-6"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "element",
+          "tagName": "li",
+          "properties": {
+            "dataSourceLine": 9,
+            "dataSourceEndLine": 9,
+            "className": [
+              "py-1",
+              "[&>p]:inline"
+            ]
+          },
+          "children": [
+            {
+              "type": "text",
+              "value": "*",
+              "position": {
+                "start": {
+                  "line": 9,
+                  "column": 3,
+                  "offset": 98
+                },
+                "end": {
+                  "line": 9,
+                  "column": 4,
+                  "offset": 99
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 9,
+              "column": 1,
+              "offset": 96
+            },
+            "end": {
+              "line": 9,
+              "column": 4,
+              "offset": 99
+            }
+          }
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 9,
+          "column": 1,
+          "offset": 96
+        },
+        "end": {
+          "line": 9,
+          "column": 4,
+          "offset": 99
+        }
+      }
+    }
+  },
+  {
+    "id": "236/61/completed",
+    "kind": "list",
+    "source": "A&am[x]p; *- \r\n*s(h> t\n\nt\ud83e\uddd1\u200d\ud83d\r\n\udcbbps:/(https://example.test/a)e.\nt/a)tps:/\r\n- /ex\r\nst/a)d\n\r\narge**t\n* *\n\nmessag`e.\n\n",
+    "sourceIdentity": {
+      "utf16Units": 114,
+      "utf16LeSha256": "0e1f17cc83d00a4a1e472f41e02a64566044da55dd04644d30eb575e96362018",
+      "sourceJsonSha256": "dc1ec52d83844ad880eace44a3609fad8df7b60fc4f64408f9539563d1bf278c"
+    },
+    "rawPointer": "/cases/120/observations/61",
+    "expected": {
+      "type": "element",
+      "tagName": "ul",
+      "properties": {
+        "dataSourceLine": 11,
+        "dataSourceEndLine": 11,
+        "className": [
+          "list-inside",
+          "list-disc",
+          "whitespace-normal",
+          "[li_&]:pl-6"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "element",
+          "tagName": "li",
+          "properties": {
+            "dataSourceLine": 11,
+            "dataSourceEndLine": 11,
+            "className": [
+              "py-1",
+              "[&>p]:inline"
+            ]
+          },
+          "children": [
+            {
+              "type": "text",
+              "value": "*",
+              "position": {
+                "start": {
+                  "line": 11,
+                  "column": 3,
+                  "offset": 100
+                },
+                "end": {
+                  "line": 11,
+                  "column": 4,
+                  "offset": 101
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 11,
+              "column": 1,
+              "offset": 98
+            },
+            "end": {
+              "line": 11,
+              "column": 4,
+              "offset": 101
+            }
+          }
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 11,
+          "column": 1,
+          "offset": 98
+        },
+        "end": {
+          "line": 11,
+          "column": 4,
+          "offset": 101
+        }
+      }
+    }
+  },
+  {
+    "id": "236/62/completed",
+    "kind": "list",
+    "source": "A&am[x]p; *- \r\n*s(h> tt\ud83e\uddd1\u200d\ud83d\r\n\udcbbps:/(https://example.test/a)e.\nt/a)tps:/\r\n- /ex\r\nst/a)d\n\r\narge**t\n* *\n\nmessag`e.\n\n",
+    "sourceIdentity": {
+      "utf16Units": 112,
+      "utf16LeSha256": "559c9391e947ed880ee0f67aef023828670e13527434f7cc8ed70767bc2c2751",
+      "sourceJsonSha256": "99cb5637eac866a6e3e83d750180f20b2b982bf5ea24864daa34db362c50f2ff"
+    },
+    "rawPointer": "/cases/120/observations/62",
+    "expected": {
+      "type": "element",
+      "tagName": "ul",
+      "properties": {
+        "dataSourceLine": 9,
+        "dataSourceEndLine": 9,
+        "className": [
+          "list-inside",
+          "list-disc",
+          "whitespace-normal",
+          "[li_&]:pl-6"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "element",
+          "tagName": "li",
+          "properties": {
+            "dataSourceLine": 9,
+            "dataSourceEndLine": 9,
+            "className": [
+              "py-1",
+              "[&>p]:inline"
+            ]
+          },
+          "children": [
+            {
+              "type": "text",
+              "value": "*",
+              "position": {
+                "start": {
+                  "line": 9,
+                  "column": 3,
+                  "offset": 98
+                },
+                "end": {
+                  "line": 9,
+                  "column": 4,
+                  "offset": 99
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 9,
+              "column": 1,
+              "offset": 96
+            },
+            "end": {
+              "line": 9,
+              "column": 4,
+              "offset": 99
+            }
+          }
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 9,
+          "column": 1,
+          "offset": 96
+        },
+        "end": {
+          "line": 9,
+          "column": 4,
+          "offset": 99
+        }
+      }
+    }
+  },
+  {
+    "id": "236/63/completed",
+    "kind": "list",
+    "source": "A&am[x]p; *- \r\n*s(h> tt\ud83e\uddd1\u200d\ud83d\r\n\udcbbps:/([x]https://example.test/a)e.\nt/a)tps:/\r\n- /ex\r\nst/a)d\n\r\narge**t\n* *\n\nmessag`e.\n\n",
+    "sourceIdentity": {
+      "utf16Units": 115,
+      "utf16LeSha256": "89e9c4a4e1f399d1d28464e94815c68c374682e8a39549de7c2f8e2792600aff",
+      "sourceJsonSha256": "7a3d0cc907a177f85ec0cd5fdc4df0c78ccd8eb07b2ce3a1e889d2493f97b32e"
+    },
+    "rawPointer": "/cases/120/observations/63",
+    "expected": {
+      "type": "element",
+      "tagName": "ul",
+      "properties": {
+        "dataSourceLine": 9,
+        "dataSourceEndLine": 9,
+        "className": [
+          "list-inside",
+          "list-disc",
+          "whitespace-normal",
+          "[li_&]:pl-6"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "element",
+          "tagName": "li",
+          "properties": {
+            "dataSourceLine": 9,
+            "dataSourceEndLine": 9,
+            "className": [
+              "py-1",
+              "[&>p]:inline"
+            ]
+          },
+          "children": [
+            {
+              "type": "text",
+              "value": "*",
+              "position": {
+                "start": {
+                  "line": 9,
+                  "column": 3,
+                  "offset": 101
+                },
+                "end": {
+                  "line": 9,
+                  "column": 4,
+                  "offset": 102
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 9,
+              "column": 1,
+              "offset": 99
+            },
+            "end": {
+              "line": 9,
+              "column": 4,
+              "offset": 102
+            }
+          }
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 9,
+          "column": 1,
+          "offset": 99
+        },
+        "end": {
+          "line": 9,
+          "column": 4,
+          "offset": 102
+        }
+      }
+    }
+  },
+  {
+    "id": "236/64/completed",
+    "kind": "list",
+    "source": "A&am[x]p; *- \r\n*s(h> tt\ud83e\uddd1\u200d\ud83d\r\n\udcbbps:/([x]https://example.te/\r\n- /ex\r\nst/a)d\n\r\narge**t\n* *\n\nmessag`e.\n\n",
+    "sourceIdentity": {
+      "utf16Units": 99,
+      "utf16LeSha256": "ed3c0177d052074577991b1845488c6ae9b28296b7f2f09736ed020f161dfba6",
+      "sourceJsonSha256": "c4d8276f0bf5c9fee2308768d670aa350479a0497fec5941c016d33aa068331e"
+    },
+    "rawPointer": "/cases/120/observations/64",
+    "expected": {
+      "type": "element",
+      "tagName": "ul",
+      "properties": {
+        "dataSourceLine": 8,
+        "dataSourceEndLine": 8,
+        "className": [
+          "list-inside",
+          "list-disc",
+          "whitespace-normal",
+          "[li_&]:pl-6"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "element",
+          "tagName": "li",
+          "properties": {
+            "dataSourceLine": 8,
+            "dataSourceEndLine": 8,
+            "className": [
+              "py-1",
+              "[&>p]:inline"
+            ]
+          },
+          "children": [
+            {
+              "type": "text",
+              "value": "*",
+              "position": {
+                "start": {
+                  "line": 8,
+                  "column": 3,
+                  "offset": 85
+                },
+                "end": {
+                  "line": 8,
+                  "column": 4,
+                  "offset": 86
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 8,
+              "column": 1,
+              "offset": 83
+            },
+            "end": {
+              "line": 8,
+              "column": 4,
+              "offset": 86
+            }
+          }
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 8,
+          "column": 1,
+          "offset": 83
+        },
+        "end": {
+          "line": 8,
+          "column": 4,
+          "offset": 86
+        }
+      }
+    }
+  },
+  {
+    "id": "236/60/live",
+    "kind": "list",
+    "source": "A&am[x]p; *- \r\n*s(h> tt\ud83e\uddd1\u200d\ud83d\r\n\udcbbps:/(https://example.test/a)e.\nt/a)tps:/\r\n- /ex\r\nst/a)d\n\r\narge**t\n* *\n\nmessag`e.\n\n",
+    "sourceIdentity": {
+      "utf16Units": 112,
+      "utf16LeSha256": "559c9391e947ed880ee0f67aef023828670e13527434f7cc8ed70767bc2c2751",
+      "sourceJsonSha256": "99cb5637eac866a6e3e83d750180f20b2b982bf5ea24864daa34db362c50f2ff"
+    },
+    "rawPointer": "/cases/121/observations/60",
+    "expected": {
+      "type": "element",
+      "tagName": "ul",
+      "properties": {
+        "dataSourceLine": 9,
+        "dataSourceEndLine": 9,
+        "className": [
+          "list-inside",
+          "list-disc",
+          "whitespace-normal",
+          "[li_&]:pl-6"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "element",
+          "tagName": "li",
+          "properties": {
+            "dataSourceLine": 9,
+            "dataSourceEndLine": 9,
+            "className": [
+              "py-1",
+              "[&>p]:inline"
+            ]
+          },
+          "children": [
+            {
+              "type": "text",
+              "value": "*",
+              "position": {
+                "start": {
+                  "line": 9,
+                  "column": 3,
+                  "offset": 98
+                },
+                "end": {
+                  "line": 9,
+                  "column": 4,
+                  "offset": 99
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 9,
+              "column": 1,
+              "offset": 96
+            },
+            "end": {
+              "line": 9,
+              "column": 4,
+              "offset": 99
+            }
+          }
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 9,
+          "column": 1,
+          "offset": 96
+        },
+        "end": {
+          "line": 9,
+          "column": 4,
+          "offset": 99
+        }
+      }
+    }
+  },
+  {
+    "id": "236/61/live",
+    "kind": "list",
+    "source": "A&am[x]p; *- \r\n*s(h> t\n\nt\ud83e\uddd1\u200d\ud83d\r\n\udcbbps:/(https://example.test/a)e.\nt/a)tps:/\r\n- /ex\r\nst/a)d\n\r\narge**t\n* *\n\nmessag`e.\n\n",
+    "sourceIdentity": {
+      "utf16Units": 114,
+      "utf16LeSha256": "0e1f17cc83d00a4a1e472f41e02a64566044da55dd04644d30eb575e96362018",
+      "sourceJsonSha256": "dc1ec52d83844ad880eace44a3609fad8df7b60fc4f64408f9539563d1bf278c"
+    },
+    "rawPointer": "/cases/121/observations/61",
+    "expected": {
+      "type": "element",
+      "tagName": "ul",
+      "properties": {
+        "dataSourceLine": 11,
+        "dataSourceEndLine": 11,
+        "className": [
+          "list-inside",
+          "list-disc",
+          "whitespace-normal",
+          "[li_&]:pl-6"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "element",
+          "tagName": "li",
+          "properties": {
+            "dataSourceLine": 11,
+            "dataSourceEndLine": 11,
+            "className": [
+              "py-1",
+              "[&>p]:inline"
+            ]
+          },
+          "children": [
+            {
+              "type": "text",
+              "value": "*",
+              "position": {
+                "start": {
+                  "line": 11,
+                  "column": 3,
+                  "offset": 100
+                },
+                "end": {
+                  "line": 11,
+                  "column": 4,
+                  "offset": 101
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 11,
+              "column": 1,
+              "offset": 98
+            },
+            "end": {
+              "line": 11,
+              "column": 4,
+              "offset": 101
+            }
+          }
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 11,
+          "column": 1,
+          "offset": 98
+        },
+        "end": {
+          "line": 11,
+          "column": 4,
+          "offset": 101
+        }
+      }
+    }
+  },
+  {
+    "id": "236/62/live",
+    "kind": "list",
+    "source": "A&am[x]p; *- \r\n*s(h> tt\ud83e\uddd1\u200d\ud83d\r\n\udcbbps:/(https://example.test/a)e.\nt/a)tps:/\r\n- /ex\r\nst/a)d\n\r\narge**t\n* *\n\nmessag`e.\n\n",
+    "sourceIdentity": {
+      "utf16Units": 112,
+      "utf16LeSha256": "559c9391e947ed880ee0f67aef023828670e13527434f7cc8ed70767bc2c2751",
+      "sourceJsonSha256": "99cb5637eac866a6e3e83d750180f20b2b982bf5ea24864daa34db362c50f2ff"
+    },
+    "rawPointer": "/cases/121/observations/62",
+    "expected": {
+      "type": "element",
+      "tagName": "ul",
+      "properties": {
+        "dataSourceLine": 9,
+        "dataSourceEndLine": 9,
+        "className": [
+          "list-inside",
+          "list-disc",
+          "whitespace-normal",
+          "[li_&]:pl-6"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "element",
+          "tagName": "li",
+          "properties": {
+            "dataSourceLine": 9,
+            "dataSourceEndLine": 9,
+            "className": [
+              "py-1",
+              "[&>p]:inline"
+            ]
+          },
+          "children": [
+            {
+              "type": "text",
+              "value": "*",
+              "position": {
+                "start": {
+                  "line": 9,
+                  "column": 3,
+                  "offset": 98
+                },
+                "end": {
+                  "line": 9,
+                  "column": 4,
+                  "offset": 99
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 9,
+              "column": 1,
+              "offset": 96
+            },
+            "end": {
+              "line": 9,
+              "column": 4,
+              "offset": 99
+            }
+          }
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 9,
+          "column": 1,
+          "offset": 96
+        },
+        "end": {
+          "line": 9,
+          "column": 4,
+          "offset": 99
+        }
+      }
+    }
+  },
+  {
+    "id": "236/63/live",
+    "kind": "list",
+    "source": "A&am[x]p; *- \r\n*s(h> tt\ud83e\uddd1\u200d\ud83d\r\n\udcbbps:/([x]https://example.test/a)e.\nt/a)tps:/\r\n- /ex\r\nst/a)d\n\r\narge**t\n* *\n\nmessag`e.\n\n",
+    "sourceIdentity": {
+      "utf16Units": 115,
+      "utf16LeSha256": "89e9c4a4e1f399d1d28464e94815c68c374682e8a39549de7c2f8e2792600aff",
+      "sourceJsonSha256": "7a3d0cc907a177f85ec0cd5fdc4df0c78ccd8eb07b2ce3a1e889d2493f97b32e"
+    },
+    "rawPointer": "/cases/121/observations/63",
+    "expected": {
+      "type": "element",
+      "tagName": "ul",
+      "properties": {
+        "dataSourceLine": 9,
+        "dataSourceEndLine": 9,
+        "className": [
+          "list-inside",
+          "list-disc",
+          "whitespace-normal",
+          "[li_&]:pl-6"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "element",
+          "tagName": "li",
+          "properties": {
+            "dataSourceLine": 9,
+            "dataSourceEndLine": 9,
+            "className": [
+              "py-1",
+              "[&>p]:inline"
+            ]
+          },
+          "children": [
+            {
+              "type": "text",
+              "value": "*",
+              "position": {
+                "start": {
+                  "line": 9,
+                  "column": 3,
+                  "offset": 101
+                },
+                "end": {
+                  "line": 9,
+                  "column": 4,
+                  "offset": 102
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 9,
+              "column": 1,
+              "offset": 99
+            },
+            "end": {
+              "line": 9,
+              "column": 4,
+              "offset": 102
+            }
+          }
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 9,
+          "column": 1,
+          "offset": 99
+        },
+        "end": {
+          "line": 9,
+          "column": 4,
+          "offset": 102
+        }
+      }
+    }
+  },
+  {
+    "id": "236/64/live",
+    "kind": "list",
+    "source": "A&am[x]p; *- \r\n*s(h> tt\ud83e\uddd1\u200d\ud83d\r\n\udcbbps:/([x]https://example.te/\r\n- /ex\r\nst/a)d\n\r\narge**t\n* *\n\nmessag`e.\n\n",
+    "sourceIdentity": {
+      "utf16Units": 99,
+      "utf16LeSha256": "ed3c0177d052074577991b1845488c6ae9b28296b7f2f09736ed020f161dfba6",
+      "sourceJsonSha256": "c4d8276f0bf5c9fee2308768d670aa350479a0497fec5941c016d33aa068331e"
+    },
+    "rawPointer": "/cases/121/observations/64",
+    "expected": {
+      "type": "element",
+      "tagName": "ul",
+      "properties": {
+        "dataSourceLine": 8,
+        "dataSourceEndLine": 8,
+        "className": [
+          "list-inside",
+          "list-disc",
+          "whitespace-normal",
+          "[li_&]:pl-6"
+        ]
+      },
+      "children": [
+        {
+          "type": "text",
+          "value": "\n"
+        },
+        {
+          "type": "element",
+          "tagName": "li",
+          "properties": {
+            "dataSourceLine": 8,
+            "dataSourceEndLine": 8,
+            "className": [
+              "py-1",
+              "[&>p]:inline"
+            ]
+          },
+          "children": [
+            {
+              "type": "text",
+              "value": "*",
+              "position": {
+                "start": {
+                  "line": 8,
+                  "column": 3,
+                  "offset": 85
+                },
+                "end": {
+                  "line": 8,
+                  "column": 4,
+                  "offset": 86
+                }
+              }
+            }
+          ],
+          "position": {
+            "start": {
+              "line": 8,
+              "column": 1,
+              "offset": 83
+            },
+            "end": {
+              "line": 8,
+              "column": 4,
+              "offset": 86
+            }
+          }
+        },
+        {
+          "type": "text",
+          "value": "\n"
+        }
+      ],
+      "position": {
+        "start": {
+          "line": 8,
+          "column": 1,
+          "offset": 83
+        },
+        "end": {
+          "line": 8,
+          "column": 4,
+          "offset": 86
+        }
+      }
+    }
+  }
+]
