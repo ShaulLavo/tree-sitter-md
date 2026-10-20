@@ -182,8 +182,16 @@ bool leaf_lazy_definition_line(Document *d, TSNode paragraph) {
   if (!count) return false;
   TSNode tail = ts_node_named_child(previous, count - 1);
   if (!is(tail, d->ids.block_continuation) || end(tail) != start(paragraph)) return false;
+  uint32_t unmatched_quotes = 0;
+  for (TSNode container = ts_node_parent(paragraph); !ts_node_is_null(container);
+       container = ts_node_parent(container)) {
+    if (is(container, d->ids.block_quote)) unmatched_quotes++;
+  }
+  // The scanner's continuation token contains matched prefixes from outer to inner.
   for (uint32_t at = start(tail); at < end(tail); at++) {
-    if (d->text[at] != ' ' && d->text[at] != '\t') return false;
+    if (d->text[at] == ' ' || d->text[at] == '\t') continue;
+    if (d->text[at] != '>') return false;
+    if (--unmatched_quotes == 0) return false;
   }
   return true;
 }

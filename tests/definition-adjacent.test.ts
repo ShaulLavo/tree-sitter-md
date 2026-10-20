@@ -61,3 +61,31 @@ for (const row of cases) test('definition continuation oracle ' + row.id, () => 
     check(row, profile.math, profile.gfm)
   }
 })
+
+function checkPrefixEdit(partial: typeof cases[number], matched: typeof cases[number], math: boolean, gfm: boolean) {
+  const document = new MarkdownDocument({ math, gfm })
+  const fresh = new MarkdownDocument({ math, gfm })
+  try {
+    document.setText(partial.source)
+    const initial = state(document, partial.source)
+    const at = partial.source.indexOf('\n') + 1
+    document.edit(at, at, '> ')
+    fresh.setText(matched.source)
+    const root = document.semantics().root
+    assert.equal(semanticHtml({ root: { ...root, children: clean(root.children) } }), matched.oracleHtml)
+    assert.deepEqual(state(document, matched.source), state(fresh, matched.source))
+    document.edit(at, at + 2, '')
+    assert.deepEqual(state(document, partial.source), initial)
+    document.reparse()
+    assert.deepEqual(state(document, partial.source), initial)
+  } finally { document.dispose(); fresh.dispose() }
+}
+
+for (const ending of ['LF', 'CRLF']) test('definition continuation prefix cache ' + ending, () => {
+  const partial = cases.find(row => row.id === 'r106/partial-outer-quote/' + ending)
+  const matched = cases.find(row => row.id === 'r106/matched-inner-quote/' + ending)
+  assert(partial && matched)
+  for (const profile of [{ math: false, gfm: false }, { math: false, gfm: true }, { math: true, gfm: false }, { math: true, gfm: true }]) {
+    checkPrefixEdit(partial, matched, profile.math, profile.gfm)
+  }
+})

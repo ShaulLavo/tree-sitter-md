@@ -496,5 +496,101 @@
     "source": "> [x]: /target\r>     code\r\r[x]",
     "oracleHtml": "<blockquote>\n<p>code</p>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
     "utf16LeSha256": "0b4b09c46bae913a1ca4dda434a006d34869676967619ff2877fadae3fcae905"
+  },
+  {
+    "id": "r106/partial-outer-quote/LF",
+    "source": "> > [x]: /target\n>     code\n\n[x]",
+    "oracleHtml": "<blockquote>\n<blockquote>\n<p>    code</p>\n</blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "fa5f8ed93a89f3beca53ffc2790ff6fa7516d89de94cce1704c43d231b141f90"
+  },
+  {
+    "id": "r106/partial-outer-quote/CRLF",
+    "source": "> > [x]: /target\r\n>     code\r\n\r\n[x]",
+    "oracleHtml": "<blockquote>\n<blockquote>\n<p>    code</p>\n</blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "653542e10fa1fe1f941b119556a044bedc6a59c3e751783190e63bfbb15bd4f0"
+  },
+  {
+    "id": "r106/matched-inner-quote/LF",
+    "source": "> > [x]: /target\n> >     code\n\n[x]",
+    "oracleHtml": "<blockquote>\n<blockquote>\n<p>code</p>\n</blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "c1abe58c97bfd510c8f96840143ae3d9a45a061dd5fadc4fac37bbd4625fe52a"
+  },
+  {
+    "id": "r106/matched-inner-quote/CRLF",
+    "source": "> > [x]: /target\r\n> >     code\r\n\r\n[x]",
+    "oracleHtml": "<blockquote>\n<blockquote>\n<p>code</p>\n</blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "e6fdc346ed34ae03c4f1bf3b58caaa77e2ff6c962ed73af719b3b4c9a06b3504"
+  },
+  {
+    "id": "r106/three-quotes-one-prefix/LF",
+    "source": "> > > [x]: /target\n>     code\n\n[x]",
+    "oracleHtml": "<blockquote>\n<blockquote>\n<blockquote>\n<p>    code</p>\n</blockquote>\n</blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "0a9e20ef3fe71573d1990f3374373a4b9ffe05dce32bdbc7203a2c0c306d266f"
+  },
+  {
+    "id": "r106/three-quotes-one-prefix/CRLF",
+    "source": "> > > [x]: /target\r\n>     code\r\n\r\n[x]",
+    "oracleHtml": "<blockquote>\n<blockquote>\n<blockquote>\n<p>    code</p>\n</blockquote>\n</blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "44a7d9096cdbf7d93c483a110dbad02f6bdb6e30847ea63a948d22a170124a65"
+  },
+  {
+    "id": "r106/three-quotes-two-prefixes/LF",
+    "source": "> > > [x]: /target\n> >     code\n\n[x]",
+    "oracleHtml": "<blockquote>\n<blockquote>\n<blockquote>\n<p>    code</p>\n</blockquote>\n</blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "77b8d40b3135fd13813b4a0550a40d3b3bc83cd86f47cb845cf14a885e7d13b4"
+  },
+  {
+    "id": "r106/three-quotes-two-prefixes/CRLF",
+    "source": "> > > [x]: /target\r\n> >     code\r\n\r\n[x]",
+    "oracleHtml": "<blockquote>\n<blockquote>\n<blockquote>\n<p>    code</p>\n</blockquote>\n</blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "b4b5eb987bda8d674132d2a2f12bfd553a8b099b78f46dd9c70b3a1a0831acad"
+  },
+  {
+    "id": "r106/three-quotes-matched/LF",
+    "source": "> > > [x]: /target\n> > >     code\n\n[x]",
+    "oracleHtml": "<blockquote>\n<blockquote>\n<blockquote>\n<p>code</p>\n</blockquote>\n</blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "135c409008e6e4d0cbc9a206e02115565dfaf83086a9e2e76d494467e3e28d85"
+  },
+  {
+    "id": "r106/three-quotes-matched/CRLF",
+    "source": "> > > [x]: /target\r\n> > >     code\r\n\r\n[x]",
+    "oracleHtml": "<blockquote>\n<blockquote>\n<blockquote>\n<p>code</p>\n</blockquote>\n</blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "8ee062fea258a0a242faefd08877ff4b6fdf722d2b0bdce96dc8f2798c41c0d4"
+  },
+  {
+    "id": "r106/compact-partial/LF",
+    "source": ">> [x]: /target\n>     code\n\n[x]",
+    "oracleHtml": "<blockquote>\n<blockquote>\n<p>    code</p>\n</blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "57c19690e380c7886f949ac0c2991b4c0ab7270d1128213141ff3d695a9d781b"
+  },
+  {
+    "id": "r106/compact-partial/CRLF",
+    "source": ">> [x]: /target\r\n>     code\r\n\r\n[x]",
+    "oracleHtml": "<blockquote>\n<blockquote>\n<p>    code</p>\n</blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "e90979d67f74206e5b4effb8fce83e66b3328c04bf6798105f1b2c57b9e1793e"
+  },
+  {
+    "id": "r106/list-outer-partial/LF",
+    "source": "- > > [x]: /target\n  >     code\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<blockquote>\n<p>    code</p>\n</blockquote>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "2066fd9eb94ca23c59cc6534126d1ca21bc4189780ecd51023c7e4c2fd419b11"
+  },
+  {
+    "id": "r106/list-outer-partial/CRLF",
+    "source": "- > > [x]: /target\r\n  >     code\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<blockquote>\n<p>    code</p>\n</blockquote>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "e98a9db2a55874e0bd46675a7e9754162abc09f26bd527c735b6c5dbd605ff9b"
+  },
+  {
+    "id": "r106/quote-list-partial/LF",
+    "source": "> - > [x]: /target\n>       code\n\n[x]",
+    "oracleHtml": "<blockquote>\n<ul>\n<li>\n<blockquote>\n<p>    code</p>\n</blockquote>\n</li>\n</ul>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "07af657f6c8f281dc71d84db16f72191487bf293711dbbd7d5016ff683a5c3a9"
+  },
+  {
+    "id": "r106/quote-list-partial/CRLF",
+    "source": "> - > [x]: /target\r\n>       code\r\n\r\n[x]",
+    "oracleHtml": "<blockquote>\n<ul>\n<li>\n<blockquote>\n<p>    code</p>\n</blockquote>\n</li>\n</ul>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "287d934abdf5a0c1efa9ded17f8514d382042e7d325c148333d4315b52ca3f29"
   }
 ]

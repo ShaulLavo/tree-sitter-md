@@ -4,12 +4,15 @@ Fixed raw CR and CRLF line endings in multiline link titles. Titles normalize
 line endings before entity decoding, so an explicit `&#13;` remains intact.
 Fixed lazy paragraph continuations after reference definitions leaving their
 block quote too early. Preserved first-line indentation and included that
-context in the inline cache key so edits agree with fresh parses.
+context in the inline cache key so edits agree with fresh parses. Matched outer
+quote prefixes leave inner lazy indentation intact.
 
 The focused regression fixture retains 50 saved independent-review controls
 and adds 33 controls checked against cmark 0.31.2 at
 `eec0eeba6d31189fd828314576494566d539b1e3`. It covers both grammars with
 GFM on and off, source fidelity, insert/delete, reparse and presentation records.
+A further 16 independent LF/CRLF controls cover partially matched nested quote
+prefixes, including prefix insertion and undo against fully matched quotes.
 Two further pre-existing nested-list differences remain owned by the semantic
 compatibility plan. Their oracle expectations have not changed.
 
