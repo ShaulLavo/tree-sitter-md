@@ -91,7 +91,7 @@ void leaf_single(Document *d, uint32_t a, uint32_t b);
 uint32_t strip_definitions(Leaf *leaf, cmark_reference_map *map, Words *records);
 void inline_resolve(Leaf *leaf, int kind, bool gfm, bool cjk, bool math, cmark_reference_map *defs, Words *out,
                     Labels *deps);
-void autolinks(Leaf *leaf, uint32_t a, uint32_t b, Words *out);
+void autolinks(Leaf *leaf, uint32_t a, uint32_t b, Words *out, bool cjk);
 void highlights(Document *d);
 static inline uint32_t start(TSNode n) { return ts_node_start_byte(n) / 2; }
 static inline uint32_t end(TSNode n) { return ts_node_end_byte(n) / 2; }

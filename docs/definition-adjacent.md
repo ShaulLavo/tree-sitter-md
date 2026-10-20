@@ -22,5 +22,5 @@ compatibility plan. Their oracle expectations have not changed.
 | Upstream-derived inline parser | `vendor/cmark/inlines.c`, resolver and grammar WASMs | cmark 0.31.2, BSD-2-Clause | Normalize raw title line endings before HTML entity decoding. |
 | Original resolver and tests | `src/leaf.c`, `src/document.c`, `src/resolver.h`, definition-adjacent tests | tree-sitter-md | Preserve lazy first-line indentation and cache identity, with independent HTML expectations. |
 
-This branch starts at 0.1.18. The merge train owns reconciliation with the other
-native patch releases before merge. No downstream dependency pins change here.
+Release 0.1.21 includes the landed CJK-domain and pipe-table fixes from main.
+No downstream dependency pins change here.

@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 mkdir -p target/c
 flags="-g -O1 -fsanitize=address,undefined -fno-omit-frame-pointer -std=c11 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE -Isrc -I$TREE_SITTER_LIB/include -I$TREE_SITTER_LIB/src -Igrammar/src -Ivendor/cmark"
 runtime="$TREE_SITTER_LIB/src/lib.c grammar/src/parser.c grammar/src/scanner.c grammar/chat/src/parser.c grammar/chat/scanner.c"
-clang $flags tests/native.c src/*.c vendor/cmark/*.c $runtime -o target/c/check-native
+clang $flags tests/native.c tests/autolink-cjk.c src/*.c vendor/cmark/*.c $runtime -o target/c/check-native
 ASAN_OPTIONS=detect_leaks=1 target/c/check-native
 printf 'ASan + UBSan: streaming semantic prefixes, ownership and 2,000 incremental decoration/semantic edits passed\n'
 clang $flags tests/presentation-inline.c src/*.c vendor/cmark/*.c $runtime -o target/c/check-presentation-inline

@@ -232,17 +232,7 @@ static size_t email_end(uint8_t *data, size_t size, size_t at, size_t lower, siz
   *begin = a;
   return b;
 }
-static size_t url_end(uint8_t *data, size_t size, size_t begin, size_t finish) {
-  while (finish < size && !cmark_isspace(data[finish]) && data[finish] != '<') {
-    if (data[finish] == ']' && finish + 1 < size &&
-        (cmark_isspace(data[finish + 1]) || strchr("([", data[finish + 1])))
-      break;
-    finish++;
-  }
-  finish = begin + autolink_delim(data + begin, finish - begin);
-  return finish;
-}
-size_t tsmd_cjk_autolink_end(const uint8_t *data, size_t a, size_t b) {
+static size_t cjk_autolink_end(const uint8_t *data, size_t a, size_t b) {
   for (size_t i = a; i < b;) {
     int32_t c = 0; int width = cmark_utf8proc_iterate(data + i, b - i, &c);
     if (width <= 0) break;
@@ -253,6 +243,17 @@ size_t tsmd_cjk_autolink_end(const uint8_t *data, size_t a, size_t b) {
     i += width;
   }
   return b;
+}
+static size_t url_end(uint8_t *data, size_t size, size_t begin, size_t finish, bool cjk) {
+  while (finish < size && !cmark_isspace(data[finish]) && data[finish] != '<') {
+    if (data[finish] == ']' && finish + 1 < size &&
+        (cmark_isspace(data[finish + 1]) || strchr("([", data[finish + 1])))
+      break;
+    finish++;
+  }
+  if (cjk) finish = cjk_autolink_end(data, begin, finish);
+  finish = begin + autolink_delim(data + begin, finish - begin);
+  return finish;
 }
 bool tsmd_gfm_autolink_match(const uint8_t *data, size_t size, size_t at,
                              size_t *begin, size_t *end, bool cjk) {
@@ -275,8 +276,7 @@ bool tsmd_gfm_autolink_match(const uint8_t *data, size_t size, size_t at,
     return false;
   }
 
-  finish = url_end((uint8_t *)data, size, start, finish);
-  if (cjk) finish = tsmd_cjk_autolink_end(data, start, finish);
+  finish = url_end((uint8_t *)data, size, start, finish, cjk);
   if (finish <= start)
     return false;
   if (finish <= domain || !check_domain(data + domain, finish - domain))
@@ -285,7 +285,7 @@ bool tsmd_gfm_autolink_match(const uint8_t *data, size_t size, size_t at,
   *end = finish;
   return true;
 }
-void autolinks(Leaf *l, uint32_t a, uint32_t b, Words *out) {
+void autolinks(Leaf *l, uint32_t a, uint32_t b, Words *out, bool cjk) {
   uint8_t *data = (uint8_t *)l->text + a;
   size_t size = b - a, consumed = 0;
   for (size_t i = 0; i < size; i++) {
@@ -293,7 +293,7 @@ void autolinks(Leaf *l, uint32_t a, uint32_t b, Words *out) {
     if (data[i] == '@')
       finish = email_end(data, size, i, consumed, &begin);
     if (data[i] != '@')
-      tsmd_gfm_autolink_match(data, size, i, &begin, &finish, false);
+      tsmd_gfm_autolink_match(data, size, i, &begin, &finish, cjk);
     if (!finish)
       continue;
     if (finish <= begin)

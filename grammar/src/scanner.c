@@ -205,6 +205,7 @@ static const uint8_t STATE_WAS_SOFT_LINE_BREAK = 0x1 << 1;
 // Block should be closed after next line break
 static const uint8_t STATE_AFTER_DEFINITION = 0x1 << 2;
 static const uint8_t STATE_CLOSE_BLOCK = 0x1 << 4;
+static const uint8_t STATE_TABLE_REJECTED = 0x1 << 5;
 
 static size_t roundup_32(size_t x) {
     x--;
@@ -267,7 +268,7 @@ static bool push_block(Scanner *s, Block b) {
 }
 
 static inline Block pop_block(Scanner *s) {
-    s->state &= ~STATE_AFTER_DEFINITION;
+    s->state &= ~(STATE_TABLE_REJECTED | STATE_AFTER_DEFINITION);
     return s->open_blocks.items[--s->open_blocks.size];
 }
 
@@ -615,6 +616,42 @@ static bool parse_reference(Scanner *s, TSLexer *lexer) {
     s->reference_lines = lines;
     lexer->result_symbol = standalone ? STANDALONE_REFERENCE_START : REFERENCE_START;
     return lines > 0;
+}
+
+typedef enum {
+    TABLE_CELL_START,
+    TABLE_CELL_COLON,
+    TABLE_CELL_DASHES,
+    TABLE_CELL_END,
+    TABLE_CELL_INVALID,
+} TableDelimiterState;
+
+static TableDelimiterState table_delimiter_step(TableDelimiterState state, int32_t c) {
+    if (state == TABLE_CELL_INVALID) return state;
+    if (c == '|') return state >= TABLE_CELL_DASHES ? TABLE_CELL_START : TABLE_CELL_INVALID;
+    if (c == ' ' || c == '\t') {
+        if (state == TABLE_CELL_DASHES) return TABLE_CELL_END;
+        if (state == TABLE_CELL_COLON) return TABLE_CELL_INVALID;
+        return state;
+    }
+    if (c == ':') {
+        if (state == TABLE_CELL_START) return TABLE_CELL_COLON;
+        if (state == TABLE_CELL_DASHES) return TABLE_CELL_END;
+        return TABLE_CELL_INVALID;
+    }
+    if (c == '-' && state < TABLE_CELL_END) return TABLE_CELL_DASHES;
+    return TABLE_CELL_INVALID;
+}
+
+static void reject_table_delimiter_tail(Scanner *s, TSLexer *lexer, TableDelimiterState state) {
+    bool pipe = false;
+    while (lexer->lookahead != '\r' && lexer->lookahead != '\n' && !lexer->eof(lexer)) {
+        pipe |= lexer->lookahead == '|';
+        state = table_delimiter_step(state, lexer->lookahead);
+        advance(s, lexer);
+    }
+    if (pipe && (state == TABLE_CELL_START || state == TABLE_CELL_DASHES || state == TABLE_CELL_END))
+        s->state |= STATE_TABLE_REJECTED;
 }
 
 static bool parse_pipe_table(Scanner *s, TSLexer *lexer, bool header_prefix);
@@ -1185,6 +1222,9 @@ static bool parse_minus(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
         if (success) {
             return true;
         }
+        if (s->simulate && s->matched == s->open_blocks.size &&
+            valid_symbols[PIPE_TABLE_START] && !minus_after_whitespace)
+            reject_table_delimiter_tail(s, lexer, whitespace_after_minus ? TABLE_CELL_END : TABLE_CELL_DASHES);
     }
     return false;
 }
@@ -1437,39 +1477,67 @@ static bool parse_html_block(Scanner *s, TSLexer *lexer,
     return false;
 }
 
+static bool parse_pipe_table_delimiter(Scanner *s, TSLexer *lexer, size_t expected_cells) {
+    bool pipe = lexer->lookahead == '|';
+    if (pipe) advance(s, lexer);
+    size_t cells = 0;
+    TableDelimiterState state = TABLE_CELL_START;
+    while (lexer->lookahead != '\r' && lexer->lookahead != '\n' && !lexer->eof(lexer)) {
+        int32_t c = lexer->lookahead;
+        state = table_delimiter_step(state, c);
+        if (state == TABLE_CELL_INVALID) return false;
+        if (c == '|') {
+            pipe = true;
+            cells++;
+        }
+        advance(s, lexer);
+    }
+    if (state == TABLE_CELL_DASHES || state == TABLE_CELL_END) cells++;
+    return pipe && cells == expected_cells && state != TABLE_CELL_COLON;
+}
+
 static bool parse_pipe_table(Scanner *s, TSLexer *lexer, bool header_prefix) {
+    if (s->state & STATE_TABLE_REJECTED) return false;
     // count number of cells
     size_t cell_count = 0;
     // also remember if we see starting and ending pipes, as empty headers have
     // to have both
     bool starting_pipe = false;
     bool ending_pipe = false;
-    bool empty = true;
+    bool empty = !header_prefix;
+    TableDelimiterState delimiter = header_prefix ? TABLE_CELL_INVALID : TABLE_CELL_START;
     if (!header_prefix && lexer->lookahead == '|') {
         starting_pipe = true;
         advance(s, lexer);
     }
     while (lexer->lookahead != '\r' && lexer->lookahead != '\n' &&
            !lexer->eof(lexer)) {
+        delimiter = table_delimiter_step(delimiter, lexer->lookahead);
         if (lexer->lookahead == '|') {
             cell_count++;
             ending_pipe = true;
             advance(s, lexer);
-        } else {
-            if (lexer->lookahead != ' ' && lexer->lookahead != '\t') {
-                ending_pipe = false;
-            }
-            if (lexer->lookahead == '\\') {
-                advance(s, lexer);
-                if (is_punctuation((char)lexer->lookahead)) {
-                    advance(s, lexer);
-                }
-            } else {
-                advance(s, lexer);
-            }
+            continue;
+        }
+        if (lexer->lookahead != ' ' && lexer->lookahead != '\t') {
+            empty = false;
+            ending_pipe = false;
+        }
+        bool escaped = lexer->lookahead == '\\';
+        advance(s, lexer);
+        if (escaped && is_punctuation((char)lexer->lookahead)) {
+            advance(s, lexer);
         }
     }
     if (empty && cell_count == 0 && !(starting_pipe && ending_pipe)) {
+        return false;
+    }
+    bool delimiter_header = delimiter != TABLE_CELL_INVALID &&
+        (delimiter >= TABLE_CELL_DASHES || (delimiter == TABLE_CELL_START && ending_pipe)) &&
+        (starting_pipe || cell_count > 0);
+    if (s->simulate && s->matched == s->open_blocks.size && delimiter_header) {
+        // A failed delimiter candidate disables table conversion for this paragraph.
+        s->state |= STATE_TABLE_REJECTED;
         return false;
     }
     if (!ending_pipe) {
@@ -1507,60 +1575,7 @@ static bool parse_pipe_table(Scanner *s, TSLexer *lexer, bool header_prefix) {
         }
     }
 
-    // check if delimiter row has the same number of cells and at least one pipe
-    size_t delimiter_cell_count = 0;
-    if (lexer->lookahead == '|') {
-        advance(s, lexer);
-    }
-    for (;;) {
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
-            advance(s, lexer);
-        }
-        if (lexer->lookahead == '|') {
-            delimiter_cell_count++;
-            advance(s, lexer);
-            continue;
-        }
-        if (lexer->lookahead == ':') {
-            advance(s, lexer);
-            if (lexer->lookahead != '-') {
-                return false;
-            }
-        }
-        bool had_one_minus = false;
-        while (lexer->lookahead == '-') {
-            had_one_minus = true;
-            advance(s, lexer);
-        }
-        if (had_one_minus) {
-            delimiter_cell_count++;
-        }
-        if (lexer->lookahead == ':') {
-            if (!had_one_minus) {
-                return false;
-            }
-            advance(s, lexer);
-        }
-        while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
-            advance(s, lexer);
-        }
-        if (lexer->lookahead == '|') {
-            if (!had_one_minus) {
-                delimiter_cell_count++;
-            }
-            advance(s, lexer);
-            continue;
-        }
-        if (lexer->lookahead != '\r' && lexer->lookahead != '\n' && !lexer->eof(lexer)) {
-            return false;
-        } else {
-            break;
-        }
-    }
-    // if the cell counts are not equal then this is not a table
-    if (cell_count != delimiter_cell_count) {
-        return false;
-    }
+    if (!parse_pipe_table_delimiter(s, lexer, cell_count)) return false;
 
     lexer->result_symbol = PIPE_TABLE_START;
     return true;
@@ -1916,7 +1931,7 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
                 s->state &= (~STATE_MATCHING);
             }
             // reset some state variables
-            s->state &= (~STATE_WAS_SOFT_LINE_BREAK);
+            s->state &= ~(STATE_WAS_SOFT_LINE_BREAK | STATE_TABLE_REJECTED);
             lexer->result_symbol = LINE_ENDING;
             return true;
         }

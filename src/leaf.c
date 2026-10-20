@@ -281,17 +281,17 @@ static void dependency(void *ctx, const char *label) {
   reserve((void **)&labels->v, &labels->cap, labels->n + 1, sizeof(char *));
   labels->v[labels->n++] = strdup(label);
 }
-static cmark_node *text_run(Leaf *leaf, cmark_node *n, uint32_t offset, Words *out) {
+static cmark_node *text_run(Leaf *leaf, cmark_node *n, uint32_t offset, Words *out, bool cjk) {
   uint32_t a = n->source_start, b = n->source_end;
   while (n->next && n->next->type == CMARK_NODE_TEXT && n->next->source_start == b) {
     n = n->next;
     b = n->source_end;
   }
-  autolinks(leaf, offset + a, offset + b, out);
+  autolinks(leaf, offset + a, offset + b, out, cjk);
   return n;
 }
 static void inline_nodes(Leaf *leaf, bool gfm, cmark_node *node, uint32_t offset, Words *out,
-                         bool in_link) {
+                         bool in_link, bool cjk) {
   for (cmark_node *n = node; n; n = n->next) {
     uint32_t kind = 0;
     switch (n->type) {
@@ -323,11 +323,11 @@ static void inline_nodes(Leaf *leaf, bool gfm, cmark_node *node, uint32_t offset
     if (kind)
       leaf_record(leaf, out, offset + n->source_start, offset + n->source_end, kind);
     if (n->first_child)
-      inline_nodes(leaf, gfm, n->first_child, offset, out, in_link || kind == A || kind == IMG);
+      inline_nodes(leaf, gfm, n->first_child, offset, out, in_link || kind == A || kind == IMG, cjk);
     if ((kind == A || kind == IMG) && !(n->flags & CMARK_NODE__GFM_AUTOLINK) && n->label_end > n->label_start)
       leaf_record(leaf, out, offset + n->label_start, offset + n->label_end, LINK_TEXT);
     if (gfm && !in_link && n->type == CMARK_NODE_TEXT)
-      n = text_run(leaf, n, offset, out);
+      n = text_run(leaf, n, offset, out, cjk);
   }
 }
 void inline_resolve(Leaf *leaf, int kind, bool gfm, bool cjk, bool math, cmark_reference_map *defs, Words *out,
@@ -360,7 +360,7 @@ void inline_resolve(Leaf *leaf, int kind, bool gfm, bool cjk, bool math, cmark_r
                         (math ? CMARK_OPT_MATH : 0), NULL);
   defs->lookup_label = NULL;
   defs->lookup_context = NULL;
-  inline_nodes(leaf, gfm, root->first_child, body, out, false);
+  inline_nodes(leaf, gfm, root->first_child, body, out, false, cjk);
   root->data = NULL;
   root->len = 0;
   cmark_node_free(root);
