@@ -89,7 +89,7 @@ export default {
     ]),
     fixture('escaped-and-nonflanking-markers', ['literal-delimiters'], '\\*safe* foo_bar', [paragraph(0, 15, [text('*safe* foo_bar', 0, 15)])]),
     fixture('unclosed-code-content', ['unclosed-code'], '`x * y', [paragraph(0, 6, [text('`x * y', 0, 6)])], {
-      children: [paragraph(0, 6, [node('code', 0, 6, { value: 'x * y', sourceValue: 'x * y' })])],
+      children: [paragraph(0, 6, [node('code', 0, 6, { value: 'x * y', sourceValue: 'x * y', sourceMap: { value: 'x * y', tokenLength: 6, runs: [{ kind: 'copy', valueStart: 0, length: 5, tokenOffset: 1 }] } })])],
       provisional: [provisional(inlinePath, 'unclosed-code')],
     }),
     fixture('bare-backtick', ['bare-delimiters'], '`', [paragraph(0, 1, [text('`', 0, 1)])], {
@@ -183,7 +183,7 @@ export default {
       children: [quote(0, 10, [list(2, 10, [item(2, 10, [paragraph(4, 10, [strong(4, 10, [text('bold', 6, 10)])])])])])],
       provisional: [provisional(['children', 0, 'children', 0, 'items', 0, 'children', 0, 'children', 0], 'unclosed-delimiter')],
     }),
-    fixture('completed-code-span', ['unclosed-code'], '`a * b`', [paragraph(0, 7, [node('code', 0, 7, { value: 'a * b', sourceValue: 'a * b' })])]),
+    fixture('completed-code-span', ['unclosed-code'], '`a * b`', [paragraph(0, 7, [node('code', 0, 7, { value: 'a * b', sourceValue: 'a * b', sourceMap: { value: 'a * b', tokenLength: 7, runs: [{ kind: 'copy', valueStart: 0, length: 5, tokenOffset: 1 }] } })])]),
     fixture('completed-link-and-image', ['pending-link', 'pending-image'], '[x](/go) ![a](/img)', [paragraph(0, 19, [
       link(0, 8, [text('x', 1, 2)], '/go'), text(' ', 8, 9), node('image', 9, 19, { alt: 'a', url: '/img', title: null }),
     ])]),

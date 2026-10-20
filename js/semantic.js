@@ -20,12 +20,34 @@ function children(node, name, validate, length, presentation = false) {
   for (const child of node[name]) validate(child, length, presentation)
 }
 function link(node) { field(node, 'url', 'string'); nullable(node, 'title', 'string') }
+function natural(value) { return Number.isSafeInteger(value) && value >= 0 }
+function codeSourceRun(run, valueEnd, sourceEnd, map) {
+  object(run)
+  if (!natural(run.valueStart) || run.valueStart !== valueEnd || !natural(run.tokenOffset) || run.tokenOffset < sourceEnd) invalid()
+  if (run.kind !== 'copy' && run.kind !== 'atom') invalid()
+  const valueLength = run.kind === 'copy' ? run.length : run.valueLength
+  const sourceLength = run.kind === 'copy' ? run.length : run.sourceLength
+  if (!natural(valueLength) || valueLength === 0 || !natural(sourceLength) || sourceLength === 0) invalid()
+  const nextValue = valueEnd + valueLength, nextSource = run.tokenOffset + sourceLength
+  if (!natural(nextValue) || nextValue > map.value.length || !natural(nextSource) || nextSource > map.tokenLength) invalid()
+  return { valueEnd: nextValue, sourceEnd: nextSource }
+}
+function codeSource(node) {
+  field(node, 'sourceValue', 'string')
+  const map = node.sourceMap
+  object(map); field(map, 'value', 'string')
+  if (map.value !== node.sourceValue || !natural(map.tokenLength) || map.tokenLength !== node.range.end - node.range.start) invalid()
+  if (!Array.isArray(map.runs)) invalid()
+  let valueEnd = 0, sourceEnd = 0
+  for (const run of map.runs) ({ valueEnd, sourceEnd } = codeSourceRun(run, valueEnd, sourceEnd, map))
+  if (valueEnd !== map.value.length) invalid()
+}
 function inline(node, length, presentation = false) {
   range(node, length)
   if (presentation && pending(node, length)) return
   if (VALUES.has(node.type)) {
     field(node, 'value', 'string')
-    if (node.type === 'code') field(node, 'sourceValue', 'string')
+    if (node.type === 'code') codeSource(node)
     return
   }
   if (node.type === 'break') { field(node, 'hard', 'boolean'); return }
