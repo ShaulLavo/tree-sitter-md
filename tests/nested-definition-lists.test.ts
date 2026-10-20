@@ -28,9 +28,9 @@ function html(document: MarkdownDocument) {
   return semanticHtml({ root: { ...root, children: clean(root.children) } })
 }
 function state(document: MarkdownDocument, source: string) {
-  const { revision: semanticRevision, ...semantics } = document.semantics()
-  const { revision: openRevision, ...open } = document.presentation({ input: 'open' })
-  const { revision: endedRevision, ...ended } = document.presentation({ input: 'ended' })
+  const { revision: _semanticRevision, ...semantics } = document.semantics()
+  const { revision: _openRevision, ...open } = document.presentation({ input: 'open' })
+  const { revision: _endedRevision, ...ended } = document.presentation({ input: 'ended' })
   assert.equal(open.source, source)
   assert.equal(ended.source, source)
   return { semantics, open, ended,
@@ -56,6 +56,11 @@ function check(row: Case, profile: typeof profiles[number]) {
   try {
     document.setText(row.source)
     assert.equal(html(document), row.oracleHtml)
+    if (row.id.startsWith('lazy-definition/')) {
+      const { root } = document.semantics()
+      assert.deepEqual(document.presentation({ input: 'open' }).root, root)
+      assert.deepEqual(document.presentation({ input: 'ended' }).root, root)
+    }
     same(document, fresh, row.source)
     const line = row.source.indexOf('\n') + 1
     const ending = row.source.includes('\r\n') ? '\r\n' : '\n'
@@ -63,7 +68,8 @@ function check(row: Case, profile: typeof profiles[number]) {
     editUndo(document, fresh, row.source, line, 0, '  > ')
     const target = row.source.indexOf('/target')
     editUndo(document, fresh, row.source, target, 7, '/changed')
-    if (row.source.startsWith('- ')) editUndo(document, fresh, row.source, 0, 1, '1.')
+    const list = row.source.indexOf('- ')
+    if (list >= 0) editUndo(document, fresh, row.source, list, 1, '1.')
     const tab = row.source.indexOf('\t')
     if (tab >= 0) editUndo(document, fresh, row.source, tab, 1, '    ')
     document.reparse()

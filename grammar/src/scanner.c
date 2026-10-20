@@ -1723,6 +1723,9 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
             after_definition[LIST_MARKER_DOT_DONT_INTERRUPT] = false;
             after_definition[LIST_MARKER_PARENTHESIS_DONT_INTERRUPT] = false;
             after_definition[HTML_BLOCK_7_START] = false;
+            bool definition_start = s->matched == s->open_blocks.size || !s->indentation;
+            after_definition[REFERENCE_START] &= definition_start;
+            after_definition[STANDALONE_REFERENCE_START] &= definition_start;
             valid_symbols = after_definition;
             if (lexer->lookahead != '\n' && lexer->lookahead != '\r')
                 s->state &= ~STATE_AFTER_DEFINITION;

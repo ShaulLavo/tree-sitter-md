@@ -319,10 +319,13 @@ void leaf_build(Document *d, TSNode node, int kind) {
     return;
   }
   // The first body line after a definition can already be a lazy continuation.
-  bool line_start = kind != PARAGRAPH || !leaf_lazy_definition_line(d, node);
-  uint32_t padding = kind == PARAGRAPH ? leaf_definition_padding(d, node) : 0;
-  // Container matching can consume a tab while leaving virtual columns in the paragraph.
-  for (uint32_t i = 0; i < padding; i++) push_character(&d->leaf, ' ', a - 1, a);
+  bool lazy = kind == PARAGRAPH && leaf_lazy_definition_line(d, node);
+  bool line_start = !lazy;
+  uint32_t padding = lazy ? leaf_definition_padding(d, node) : 0;
+  uint32_t prefix = lazy ? start(node) : a;
+  // Virtual columns belong to the consumed tab, before any authored inline prefix.
+  for (uint32_t i = 0; i < padding; i++) push_character(&d->leaf, ' ', prefix - 1, prefix);
+  if (lazy) a = prefix;
   if (kind == PARAGRAPH) push_task_prefix(d, node, a, &line_start);
   count = ts_node_named_child_count(in);
   for (uint32_t i = 0; i < count; i++) {
