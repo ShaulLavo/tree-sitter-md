@@ -174,6 +174,20 @@ static void push_task_prefix(Document *d, TSNode paragraph, uint32_t limit, bool
   }
   push_lines(d, from, limit, line_start);
 }
+bool leaf_lazy_definition_line(Document *d, TSNode paragraph) {
+  if (!is(ts_node_parent(paragraph), d->ids.block_quote)) return false;
+  TSNode previous = ts_node_prev_named_sibling(paragraph);
+  if (!is(previous, d->ids.reference_definition)) return false;
+  uint32_t count = ts_node_named_child_count(previous);
+  if (!count) return false;
+  TSNode tail = ts_node_named_child(previous, count - 1);
+  if (!is(tail, d->ids.block_continuation) || end(tail) != start(paragraph)) return false;
+  for (uint32_t at = start(tail); at < end(tail); at++) {
+    if (d->text[at] != ' ' && d->text[at] != '\t') return false;
+  }
+  return true;
+}
+
 void leaf_build(Document *d, TSNode node, int kind) {
   leaf_clear(&d->leaf);
   d->leaf.source_end = end(node);
@@ -212,7 +226,8 @@ void leaf_build(Document *d, TSNode node, int kind) {
     d->leaf.source_end = closed ? b : end(node);
     return;
   }
-  bool line_start = true;
+  // The first body line after a definition can already be a lazy continuation.
+  bool line_start = kind != PARAGRAPH || !leaf_lazy_definition_line(d, node);
   if (kind == PARAGRAPH) push_task_prefix(d, node, a, &line_start);
   count = ts_node_named_child_count(in);
   for (uint32_t i = 0; i < count; i++) {

@@ -1582,6 +1582,50 @@ static bool scan_continuation_interrupt(Scanner *s, TSLexer *lexer, bool table) 
     return scan(s, lexer, symbols);
 }
 
+typedef struct {
+    TSLexer lexer;
+    TSLexer *source;
+} ContinuationLexer;
+
+static void continuation_advance(TSLexer *lexer, bool skip) {
+    ContinuationLexer *probe = (ContinuationLexer *)lexer;
+    probe->source->advance(probe->source, skip);
+    lexer->lookahead = probe->source->lookahead;
+}
+
+static bool continuation_eof(const TSLexer *lexer) {
+    const ContinuationLexer *probe = (const ContinuationLexer *)lexer;
+    return probe->source->eof(probe->source);
+}
+
+static void mark_definition_end(Scanner *s, TSLexer *lexer) {
+    if (s->state & STATE_AFTER_DEFINITION)
+        lexer->mark_end(lexer);
+}
+
+static bool definition_continues(Scanner *s, TSLexer *lexer) {
+    if (!(s->state & STATE_AFTER_DEFINITION) || s->matched == s->open_blocks.size)
+        return false;
+    bool symbols[sizeof(paragraph_interrupt_symbols) / sizeof(bool)];
+    memcpy(symbols, paragraph_interrupt_symbols, sizeof(symbols));
+    // Unmatched containers allow new lists, while indented code and type-7
+    // HTML still cannot interrupt the definition's unfinished paragraph.
+    symbols[LIST_MARKER_MINUS_DONT_INTERRUPT] = true;
+    symbols[LIST_MARKER_PLUS_DONT_INTERRUPT] = true;
+    symbols[LIST_MARKER_STAR_DONT_INTERRUPT] = true;
+    symbols[LIST_MARKER_DOT_DONT_INTERRUPT] = true;
+    symbols[LIST_MARKER_PARENTHESIS_DONT_INTERRUPT] = true;
+    symbols[SETEXT_H1_UNDERLINE] = false;
+    symbols[SETEXT_H2_UNDERLINE] = false;
+    Scanner probe = *s;
+    probe.state = 0;
+    probe.simulate = true;
+    ContinuationLexer input = {.source = lexer};
+    input.lexer = (TSLexer){.lookahead = lexer->lookahead, .advance = continuation_advance,
+                           .mark_end = reference_mark, .eof = continuation_eof};
+    return !scan(&probe, &input.lexer, symbols);
+}
+
 static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
     bool after_definition[sizeof(paragraph_interrupt_symbols) / sizeof(bool)];
     if (s->reference_lines && !(s->state & STATE_MATCHING) &&
@@ -1734,6 +1778,7 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
         }
     } else { // we are in the state of trying to match all currently open blocks
         bool partial_success = false;
+        Scanner before_match = *s;
         while (s->matched < (uint8_t)s->open_blocks.size) {
             if (s->matched == (uint8_t)s->open_blocks.size - 1 &&
                 (s->state & STATE_CLOSE_BLOCK)) {
@@ -1741,9 +1786,12 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
                     s->state &= ~STATE_CLOSE_BLOCK;
                 break;
             }
+            before_match = *s;
+            mark_definition_end(s, lexer);
             if (match(s, lexer, s->open_blocks.items[s->matched])) {
                 partial_success = true;
                 s->matched++;
+                mark_definition_end(s, lexer);
             } else {
                 if (s->state & STATE_WAS_SOFT_LINE_BREAK) {
                     s->state &= (~STATE_MATCHING);
@@ -1751,6 +1799,15 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
                 break;
             }
         }
+        if (definition_continues(s, lexer)) {
+            s->indentation = before_match.indentation;
+            s->column = before_match.column;
+            s->state &= ~STATE_MATCHING;
+            s->state |= STATE_WAS_SOFT_LINE_BREAK;
+            lexer->result_symbol = BLOCK_CONTINUATION;
+            return true;
+        }
+
         if (partial_success) {
             if (s->matched == s->open_blocks.size) {
                 s->state &= (~STATE_MATCHING);

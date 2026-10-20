@@ -1179,6 +1179,24 @@ unsigned char *cmark_clean_url(cmark_mem *mem, cmark_chunk *url) {
   return cmark_strbuf_detach(&buf);
 }
 
+static void unescape_title(cmark_strbuf *out, const unsigned char *data, bufsize_t length) {
+  if (!memchr(data, '\r', length)) {
+    houdini_unescape_html_f(out, data, length);
+    return;
+  }
+  cmark_strbuf normalized = CMARK_BUF_INIT(out->mem);
+  for (bufsize_t i = 0; i < length; i++) {
+    if (data[i] != '\r') {
+      cmark_strbuf_putc(&normalized, data[i]);
+      continue;
+    }
+    cmark_strbuf_putc(&normalized, '\n');
+    i += i + 1 < length && data[i + 1] == '\n';
+  }
+  houdini_unescape_html_f(out, normalized.ptr, normalized.size);
+  cmark_strbuf_free(&normalized);
+}
+
 unsigned char *cmark_clean_title(cmark_mem *mem, cmark_chunk *title) {
   cmark_strbuf buf = CMARK_BUF_INIT(mem);
   unsigned char first, last;
@@ -1193,9 +1211,9 @@ unsigned char *cmark_clean_title(cmark_mem *mem, cmark_chunk *title) {
   // remove surrounding quotes if any:
   if ((first == '\'' && last == '\'') || (first == '(' && last == ')') ||
       (first == '"' && last == '"')) {
-    houdini_unescape_html_f(&buf, title->data + 1, title->len - 2);
+    unescape_title(&buf, title->data + 1, title->len - 2);
   } else {
-    houdini_unescape_html_f(&buf, title->data, title->len);
+    unescape_title(&buf, title->data, title->len);
   }
 
   cmark_strbuf_unescape(&buf);
