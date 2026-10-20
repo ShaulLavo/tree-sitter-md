@@ -97,7 +97,8 @@ test('tilde neighbors remain attention markers', () => {
 })
 
 test('code and math keep interior markers opaque', () => {
-  check('`*_*` $$*_*$$', [{ type: 'code', range: { start: 0, end: 5 }, value: '*_*', sourceValue: '*_*' },
+  check('`*_*` $$*_*$$', [{ type: 'code', range: { start: 0, end: 5 }, value: '*_*', sourceValue: '*_*',
+    sourceMap: { value: '*_*', tokenLength: 5, runs: [{ kind: 'copy', valueStart: 0, length: 3, tokenOffset: 1 }] } },
     text(' ', 5, 6), { type: 'math', range: { start: 6, end: 13 }, value: '*_*' }])
 })
 
