@@ -13,7 +13,11 @@ const cell = (value: string, start: number, end: number, textStart: number): Sem
 });
 const padding: SemanticTableCell = { type: "tableCell", range: null, children: [] };
 
-function table(start: number, body: number, end: number): Extract<SemanticBlock, { type: "table" }> {
+function table(
+  start: number,
+  body: number,
+  end: number,
+): Extract<SemanticBlock, { type: "table" }> {
   return {
     type: "table",
     range: range(start, end),
@@ -24,7 +28,11 @@ function table(start: number, body: number, end: number): Extract<SemanticBlock,
         range: range(start, start + 9),
         cells: [cell("a", start, start + 4, start + 2), cell("b", start + 4, start + 9, start + 6)],
       },
-      { type: "tableRow", range: range(body, end), cells: [cell("c", body, end, body + 2), padding] },
+      {
+        type: "tableRow",
+        range: range(body, end),
+        cells: [cell("c", body, end, body + 2), padding],
+      },
     ],
   };
 }
@@ -35,7 +43,9 @@ function quoteExpected(prefix: string, eol: string): SemanticRoot {
   return {
     type: "root",
     range: range(0, end),
-    children: [{ type: "quote", range: range(0, end), children: [table(prefix.length, body, end)] }],
+    children: [
+      { type: "quote", range: range(0, end), children: [table(prefix.length, body, end)] },
+    ],
   };
 }
 
@@ -71,8 +81,18 @@ function quoteSource(prefix: string, eol: string): string {
 }
 
 function footnoteSource(eols: readonly string[]): string {
-  return "x[^a]" + eols[0] + eols[1] + "[^a]:" + eols[2] + "    | a | b |" + eols[3] +
-    "    |---|---|" + eols[4] + "      | c |";
+  return (
+    "x[^a]" +
+    eols[0] +
+    eols[1] +
+    "[^a]:" +
+    eols[2] +
+    "    | a | b |" +
+    eols[3] +
+    "    |---|---|" +
+    eols[4] +
+    "      | c |"
+  );
 }
 
 function snapshots(document: MarkdownDocument) {
@@ -109,13 +129,16 @@ function checkDocument(source: string, expected: SemanticRoot, math: boolean): v
 function registerEol(eol: string, math: boolean): void {
   const eols = [eol, eol, eol, eol, eol];
   test("original quoted table " + JSON.stringify({ eol, math }), () =>
-    checkDocument(quoteSource(">   ", eol), quoteExpected(">   ", eol), math));
+    checkDocument(quoteSource(">   ", eol), quoteExpected(">   ", eol), math),
+  );
   test("original footnote table " + JSON.stringify({ eol, math }), () =>
-    checkDocument(footnoteSource(eols), footnoteExpected(eols), math));
+    checkDocument(footnoteSource(eols), footnoteExpected(eols), math),
+  );
   for (const indent of [0, 1, 2, 3]) {
     const prefix = "> " + " ".repeat(indent);
     test("quote residual allowance " + JSON.stringify({ indent, eol, math }), () =>
-      checkDocument(quoteSource(prefix, eol), quoteExpected(prefix, eol), math));
+      checkDocument(quoteSource(prefix, eol), quoteExpected(prefix, eol), math),
+    );
   }
 }
 
@@ -123,7 +146,14 @@ for (const eol of ["\n", "\r\n", "\r"]) {
   for (const math of [false, true]) registerEol(eol, math);
 }
 
-function checkEdit(source: string, expected: SemanticRoot, at: number, end: number, replacement: string, math: boolean): void {
+function checkEdit(
+  source: string,
+  expected: SemanticRoot,
+  at: number,
+  end: number,
+  replacement: string,
+  math: boolean,
+): void {
   const document = new MarkdownDocument({ math });
   const fresh = new MarkdownDocument({ math });
   try {
@@ -147,13 +177,16 @@ function checkEdit(source: string, expected: SemanticRoot, at: number, end: numb
 
 function registerEdits(math: boolean): void {
   test("delimiter prefix edit and undo " + math, () =>
-    checkEdit(quoteSource(">   ", "\n"), quoteExpected(">   ", "\n"), 16, 18, "", math));
+    checkEdit(quoteSource(">   ", "\n"), quoteExpected(">   ", "\n"), 16, 18, "", math),
+  );
   const cr = ["\r", "\r", "\r", "\r", "\r"];
   test("footnote EOL and dedent edit and undo " + math, () =>
-    checkEdit(footnoteSource(cr), footnoteExpected(cr), 26, 31, "\r\n\t", math));
+    checkEdit(footnoteSource(cr), footnoteExpected(cr), 26, 31, "\r\n\t", math),
+  );
   const mixed = ["\r\n", "\r", "\n", "\r\n", "\r"];
   test("mixed physical endings preserve original units " + math, () =>
-    checkDocument(footnoteSource(mixed), footnoteExpected(mixed), math));
+    checkDocument(footnoteSource(mixed), footnoteExpected(mixed), math),
+  );
 }
 
 for (const math of [false, true]) registerEdits(math);
@@ -166,12 +199,22 @@ function checkCode(prefix: string, eol: string, math: boolean): void {
     const expected: SemanticRoot = {
       type: "root",
       range: range(0, source.length),
-      children: [{
-        type: "quote",
-        range: range(0, source.length),
-        children: [{ type: "code", range: range(2, source.length), fence: "indented",
-          value: "| a | b |\n|---|---|\n| c |", language: null, meta: null }],
-      }],
+      children: [
+        {
+          type: "quote",
+          range: range(0, source.length),
+          children: [
+            {
+              type: "code",
+              range: range(2, source.length),
+              fence: "indented",
+              value: "| a | b |\n|---|---|\n| c |",
+              language: null,
+              meta: null,
+            },
+          ],
+        },
+      ],
     };
     check(document, source, expected);
   } finally {
@@ -188,11 +231,16 @@ function checkParagraphs(eol: string, math: boolean): void {
     const note = state.exact.root.children[1];
     assert.equal(note.type, "footnoteDefinition");
     if (note.type !== "footnoteDefinition") return;
-    assert.deepEqual(note.children.map(child => child.type), ["paragraph", "paragraph"]);
+    assert.deepEqual(
+      note.children.map((child) => child.type),
+      ["paragraph", "paragraph"],
+    );
     const last = note.children[1];
     assert.equal(last.type, "paragraph");
     if (last.type !== "paragraph") return;
-    assert.deepEqual(last.children, [{ type: "text", range: range(source.length - 5, source.length), value: "third" }]);
+    assert.deepEqual(last.children, [
+      { type: "text", range: range(source.length - 5, source.length), value: "third" },
+    ]);
     assert.deepEqual(note.range, range(5 + 2 * eol.length, source.length));
     assert.deepEqual(state.open.root, state.exact.root);
     assert.deepEqual(state.ended.root, state.exact.root);
@@ -206,14 +254,17 @@ function checkParagraphs(eol: string, math: boolean): void {
 function registerBoundaries(eol: string, math: boolean): void {
   for (const prefix of [">\t", "> \t", ">\t "]) {
     test("quote tab uses visual columns " + JSON.stringify({ prefix, eol, math }), () =>
-      checkDocument(quoteSource(prefix, eol), quoteExpected(prefix, eol), math));
+      checkDocument(quoteSource(prefix, eol), quoteExpected(prefix, eol), math),
+    );
   }
   for (const prefix of [">     ", ">\t  "]) {
     test("quote four residual columns retain code " + JSON.stringify({ prefix, eol, math }), () =>
-      checkCode(prefix, eol, math));
+      checkCode(prefix, eol, math),
+    );
   }
   test("footnote paragraphs across physical lines " + JSON.stringify({ eol, math }), () =>
-    checkParagraphs(eol, math));
+    checkParagraphs(eol, math),
+  );
 }
 
 for (const eol of ["\n", "\r\n", "\r"]) {
