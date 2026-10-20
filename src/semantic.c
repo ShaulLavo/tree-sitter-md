@@ -618,8 +618,8 @@ static uint32_t container_prefix(Document *d, Document *context, TSNode parent, 
     }
     bool matched = list ? width >= required : a < b && d->text[a] == '>';
     if (literal && !matched) { a = saved; virtual_spaces = saved_virtual; virtual_from = saved_from; break; }
+    if (list && width > required) virtual_from = a - 1;
     if (list) {
-      if (width > required) virtual_from = a - 1;
       virtual_spaces = (literal ? virtual_spaces : 0) + (width > required ? width - required : 0); continue;
     }
     if (!matched) break;

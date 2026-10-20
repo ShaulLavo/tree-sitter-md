@@ -214,19 +214,21 @@ test('footnote producer witnesses retained lazy spaces and local virtual tabs', 
 })
 
 
+function assertRepeatedCodeWitness(document, prefix) {
+  const source = prefix + '`one\ntwo three` and `one two\nthree`'
+  document.setText(source)
+  const code = nodes(document.semantics().root, 'code')
+  assert.equal(code.length, 2)
+  for (const entry of code) assertCodeSourceMap(source, entry)
+  assert.notEqual(code[0].range.start, code[1].range.start)
+  assert.equal(code[0].sourceMap.runs[0].tokenOffset, 1)
+  assert.equal(code[1].sourceMap.runs[0].tokenOffset, 1)
+}
+
 test('producer witness follows equal occurrences and repeated setText calls', () => {
   const document = new MarkdownDocument()
   try {
-    for (const prefix of ['', '🙂\ud800 before\n\n']) {
-      const source = prefix + '`one\ntwo three` and `one two\nthree`'
-      document.setText(source)
-      const code = nodes(document.semantics().root, 'code')
-      assert.equal(code.length, 2)
-      for (const entry of code) assertCodeSourceMap(source, entry)
-      assert.notEqual(code[0].range.start, code[1].range.start)
-      assert.equal(code[0].sourceMap.runs[0].tokenOffset, 1)
-      assert.equal(code[1].sourceMap.runs[0].tokenOffset, 1)
-    }
+    for (const prefix of ['', '🙂\ud800 before\n\n']) assertRepeatedCodeWitness(document, prefix)
   } finally { document.dispose() }
 })
 
