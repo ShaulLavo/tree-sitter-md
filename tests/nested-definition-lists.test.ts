@@ -63,6 +63,7 @@ function check(row: Case, profile: typeof profiles[number]) {
     editUndo(document, fresh, row.source, line, 0, '  > ')
     const target = row.source.indexOf('/target')
     editUndo(document, fresh, row.source, target, 7, '/changed')
+    if (row.source.startsWith('- ')) editUndo(document, fresh, row.source, 0, 1, '1.')
     const tab = row.source.indexOf('\t')
     if (tab >= 0) editUndo(document, fresh, row.source, tab, 1, '    ')
     document.reparse()

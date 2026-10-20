@@ -1028,6 +1028,39 @@ static bool suppress_empty_block(Semantic *s, TSNode node) {
   suppressed(s, start(node), finish);
   return true;
 }
+static bool owned_quote_line(Document *d, uint32_t a, uint32_t b, uint32_t depth) {
+  uint32_t quotes = 0;
+  for (; a < b; a++) {
+    if (d->text[a] == '>') { quotes++; continue; }
+    if (d->text[a] != ' ' && d->text[a] != '\t') return true;
+  }
+  return quotes >= depth;
+}
+static uint32_t quote_spread_end(Document *d, TSNode quote) {
+  uint32_t depth = 0;
+  for (TSNode n = quote; !ts_node_is_null(n); n = ts_node_parent(n)) {
+    if (is(n, d->ids.block_quote)) depth++;
+  }
+  uint32_t b = content_end(d, quote);
+  while (b > start(quote)) {
+    uint32_t line = b;
+    while (line && d->text[line - 1] != '\n' && d->text[line - 1] != '\r') line--;
+    if (owned_quote_line(d, line, b, depth)) return b;
+    b = line;
+    while (b > start(quote) && ws(d->text[b - 1])) b--;
+  }
+  return b;
+}
+static uint32_t spread_end(Document *d, TSNode node) {
+  if (is(node, d->ids.block_quote)) return quote_spread_end(d, node);
+  if (!is(node, d->ids.list) && !is(node, d->ids.list_item)) return content_end(d, node);
+  for (uint32_t i = ts_node_named_child_count(node); i > 0; i--) {
+    TSNode child = ts_node_named_child(node, i - 1);
+    if (!block_kind(d, child) && !is(child, d->ids.list_item)) continue;
+    return spread_end(d, child);
+  }
+  return content_end(d, node);
+}
 static bool item_spread(Document *d, TSNode item) {
   TSNode task = task_marker(d, item);
   uint32_t previous = ts_node_is_null(task) ? 0 : end(task);
@@ -1036,7 +1069,7 @@ static bool item_spread(Document *d, TSNode item) {
     TSNode c = ts_node_named_child(item, i);
     if (!block_kind(d, c)) continue;
     if (found && blank_between(d, previous, start(c))) return true;
-    previous = content_end(d, c); found = true;
+    previous = spread_end(d, c); found = true;
   }
   return false;
 }
@@ -1046,7 +1079,7 @@ static bool list_spread(Document *d, TSNode list) {
     TSNode item = ts_node_named_child(list, i);
     if (!is(item, d->ids.list_item)) continue;
     if (item_spread(d, item) || (found && blank_between(d, previous, start(item)))) return true;
-    previous = content_end(d, item);
+    previous = spread_end(d, item);
     found = true;
   }
   return false;
