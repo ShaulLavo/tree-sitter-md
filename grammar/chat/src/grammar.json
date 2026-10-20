@@ -2187,13 +2187,25 @@
       "type": "CHOICE",
       "members": [
         {
-          "type": "ALIAS",
-          "content": {
-            "type": "SYMBOL",
-            "name": "task_literal_paragraph"
-          },
-          "named": true,
-          "value": "paragraph"
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "ALIAS",
+              "content": {
+                "type": "SYMBOL",
+                "name": "task_literal_paragraph"
+              },
+              "named": true,
+              "value": "paragraph"
+            },
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_block"
+              }
+            }
+          ]
         },
         {
           "type": "SEQ",
