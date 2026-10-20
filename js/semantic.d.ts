@@ -1,9 +1,17 @@
 export type SemanticRange = { readonly start: number; readonly end: number }
 export type Alignment = 'left' | 'center' | 'right' | null
 type Base = { readonly range: SemanticRange }
+type CodeSourceRun =
+  | { readonly kind: 'copy'; readonly valueStart: number; readonly length: number; readonly tokenOffset: number }
+  | { readonly kind: 'atom'; readonly valueStart: number; readonly valueLength: number; readonly tokenOffset: number; readonly sourceLength: number }
+type CodeSourceMap = {
+  readonly value: string
+  readonly tokenLength: number
+  readonly runs: readonly CodeSourceRun[]
+}
 export type SemanticInline = Base & (
   | { readonly type: 'text' | 'html' | 'math'; readonly value: string }
-  | { readonly type: 'code'; readonly value: string; readonly sourceValue: string }
+  | { readonly type: 'code'; readonly value: string; readonly sourceValue: string; readonly sourceMap: CodeSourceMap }
   | { readonly type: 'emphasis' | 'strong' | 'delete'; readonly children: readonly SemanticInline[] }
   | { readonly type: 'break'; readonly hard: boolean }
   | { readonly type: 'link'; readonly children: readonly SemanticInline[]; readonly url: string; readonly title: string | null } & (

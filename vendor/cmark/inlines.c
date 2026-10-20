@@ -626,8 +626,8 @@ static bool non_cjk_punctuation(uint32_t category) {
   return (category & (CJK_CHARACTER | CJK_PUNCTUATION)) == CJK_PUNCTUATION;
 }
 
-static bool attention_marker(int32_t scalar, int options) {
-  return scalar == '*' || scalar == '_' || ((options & CMARK_OPT_GFM) && scalar == '~');
+static bool gfm_attention_marker(int32_t scalar, int options) {
+  return (options & CMARK_OPT_GFM) && scalar == '~';
 }
 
 static void cjk_delims(subject *subj, unsigned char marker, int32_t before, int32_t after,
@@ -647,9 +647,9 @@ static void cjk_delims(subject *subj, unsigned char marker, int32_t before, int3
     return;
   }
   bool left = !after_space || (after_punct && (before_space || before_cjk)) ||
-              attention_marker(after, options);
+              gfm_attention_marker(after, options);
   bool right = !before_space || (before_punct && (after_space || (following & CJK_CHARACTER))) ||
-               attention_marker(before, options);
+               gfm_attention_marker(before, options);
   *open = marker == '*' ? left : left && ((primary & (CJK_SPACE | CJK_PUNCTUATION)) || !right);
   *close = marker == '*' ? right : right && ((following & (CJK_SPACE | CJK_PUNCTUATION)) || !left);
 }

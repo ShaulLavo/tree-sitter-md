@@ -124,21 +124,24 @@ Completion requires passing semantic/profile tests, release/consumer evidence an
 
 ### Definition-adjacent nested-list follow-ups
 
-Two bounded probes still differ from cmark 0.31.2 on the PR31 base and the
-adjacent-definition fix. Keep these expectations when fixing them:
+The two recorded probes are fixed in the nested-definition-list patch, pending
+independent root review and merge. Their cmark 0.31.2 expectations are unchanged:
 
-- Input `"- > [x]: /target\n\tcode\n\n[x]"` must retain two spaces before
-  `code` inside the quote paragraph. Container matching consumes the whole tab
-  while retaining two virtual indentation columns; the leaf text loses those
-  columns. Inspect `grammar/src/scanner.c` container matching and `src/leaf.c`
-  paragraph construction. The space-only counterpart passes and protects it.
-- Input `"- > [x]: /target\n\n    code\n\n[x]"` must produce a loose list item
-  with `<p>code</p>` after its empty quote. Current semantics render a tight
-  item. Inspect list spread calculation independently of definition laziness.
+- Input `"- > [x]: /target\n\tcode\n\n[x]"` retains two spaces before
+  `code` inside the quote paragraph. Leaf construction recovers the virtual
+  columns left when container matching consumes a partial tab. Its cache key
+  includes that padding, so changing list marker width also invalidates it.
+- Input `"- > [x]: /target\n\n    code\n\n[x]"` produces a loose list item
+  with `<p>code</p>` after its empty quote. Spread calculation now distinguishes
+  separator blanks from trailing blank lines owned by a quote, including outer
+  quote prefixes.
 
-Reproduce with `MarkdownDocument.setText`, then `semanticHtml` from
-`tests/semantic-html.mjs` after recursively removing definition blocks, as in
-`tests/definition-adjacent.test.ts`. Both must end with a resolved `/target`
-reference. No fix or comparison waiver is claimed here. These are follow-ups
-owned by this semantic-compatibility plan, outside the two proven direct-quote
-and title bug classes in this patch.
+Both exact inputs end with a resolved `/target` reference. Portable fixtures
+retain 40 independent cmark outputs, covering LF/CRLF, tab/space indentation,
+container siblings, edit/undo, reparse and streaming. Exact, open and ended
+records agree with fresh parses across both grammars and GFM settings. Native
+sanitizer tests also check that the two virtual spaces map to the authored tab.
+See `docs/nested-definition-lists.md` for verification and provenance. No
+comparison allowance changed. These results resolve only these two findings;
+full product qualification remains NOT VERIFIED, with historical 192/8320 and
+F08 still strict RED. Downstream pins and installed consumers are unchanged.
