@@ -250,6 +250,36 @@ uint32_t leaf_definition_padding(Document *d, TSNode paragraph) {
   return padding;
 }
 
+static void push_canonical_lines(Document *d, uint32_t a, uint32_t b, bool *line_start) {
+  if (!d->footnote_parent) { push_lines(d, a, b, line_start); return; }
+  while (a < b) {
+    *line_start = false;
+    a = push_line_scalar(d, a, b, line_start);
+  }
+}
+
+static bool prepared_lazy_prefix(Document *d, TSNode node) {
+  if (!d->footnote_parent) return false;
+  for (uint32_t at = start(node); at < end(node); at++)
+    if (d->text[at] != ' ' && d->text[at] != '\t') return false;
+  return footnote_lazy_continuation(d, start(node));
+}
+
+static uint32_t prepared_continuation_padding(Document *d, TSNode paragraph, TSNode continuation) {
+  if (!d->footnote_parent) return 0;
+  TSNode path[200]; uint32_t count = 0;
+  for (TSNode node = ts_node_parent(paragraph); !ts_node_is_null(node); node = ts_node_parent(node)) {
+    if (!is(node, d->ids.list_item) && !is(node, d->ids.block_quote)) continue;
+    if (count == 200) return 0;
+    path[count++] = node;
+  }
+  uint32_t at = start(continuation), padding = 0;
+  while (count) {
+    if (!definition_prefix(d, path[--count], &at, end(continuation), &padding)) return 0;
+  }
+  return padding;
+}
+
 void leaf_build(Document *d, TSNode node, int kind) {
   leaf_clear(&d->leaf);
   d->leaf.source_end = end(node);
@@ -299,10 +329,13 @@ void leaf_build(Document *d, TSNode node, int kind) {
     TSNode c = ts_node_named_child(in, i);
     if (!is(c, d->ids.block_continuation))
       continue;
-    push_lines(d, a, start(c), &line_start);
-    a = end(c);
+    push_canonical_lines(d, a, start(c), &line_start);
+    bool lazy = prepared_lazy_prefix(d, c);
+    uint32_t padding = lazy ? 0 : prepared_continuation_padding(d, node, c);
+    for (uint32_t j = 0; j < padding; j++) push_character(&d->leaf, ' ', end(c) - 1, end(c));
+    a = lazy ? start(c) : end(c);
   }
-  push_lines(d, a, b, &line_start);
+  push_canonical_lines(d, a, b, &line_start);
   if (kind == PARAGRAPH && b < end(node)) b = push_block_tail(d, node, b, &line_start);
   word(&d->leaf.starts, b);
 }

@@ -12,11 +12,16 @@ typedef struct { uint32_t width, from; } SourcePadding;
 
 static bool horizontal(uint16_t c) { return c == ' ' || c == '\t'; }
 static uint32_t line_end(Document *d, uint32_t at, uint32_t limit) {
-  while (at < limit && d->text[at] != '\n') at++;
+  while (at < limit && d->text[at] != '\r' && d->text[at] != '\n') at++;
   return at;
 }
 static uint32_t line_start(Document *d, uint32_t at) {
-  while (at && d->text[at - 1] != '\n') at--;
+  while (at && d->text[at - 1] != '\r' && d->text[at - 1] != '\n') at--;
+  return at;
+}
+static uint32_t next_line(Document *d, uint32_t at, uint32_t limit) {
+  if (at == limit) return at;
+  if (d->text[at++] == '\r' && at < limit && d->text[at] == '\n') at++;
   return at;
 }
 static uint32_t trim_end(Document *d, uint32_t at, uint32_t from) {
@@ -143,26 +148,55 @@ static void append(Document *source, Footnote *note, uint32_t a, uint32_t b, uin
 static void build_body(Document *d, Footnote *note, Container container) {
   note->body = tsmd_new(d->gfm ? 1 : 0, ts_parser_language(d->parser));
   note->body->cjk = d->cjk; note->body->math = d->math;
+  note->body->footnote_parent = d;
   tsmd_input(note->body, 0); tsmd_set_text(note->body);
   uint32_t stop = line_end(d, note->body_start, container.limit);
-  uint32_t cursor = stop < container.limit ? stop + 1 : stop;
+  uint32_t cursor = next_line(d, stop, container.limit);
   append(d, note, note->body_start, cursor, 0);
   note->end = trim_end(d, stop, note->start);
   note->consumed_end = cursor;
   bool blank = stop == note->body_start;
   while (cursor < container.limit) {
     uint32_t a = cursor, b = line_end(d, cursor, container.limit);
-    uint32_t next = b < container.limit ? b + 1 : b;
-    if (!strip_container(d, &a, b, container, NULL)) break;
-    uint32_t columns = indentation(d, &a, b, 4);
+    uint32_t next = next_line(d, b, container.limit);
+    SourcePadding padding = {0};
+    if (!strip_container(d, &a, b, container, &padding)) break;
+    uint32_t content = a; SourcePadding saved_padding = padding;
+    uint32_t columns = source_indentation(d, &a, b, 4, &padding);
     bool empty = trim_end(d, b, a) == a;
     if (!empty && columns < 4 && (blank || !final_paragraph(note->body) || !paragraph_line(d, a))) break;
-    append(d, note, a, next, columns > 4 ? columns - 4 : 0);
+    if (columns < 4) { a = content; padding = saved_padding; }
+    append(d, note, a, next, padding.width);
     if (!empty) note->end = trim_end(d, b, a);
     note->consumed_end = next; blank = empty; cursor = next;
   }
   note->body_end = note->end;
   word(&note->starts, note->end);
+  note->body->footnote_origins = note->starts.v;
+  note->body->footnote_start = note->start;
+}
+bool footnote_lazy_continuation(Document *d, uint32_t at) {
+  if (!d->footnote_parent || !d->footnote_origins || at >= d->len) return false;
+  Document *parent = d->footnote_parent;
+  uint32_t origin = d->footnote_origins[line_start(d, at)];
+  uint32_t a = line_start(parent, origin), b = line_end(parent, origin, parent->len);
+  TSNode path[200]; uint32_t count = 0;
+  TSNode node = ts_node_descendant_for_byte_range(ts_tree_root_node(parent->tree),
+    d->footnote_start * 2, d->footnote_start * 2);
+  for (; !ts_node_is_null(node); node = ts_node_parent(node)) {
+    if (!is(node, parent->ids.list_item) && !is(node, parent->ids.block_quote)) continue;
+    if (count == 200) return false;
+    path[count++] = node;
+  }
+  Container container = {0};
+  while (count) {
+    TSNode owner = path[--count];
+    TSNode marker = ts_node_named_child(owner, 0);
+    container.steps[container.count++] = is(owner, parent->ids.list_item) ? end(marker) - start(marker) : 0;
+  }
+  SourcePadding padding = {0};
+  if (!strip_container(parent, &a, b, container, &padding)) return false;
+  return source_indentation(parent, &a, b, 4, &padding) < 4;
 }
 static bool contained(const Footnotes *notes, uint32_t at) {
   for (uint32_t i = 0; i < notes->count; i++) {
