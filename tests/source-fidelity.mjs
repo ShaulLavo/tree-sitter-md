@@ -247,6 +247,10 @@ test('decoder rejects missing, stale, partial, unordered and nonnumeric code map
     code => { code.sourceMap.runs[0].tokenOffset = -1 },
     code => { code.sourceMap.runs[0].tokenOffset = 0.5 },
     code => { code.sourceMap.runs[0].kind = 'unknown' },
+    code => { code.sourceMap.runs = [{ kind: 'copy', valueStart: 0, length: 1, tokenOffset: 1 }, { kind: 'copy', valueStart: 1, length: 2, tokenOffset: 1 }] },
+    code => { code.sourceMap.runs = [{ kind: 'atom', valueStart: 0, valueLength: 3, tokenOffset: 1, sourceLength: 0 }] },
+    code => { code.sourceMap.runs = [{ kind: 'atom', valueStart: 0, valueLength: 3, tokenOffset: 1, sourceLength: 0.5 }] },
+    code => { code.sourceMap.runs[0].length = Number.MAX_SAFE_INTEGER },
     code => { code.sourceMap.runs.push({ kind: 'atom', valueStart: 3, valueLength: 1, tokenOffset: 1, sourceLength: 1 }) },
   ]
   for (const mutate of mutations) {
