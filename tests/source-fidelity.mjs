@@ -134,18 +134,18 @@ test('single-line code retains existing cell escape handling', () => {
 const footnoteLiterals = [
   ['lazy one', '[^x]: `a{eol} b`', 'a{eol} b', 'a  b'],
   ['lazy two', '[^x]: `a{eol}  b`', 'a{eol}  b', 'a   b'],
-  ['required indent', '[^x]: `a{eol}    b`', 'a{eol}b', 'a     b'],
-  ['extra indent', '[^x]: `a{eol}     b`', 'a{eol} b', 'a      b'],
-  ['inner list lazy', '[^x]: - `a{eol}   b`', 'a{eol} b', 'a  b'],
+  ['required indent', '[^x]: `a{eol}    b`', 'a{eol}b', 'a b'],
+  ['extra indent', '[^x]: `a{eol}     b`', 'a{eol} b', 'a  b'],
+  ['inner list lazy', '[^x]: - `a{eol}   b`', 'a{eol} b', 'a    b'],
   ['inner quote', '[^x]: > `a{eol}    >  b`', 'a{eol} b', 'a  b'],
-  ['outer quote lazy', '> [^x]: `a{eol}>  b`', 'a{eol} b'],
-  ['outer list tab', '- [^x]: `a{eol}\t   b`', 'a{eol} b', 'a \t   b'],
-  ['nested footnote', '[^x]: [^y]: `a{eol}     b`', 'a{eol} b', 'a      b'],
-  ['nested quote footnote', '[^x]: > [^y]: `a{eol}    >  b`', 'a{eol} b'],
+  ['outer quote lazy', '> [^x]: `a{eol}>  b`', 'a{eol} b', 'a  b'],
+  ['outer list tab', '- [^x]: `a{eol}\t   b`', 'a{eol} b', 'a  b'],
+  ['nested footnote', '[^x]: [^y]: `a{eol}     b`', 'a{eol} b', 'a  b'],
+  ['nested quote footnote', '[^x]: > [^y]: `a{eol}    >  b`', 'a{eol} b', 'a  b'],
 ]
-function checkFootnoteLiteral(source, expected, canonical) {
+function checkFootnoteLiteral(source, expected, canonical, options) {
   for (const input of [undefined, 'open', 'ended']) {
-    const code = nodes(read(source, input), 'code')[0]
+    const code = nodes(read(source, input, options), 'code')[0]
     assert.ok(code, 'canonical code node exists')
     assert.equal(code.sourceValue, expected)
     assertCodeSourceMap(source, code)
@@ -153,10 +153,16 @@ function checkFootnoteLiteral(source, expected, canonical) {
     assert.deepEqual(code.range, { start: source.indexOf('`'), end: source.length })
   }
 }
-for (const eol of ['\n', '\r\n', '\r']) {
-  for (const [name, template, value, crValue] of footnoteLiterals.filter(row => eol !== '\r' || row.length === 4)) test('footnote source mapping ' + name + ' ' + JSON.stringify(eol), () => {
-    checkFootnoteLiteral(template.replaceAll('{eol}', eol), value.replaceAll('{eol}', eol), eol === '\r' ? crValue : 'a b')
+function registerFootnoteLiteral(row, eol, math) {
+  const [name, template, value, canonical] = row
+  test('footnote source mapping ' + name + ' ' + JSON.stringify({ eol, math }), () => {
+    checkFootnoteLiteral(template.replaceAll('{eol}', eol), value.replaceAll('{eol}', eol), canonical ?? 'a b', { math })
   })
+}
+for (const eol of ['\n', '\r\n', '\r']) {
+  for (const row of footnoteLiterals.filter(row => eol !== '\r' || !['outer quote lazy', 'nested quote footnote'].includes(row[0]))) {
+    for (const math of [false, true]) registerFootnoteLiteral(row, eol, math)
+  }
 }
 
 test('lazy footnote literal mapping retains the accepted referenced definition', () => {
@@ -164,7 +170,7 @@ test('lazy footnote literal mapping retains the accepted referenced definition',
   for (const input of [undefined, 'open', 'ended']) {
     const code = nodes(read(source, input), 'code')[0]
     assert.equal(code.sourceValue, 'a\n b')
-    assert.equal(code.value, 'a b')
+    assert.equal(code.value, 'a  b')
     assert.deepEqual(code.range, { start: 6, end: 12 })
   }
 })
@@ -262,15 +268,15 @@ test('decoder rejects missing, stale, partial, unordered and nonnumeric code map
   }
 })
 
-for (const [source, tabOffset] of [
-  ['- `a\n\tb`', 3], ['> `a\n>\tb`', 4],
-  ['> [^x]: `a\n>\t\tb`', 5], ['- [^x]: `a\n\t\tb`', 4],
-  ['[^x]: > `a\n    >\tb`', 8], ['> [^x]: [^y]: `a\n>\t\tb`', 5],
+for (const [source, tabOffset, canonical] of [
+  ['- `a\n\tb`', 3, 'a b'], ['> `a\n>\tb`', 4, 'a b'],
+  ['> [^x]: `a\n>\t\tb`', 5, 'a   b'], ['- [^x]: `a\n\t\tb`', 4, 'a   b'],
+  ['[^x]: > `a\n    >\tb`', 8, 'a   b'], ['> [^x]: [^y]: `a\n>\t\tb`', 5, 'a   b'],
 ]) test('virtual tab has one exact local contribution ' + JSON.stringify(source), () => {
   for (const input of [undefined, 'open', 'ended']) {
     const code = nodes(read(source, input), 'code')[0]
     assert.equal(code.sourceValue, 'a\n  b')
-    assert.equal(code.value, 'a b')
+    assert.equal(code.value, canonical)
     assertCodeSourceMap(source, code)
     assert.deepEqual(code.sourceMap.runs, [
       { kind: 'copy', valueStart: 0, length: 2, tokenOffset: 1 },

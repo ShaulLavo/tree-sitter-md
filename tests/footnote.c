@@ -70,10 +70,37 @@ static void physical_table_body(Document *document, Footnotes *notes, const char
   assert(is(ts_node_named_child(section, 0), note->body->ids.pipe_table));
 }
 
+static void canonical_continuation(Document *document, Footnotes *notes, const char *source,
+                                   const char *body, const char *leaf, bool lazy) {
+  set_text(document, source); footnotes_scan(notes);
+  assert(notes->count == 1);
+  const Footnote *note = footnotes_at(notes, 0);
+  assert(note->body->len == strlen(body));
+  for (uint32_t i = 0; i < note->body->len; i++)
+    assert(note->body->text[i] == (unsigned char)body[i]);
+  uint32_t line = 0;
+  while (line < note->body->len && note->body->text[line] != '\n') line++;
+  assert(line < note->body->len);
+  assert(footnote_lazy_continuation(note->body, line + 1) == lazy);
+  uint32_t literal = (uint32_t)(strchr(body, '`') - body);
+  TSNode node = ts_node_descendant_for_byte_range(ts_tree_root_node(note->body->tree),
+    literal * 2, literal * 2);
+  while (!is(node, note->body->ids.paragraph)) {
+    assert(!ts_node_is_null(node));
+    node = ts_node_parent(node);
+  }
+  leaf_build(note->body, node, PARAGRAPH);
+  assert(note->body->leaf.n == strlen(leaf));
+  assert(!memcmp(note->body->leaf.text, leaf, strlen(leaf)));
+}
+
 int main(void) {
   Document *document = tsmd_new(1, tree_sitter_markdown());
   set_text(document, "[^A]: first\n\n[^b]: second\n[^a]: ignored\n");
   Footnotes *footnotes = footnotes_new(document);
+  canonical_continuation(document, footnotes, "[^x]: - `a\n   b`", "- `a\n   b`", "`a\n   b`", true);
+  canonical_continuation(document, footnotes, "[^x]: - `a\n       b`", "- `a\n   b`", "`a\n b`", false);
+  set_text(document, "[^A]: first\n\n[^b]: second\n[^a]: ignored\n");
   footnotes_scan(footnotes);
   assert(footnotes->count == 3);
   const Footnote *first = footnotes_lookup(footnotes, (const unsigned char *)"a", 1);

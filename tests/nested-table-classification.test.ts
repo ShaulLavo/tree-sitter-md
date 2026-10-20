@@ -270,3 +270,54 @@ function registerBoundaries(eol: string, math: boolean): void {
 for (const eol of ["\n", "\r\n", "\r"]) {
   for (const math of [false, true]) registerBoundaries(eol, math);
 }
+
+const quotedCodePadding: readonly (readonly [string, number])[] = [
+  [">\t   ", 1],
+  [">\t    ", 2],
+  [">\t     ", 3],
+  [">\t\t", 2],
+  ["> \t   ", 1],
+  [">  \t   ", 1],
+  [">   \t  ", 4],
+];
+
+function checkQuotedCodePadding(prefix: string, spaces: number, eol: string, math: boolean): void {
+  const source = quoteSource(prefix, eol);
+  const value = ["| a | b |", "|---|---|", "| c |"]
+    .map((line) => " ".repeat(spaces) + line)
+    .join("\n");
+  const expected: SemanticRoot = {
+    type: "root",
+    range: range(0, source.length),
+    children: [
+      {
+        type: "quote",
+        range: range(0, source.length),
+        children: [
+          {
+            type: "code",
+            range: range(2, source.length),
+            fence: "indented",
+            value,
+            language: null,
+            meta: null,
+          },
+        ],
+      },
+    ],
+  };
+  checkDocument(source, expected, math);
+}
+
+function registerQuotedCodePadding(eol: string, math: boolean): void {
+  for (const [prefix, spaces] of quotedCodePadding) {
+    test(
+      "quoted code keeps residual visual indentation " + JSON.stringify({ prefix, eol, math }),
+      () => checkQuotedCodePadding(prefix, spaces, eol, math),
+    );
+  }
+}
+
+for (const eol of ["\n", "\r\n", "\r"]) {
+  for (const math of [false, true]) registerQuotedCodePadding(eol, math);
+}
