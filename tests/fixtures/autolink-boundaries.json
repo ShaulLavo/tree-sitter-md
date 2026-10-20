@@ -1,0 +1,378 @@
+[
+  {
+    "id": "178/24/completed",
+    "pointer": "/cases/4/observations/24",
+    "source": "> A * .\n-` |(- https://exam[x]: /target\nple.test/a) a | b |\n|--\n\n-|---|\u05d0\u05d1\u05d2\n",
+    "identity": {
+      "utf16Units": 75,
+      "utf16LeSha256": "aba410f1d0d9ae166b51c061e9bef9f1ae9f53c9309557a5b8bd468ad28ccef0",
+      "sourceJsonSha256": "ac238f65525193d23a6e969aa8e45e7b79d7c09692c3821fe816d8c4167bc2ef"
+    },
+    "links": [
+      {
+        "value": "https://exam[x",
+        "href": "https://exam%5Bx",
+        "range": {
+          "start": 15,
+          "end": 29
+        }
+      }
+    ],
+    "attention": []
+  },
+  {
+    "id": "178/24/live",
+    "pointer": "/cases/5/observations/24",
+    "source": "> A * .\n-` |(- https://exam[x]: /target\nple.test/a) a | b |\n|--\n\n-|---|\u05d0\u05d1\u05d2\n",
+    "identity": {
+      "utf16Units": 75,
+      "utf16LeSha256": "aba410f1d0d9ae166b51c061e9bef9f1ae9f53c9309557a5b8bd468ad28ccef0",
+      "sourceJsonSha256": "ac238f65525193d23a6e969aa8e45e7b79d7c09692c3821fe816d8c4167bc2ef"
+    },
+    "links": [
+      {
+        "value": "https://exam[x",
+        "href": "https://exam%5Bx",
+        "range": {
+          "start": 15,
+          "end": 29
+        }
+      }
+    ],
+    "attention": []
+  },
+  {
+    "id": "190/47/completed",
+    "pointer": "/cases/28/observations/47",
+    "source": "A[x]: /(https://ex",
+    "identity": {
+      "utf16Units": 18,
+      "utf16LeSha256": "6398bf69db038d4b479a78e17a7e770e71a6d4a524093d670ccec219ca9f796f",
+      "sourceJsonSha256": "3c7caebd1d7faf3ef1b6b31dc900228b391b8f978d8d2a33ef37dbf06b9a9adc"
+    },
+    "links": [
+      {
+        "value": "https://ex",
+        "href": "https://ex",
+        "range": {
+          "start": 8,
+          "end": 18
+        }
+      }
+    ],
+    "attention": []
+  },
+  {
+    "id": "190/47/live",
+    "pointer": "/cases/29/observations/47",
+    "source": "A[x]: /(https://ex",
+    "identity": {
+      "utf16Units": 18,
+      "utf16LeSha256": "6398bf69db038d4b479a78e17a7e770e71a6d4a524093d670ccec219ca9f796f",
+      "sourceJsonSha256": "3c7caebd1d7faf3ef1b6b31dc900228b391b8f978d8d2a33ef37dbf06b9a9adc"
+    },
+    "links": [
+      {
+        "value": "https://ex",
+        "href": "https://ex",
+        "range": {
+          "start": 8,
+          "end": 18
+        }
+      }
+    ],
+    "attention": []
+  },
+  {
+    "id": "201/16/completed",
+    "pointer": "/cases/50/observations/16",
+    "source": "A \nhttps://ex**ample.ssage.\n\n&a",
+    "identity": {
+      "utf16Units": 31,
+      "utf16LeSha256": "73e9992115536301c6fdc5e46b0530ccc72f2cd491002b45a7fb1b3846f2bf97",
+      "sourceJsonSha256": "8a25425f1232dcadbd7a5db33db3f3b1aa76a41b9fc56c4cae61478f650a7758"
+    },
+    "links": [
+      {
+        "value": "https://ex**ample.ssage",
+        "href": "https://ex**ample.ssage",
+        "range": {
+          "start": 3,
+          "end": 26
+        }
+      }
+    ],
+    "attention": []
+  },
+  {
+    "id": "201/16/live",
+    "pointer": "/cases/51/observations/16",
+    "source": "A \nhttps://ex**ample.ssage.\n\n&a",
+    "identity": {
+      "utf16Units": 31,
+      "utf16LeSha256": "73e9992115536301c6fdc5e46b0530ccc72f2cd491002b45a7fb1b3846f2bf97",
+      "sourceJsonSha256": "8a25425f1232dcadbd7a5db33db3f3b1aa76a41b9fc56c4cae61478f650a7758"
+    },
+    "links": [
+      {
+        "value": "https://ex**ample.ssage",
+        "href": "https://ex**ample.ssage",
+        "range": {
+          "start": 3,
+          "end": 26
+        }
+      }
+    ],
+    "attention": []
+  },
+  {
+    "id": "203/39/completed",
+    "pointer": "/cases/54/observations/39",
+    "source": "Att**a\u05d0\u05d1\u05d2> m(https://exam(https://example.test/a)ple.test/a)ple`.t> e$x$s",
+    "identity": {
+      "utf16Units": 73,
+      "utf16LeSha256": "c090e87f56ca75c9239601885d2cf8d801fc57ee2334abb893b07ad581d5cfa9",
+      "sourceJsonSha256": "ee6e030f192c297610810b88bdae0fc3ef369920bd99a93575ed4d79bba0ffe8"
+    },
+    "links": [
+      {
+        "value": "https://exam(https://example.test/a)ple.test/a)ple`.t>",
+        "href": "https://exam(https://example.test/a)ple.test/a)ple%60.t%3E",
+        "range": {
+          "start": 13,
+          "end": 67
+        }
+      }
+    ],
+    "attention": []
+  },
+  {
+    "id": "203/39/live",
+    "pointer": "/cases/55/observations/39",
+    "source": "Att**a\u05d0\u05d1\u05d2> m(https://exam(https://example.test/a)ple.test/a)ple`.t> e$x$s",
+    "identity": {
+      "utf16Units": 73,
+      "utf16LeSha256": "c090e87f56ca75c9239601885d2cf8d801fc57ee2334abb893b07ad581d5cfa9",
+      "sourceJsonSha256": "ee6e030f192c297610810b88bdae0fc3ef369920bd99a93575ed4d79bba0ffe8"
+    },
+    "links": [
+      {
+        "value": "https://exam(https://example.test/a)ple.test/a)ple`.t>",
+        "href": "https://exam(https://example.test/a)ple.test/a)ple%60.t%3E",
+        "range": {
+          "start": 13,
+          "end": 67
+        }
+      }
+    ],
+    "attention": [
+      {
+        "type": "strong",
+        "range": {
+          "start": 3,
+          "end": 73
+        }
+      }
+    ]
+  },
+  {
+    "id": "230/47/completed",
+    "pointer": "/cases/108/observations/47",
+    "source": "A $$````\n``\nx$x$**[x\uddd1(>xamt/a)(https://example.tes> t/a)",
+    "identity": {
+      "utf16Units": 56,
+      "utf16LeSha256": "b58dc61b0b7790dd0eb21701705603c923656a7b0a1ad413569626e6aacc1711",
+      "sourceJsonSha256": "fd15dda5ec07d4da6d20dc38eb8b45167590149c63dbb7a9605c9234473d7843"
+    },
+    "links": [
+      {
+        "value": "https://example.tes",
+        "href": "https://example.tes",
+        "range": {
+          "start": 31,
+          "end": 50
+        }
+      }
+    ],
+    "attention": []
+  },
+  {
+    "id": "230/48/completed",
+    "pointer": "/cases/108/observations/48",
+    "source": "A $$````\n``\nx$x$**[x\uddd1(>x\ud83e\uddd1\u200d\ud83d\udcbbamt/a)(https://example.tes> t/a)",
+    "identity": {
+      "utf16Units": 61,
+      "utf16LeSha256": "cfa4e48dbe51bc1153318c85246e23a10b02c287c7d7247ad33ec57d4bd32bf6",
+      "sourceJsonSha256": "54cce247b794f61c41fbbf6f2e8ffad686360dbb23e31e9dcf4b668d9334807b"
+    },
+    "links": [
+      {
+        "value": "https://example.tes",
+        "href": "https://example.tes",
+        "range": {
+          "start": 36,
+          "end": 55
+        }
+      }
+    ],
+    "attention": []
+  },
+  {
+    "id": "230/47/live",
+    "pointer": "/cases/109/observations/47",
+    "source": "A $$````\n``\nx$x$**[x\uddd1(>xamt/a)(https://example.tes> t/a)",
+    "identity": {
+      "utf16Units": 56,
+      "utf16LeSha256": "b58dc61b0b7790dd0eb21701705603c923656a7b0a1ad413569626e6aacc1711",
+      "sourceJsonSha256": "fd15dda5ec07d4da6d20dc38eb8b45167590149c63dbb7a9605c9234473d7843"
+    },
+    "links": [
+      {
+        "value": "https://example.tes",
+        "href": "https://example.tes",
+        "range": {
+          "start": 31,
+          "end": 50
+        }
+      }
+    ],
+    "attention": []
+  },
+  {
+    "id": "230/48/live",
+    "pointer": "/cases/109/observations/48",
+    "source": "A $$````\n``\nx$x$**[x\uddd1(>x\ud83e\uddd1\u200d\ud83d\udcbbamt/a)(https://example.tes> t/a)",
+    "identity": {
+      "utf16Units": 61,
+      "utf16LeSha256": "cfa4e48dbe51bc1153318c85246e23a10b02c287c7d7247ad33ec57d4bd32bf6",
+      "sourceJsonSha256": "54cce247b794f61c41fbbf6f2e8ffad686360dbb23e31e9dcf4b668d9334807b"
+    },
+    "links": [
+      {
+        "value": "https://example.tes",
+        "href": "https://example.tes",
+        "range": {
+          "start": 36,
+          "end": 55
+        }
+      }
+    ],
+    "attention": []
+  },
+  {
+    "id": "235/19/completed",
+    "pointer": "/cases/118/observations/19",
+    "source": "A\r\n *(https://example[x].test/a)** *mes- sa\r(http[x]s://example.test/a)\nge",
+    "identity": {
+      "utf16Units": 74,
+      "utf16LeSha256": "cc604246594bc1b6855eb30d47965180eb542758e43dcb9d7f44b1ca11048faa",
+      "sourceJsonSha256": "bc9cab7956537a1015eecb8665e7c2d0a91dbcf230885eec7f76578ad93e2b31"
+    },
+    "links": [
+      {
+        "value": "https://example[x].test/a",
+        "href": "https://example%5Bx%5D.test/a",
+        "range": {
+          "start": 6,
+          "end": 31
+        }
+      }
+    ],
+    "attention": [
+      {
+        "type": "emphasis",
+        "range": {
+          "start": 4,
+          "end": 33
+        }
+      }
+    ]
+  },
+  {
+    "id": "235/19/live",
+    "pointer": "/cases/119/observations/19",
+    "source": "A\r\n *(https://example[x].test/a)** *mes- sa\r(http[x]s://example.test/a)\nge",
+    "identity": {
+      "utf16Units": 74,
+      "utf16LeSha256": "cc604246594bc1b6855eb30d47965180eb542758e43dcb9d7f44b1ca11048faa",
+      "sourceJsonSha256": "bc9cab7956537a1015eecb8665e7c2d0a91dbcf230885eec7f76578ad93e2b31"
+    },
+    "links": [
+      {
+        "value": "https://example[x].test/a",
+        "href": "https://example%5Bx%5D.test/a",
+        "range": {
+          "start": 6,
+          "end": 31
+        }
+      }
+    ],
+    "attention": [
+      {
+        "type": "emphasis",
+        "range": {
+          "start": 4,
+          "end": 33
+        }
+      }
+    ]
+  },
+  {
+    "id": "236/2/completed",
+    "pointer": "/cases/120/observations/2",
+    "source": "A **see(https://exa**mple.test/a)ded** message.\n\n",
+    "identity": {
+      "utf16Units": 49,
+      "utf16LeSha256": "0faa4a4a4080ff2ff1470c5209cbd4d1d3f1383dc9965faece340732b37b7ce4",
+      "sourceJsonSha256": "445bcdf297e6f234c33cf9d93e0ff04643119de8c1f8284b23c46f5ef910c918"
+    },
+    "links": [
+      {
+        "value": "https://exa**mple.test/a)ded",
+        "href": "https://exa**mple.test/a)ded",
+        "range": {
+          "start": 8,
+          "end": 36
+        }
+      }
+    ],
+    "attention": [
+      {
+        "type": "strong",
+        "range": {
+          "start": 2,
+          "end": 38
+        }
+      }
+    ]
+  },
+  {
+    "id": "236/2/live",
+    "pointer": "/cases/121/observations/2",
+    "source": "A **see(https://exa**mple.test/a)ded** message.\n\n",
+    "identity": {
+      "utf16Units": 49,
+      "utf16LeSha256": "0faa4a4a4080ff2ff1470c5209cbd4d1d3f1383dc9965faece340732b37b7ce4",
+      "sourceJsonSha256": "445bcdf297e6f234c33cf9d93e0ff04643119de8c1f8284b23c46f5ef910c918"
+    },
+    "links": [
+      {
+        "value": "https://exa**mple.test/a)ded",
+        "href": "https://exa**mple.test/a)ded",
+        "range": {
+          "start": 8,
+          "end": 36
+        }
+      }
+    ],
+    "attention": [
+      {
+        "type": "strong",
+        "range": {
+          "start": 2,
+          "end": 38
+        }
+      }
+    ]
+  }
+]
