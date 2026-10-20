@@ -8,6 +8,7 @@ void tsmd_set_text(Document *);
 void tsmd_edit(Document *, uint32_t, uint32_t);
 
 typedef struct { uint32_t limit, count, steps[200]; } Container;
+typedef struct { uint32_t width, from; } SourcePadding;
 
 static bool horizontal(uint16_t c) { return c == ' ' || c == '\t'; }
 static uint32_t line_end(Document *d, uint32_t at, uint32_t limit) {
@@ -70,21 +71,21 @@ static uint32_t indentation(Document *d, uint32_t *at, uint32_t b, uint32_t want
   return columns;
 }
 static uint32_t source_indentation(Document *d, uint32_t *at, uint32_t b,
-                                    uint32_t wanted, uint32_t *padding) {
+                                    uint32_t wanted, SourcePadding *padding) {
   uint32_t column = 0, line = *at;
   while (line && d->text[line - 1] != '\r' && d->text[line - 1] != '\n') line--;
   for (; line < *at; line++) column += d->text[line] == '\t' ? 4 - column % 4 : 1;
-  uint32_t width = *padding < wanted ? *padding : wanted;
-  *padding -= width;
+  uint32_t width = padding->width < wanted ? padding->width : wanted;
+  padding->width -= width;
   while (*at < b && horizontal(d->text[*at]) && width < wanted) {
     uint32_t added = d->text[(*at)++] == '\t' ? 4 - column % 4 : 1;
     column += added; width += added;
   }
-  if (width > wanted) *padding += width - wanted;
+  if (width > wanted) { padding->width += width - wanted; padding->from = *at - 1; }
   return width;
 }
 static bool strip_container(Document *d, uint32_t *at, uint32_t b, Container container,
-                            uint32_t *padding) {
+                            SourcePadding *padding) {
   for (uint32_t i = 0; i < container.count; i++) {
     uint32_t indent = container.steps[i];
     if (indent) {
@@ -389,16 +390,60 @@ bool footnotes_map_range(const Footnotes *notes, uint32_t start, uint32_t end,
   return footnotes_map_range(notes->parent, local_start, local_end, mapped_start, mapped_end);
 }
 
+static void source_run(FootnoteSource *out, uint32_t count, uint32_t start,
+                       uint32_t length, bool atom) {
+  if (!count) return;
+  FootnoteSourceRun *last = out->run_count ? &out->runs[out->run_count - 1] : NULL;
+  bool adjacent = last && last->source_start + last->source_length == start;
+  bool same_atom = last && last->atom && atom && last->source_start == start && last->source_length == length;
+  if (same_atom || (last && !last->atom && !atom && adjacent)) {
+    last->value_length += count;
+    if (!atom) last->source_length += length;
+    return;
+  }
+  reserve((void **)&out->runs, &out->run_cap, out->run_count + 1, sizeof(*out->runs));
+  out->runs[out->run_count++] = (FootnoteSourceRun){out->len, count, start, length, atom};
+}
 static void source_append(FootnoteSource *out, const uint16_t *text, uint32_t count) {
   reserve((void **)&out->text, &out->cap, out->len + count, sizeof(uint16_t));
   if (count) memcpy(out->text + out->len, text, count * sizeof(uint16_t));
   out->len += count;
 }
+void footnotes_source_slice(FootnoteSource *out, const FootnoteSource *source,
+                           uint32_t start, uint32_t end) {
+  if (start > end || end > source->len) abort();
+  for (uint32_t i = 0; i < source->run_count; i++) {
+    FootnoteSourceRun run = source->runs[i];
+    uint32_t from = start > run.value_start ? start : run.value_start;
+    uint32_t stop = end < run.value_start + run.value_length ? end : run.value_start + run.value_length;
+    if (from >= stop) continue;
+    uint32_t at = run.source_start + (run.atom ? 0 : from - run.value_start);
+    source_run(out, stop - from, at, run.atom ? run.source_length : stop - from, run.atom);
+    source_append(out, source->text + from, stop - from);
+  }
+}
+void footnotes_source_spaces(FootnoteSource *out, const FootnoteSource *source,
+                            uint32_t at, uint32_t count) {
+  if (!count) return;
+  for (uint32_t i = 0; i < source->run_count; i++) {
+    FootnoteSourceRun run = source->runs[i];
+    if (at < run.value_start || at >= run.value_start + run.value_length) continue;
+    uint32_t start = run.source_start + (run.atom ? 0 : at - run.value_start);
+    source_run(out, count, start, run.atom ? run.source_length : 1, true);
+    reserve((void **)&out->text, &out->cap, out->len + count, sizeof(uint16_t));
+    while (count--) out->text[out->len++] = ' ';
+    return;
+  }
+  abort();
+}
+void footnotes_source_free(FootnoteSource *source) {
+  free(source->text); free(source->runs); *source = (FootnoteSource){0};
+}
 static uint32_t source_line_prefix(Document *d, uint32_t a, uint32_t b,
-                                   Container container, uint32_t *padding) {
+                                   Container container, SourcePadding *padding) {
   uint32_t at = a;
-  if (!strip_container(d, &at, b, container, padding)) { *padding = 0; return a; }
-  uint32_t saved = at, saved_padding = *padding;
+  if (!strip_container(d, &at, b, container, padding)) { *padding = (SourcePadding){0}; return a; }
+  uint32_t saved = at; SourcePadding saved_padding = *padding;
   if (source_indentation(d, &at, b, 4, padding) < 4) {
     *padding = saved_padding; return saved;
   }
@@ -411,29 +456,32 @@ static void source_body(FootnoteSource *out, FootnoteSource *parent, const Footn
   uint32_t at = 0;
   bool first = true;
   while (at < view.len) {
-    uint32_t stop = at, padding = 0;
+    uint32_t stop = at; SourcePadding padding = {0};
     while (stop < view.len && view.text[stop] != '\r' && view.text[stop] != '\n') stop++;
     uint32_t from = first ? at : source_line_prefix(&view, at, stop, container, &padding);
-    while (padding) { uint16_t space = ' '; source_append(out, &space, 1); padding--; }
+    footnotes_source_spaces(out, parent, padding.from, padding.width);
     uint32_t next = stop;
     if (next < view.len && view.text[next] == '\r') next++;
     if (next < view.len && view.text[next] == '\n') next++;
-    source_append(out, view.text + from, next - from);
+    footnotes_source_slice(out, parent, from, next);
     first = false; at = next;
   }
 }
 bool footnotes_source_range(const Footnotes *notes, uint32_t start, uint32_t end,
                             FootnoteSource *source) {
   if (!notes || start > end || end > notes->document->len) return false;
-  if (!notes->parent) { source_append(source, notes->document->text + start, end - start); return true; }
+  if (!notes->parent) {
+    source_run(source, end - start, start, end - start, false);
+    source_append(source, notes->document->text + start, end - start); return true;
+  }
   if (notes->owner_index >= notes->parent->count) return false;
   const Footnote *owner = &notes->parent->items[notes->owner_index];
   if (start == end) return true;
   if (end > owner->ends.n || start >= owner->starts.n) return false;
   FootnoteSource parent = {0};
   if (!footnotes_source_range(notes->parent, owner->starts.v[start], owner->ends.v[end - 1], &parent)) {
-    free(parent.text); return false;
+    footnotes_source_free(&parent); return false;
   }
   source_body(source, &parent, owner);
-  free(parent.text); return true;
+  footnotes_source_free(&parent); return true;
 }

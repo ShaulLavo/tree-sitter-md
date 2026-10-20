@@ -39,6 +39,7 @@ for (const [source, expected] of literals) test('inline sourceValue ' + JSON.str
   for (const input of [undefined, 'open', 'ended']) {
     const code = nodes(read(source, input), 'code')[0]
     assert.equal(code.sourceValue, expected)
+    assertCodeSourceMap(source, code)
     assert.deepEqual(code.range, { start: source.indexOf('`'), end: source.length })
   }
 })
@@ -121,6 +122,12 @@ test('single-line code retains existing cell escape handling', () => {
   const code = nodes(read(source), 'code')[0]
   assert.equal(code.value, 'x|y')
   assert.equal(code.sourceValue, 'x|y')
+  assertCodeSourceMap(source, code)
+  assert.deepEqual(code.sourceMap.runs, [
+    { kind: 'copy', valueStart: 0, length: 1, tokenOffset: 1 },
+    { kind: 'atom', valueStart: 1, valueLength: 1, tokenOffset: 2, sourceLength: 2 },
+    { kind: 'copy', valueStart: 2, length: 1, tokenOffset: 4 },
+  ])
   assert.deepEqual(code.range, { start: 14, end: 20 })
 })
 
@@ -141,6 +148,7 @@ function checkFootnoteLiteral(source, expected, canonical) {
     const code = nodes(read(source, input), 'code')[0]
     assert.ok(code, 'canonical code node exists')
     assert.equal(code.sourceValue, expected)
+    assertCodeSourceMap(source, code)
     assert.equal(code.value, canonical)
     assert.deepEqual(code.range, { start: source.indexOf('`'), end: source.length })
   }
@@ -202,5 +210,48 @@ test('footnote producer witnesses retained lazy spaces and local virtual tabs', 
       const code = nodes(read(source, input), 'code')[0]
       assertCodeSourceMap(source, code)
     }
+  }
+})
+
+
+test('producer witness follows equal occurrences and repeated setText calls', () => {
+  const document = new MarkdownDocument()
+  try {
+    for (const prefix of ['', '🙂\ud800 before\n\n']) {
+      const source = prefix + '`one\ntwo three` and `one two\nthree`'
+      document.setText(source)
+      const code = nodes(document.semantics().root, 'code')
+      assert.equal(code.length, 2)
+      for (const entry of code) assertCodeSourceMap(source, entry)
+      assert.notEqual(code[0].range.start, code[1].range.start)
+      assert.equal(code[0].sourceMap.runs[0].tokenOffset, 1)
+      assert.equal(code[1].sourceMap.runs[0].tokenOffset, 1)
+    }
+  } finally { document.dispose() }
+})
+
+for (const source of ['``a`b``', '`&amp; \\ 🙂 é 👩‍💻`', '\ud800 `x\udc00🙂` \udc00', '`a\0b`']) test('producer UTF16 witness ' + JSON.stringify(source), () => {
+  for (const input of [undefined, 'open', 'ended']) assertCodeSourceMap(source, nodes(read(source, input), 'code')[0])
+})
+
+test('decoder rejects missing, stale, partial, unordered and nonnumeric code maps', () => {
+  const source = '`abc`'
+  const mutations = [
+    code => { delete code.sourceMap },
+    code => { code.sourceMap.value = 'stale' },
+    code => { code.sourceMap.tokenLength = 99 },
+    code => { code.sourceMap.runs = [] },
+    code => { code.sourceMap.runs[0].valueStart = 1 },
+    code => { code.sourceMap.runs[0].length = 0 },
+    code => { code.sourceMap.runs[0].length = 4 },
+    code => { code.sourceMap.runs[0].tokenOffset = -1 },
+    code => { code.sourceMap.runs[0].tokenOffset = 0.5 },
+    code => { code.sourceMap.runs[0].kind = 'unknown' },
+    code => { code.sourceMap.runs.push({ kind: 'atom', valueStart: 3, valueLength: 1, tokenOffset: 1, sourceLength: 1 }) },
+  ]
+  for (const mutate of mutations) {
+    const root = read(source)
+    mutate(nodes(root, 'code')[0])
+    assert.throws(() => decodeSemanticRoot(JSON.stringify(root), source.length), TypeError)
   }
 })
