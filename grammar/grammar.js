@@ -220,7 +220,7 @@ module.exports = grammar({
         _list_item_dot: $ => list_item($, $.list_marker_dot),
         _list_item_parenthesis: $ => list_item($, $.list_marker_parenthesis),
         _list_item_content: $ => choice(
-            alias($.task_literal_paragraph, $.paragraph),
+            seq(alias($.task_literal_paragraph, $.paragraph), repeat($._block)),
             seq(
                 choice($.task_list_marker_checked, $.task_list_marker_unchecked),
                 optional($._whitespace),
