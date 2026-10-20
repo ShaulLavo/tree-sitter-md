@@ -138,10 +138,10 @@ const cases = [
     node('heading', 0, 7, { depth: 1, children: [text('**x', 2, 5)] }),
   ], []],
   ['an open ATX heading retains temporary EOF through trailing spaces', '# **x  ', [
-    node('heading', 0, 5, { depth: 1, children: [strong(2, 5, [text('x', 4, 5)])] }),
+    node('heading', 0, 7, { depth: 1, children: [strong(2, 5, [text('x', 4, 5)])] }),
   ], [provisional(path)]],
   ['trailing ordinary spaces retain temporary EOF eligibility', '**bold  ', [
-    paragraph(0, 6, [strong(0, 6, [text('bold', 2, 6)])]),
+    paragraph(0, 8, [strong(0, 6, [text('bold', 2, 6)])]),
   ], [provisional(path)]],
   ['one trailing newline retains temporary EOF eligibility', '**bold\n', [
     paragraph(0, 6, [strong(0, 6, [text('bold', 2, 6)])]),
@@ -185,7 +185,7 @@ test('CJK and math speculation honor disabled capabilities', () => {
 test('trailing nested-container prefixes retain the existing leaf source mapping', () => {
   const document = new MarkdownDocument(options)
   const source = '> - **bold\n>   '
-  const children = [node('quote', 0, 12, { children: [node('list', 2, 12, {
+  const children = [node('quote', 0, 15, { children: [node('list', 2, 15, {
     ordered: false, start: null, spread: false,
     items: [node('listItem', 2, 10, { spread: false, checked: null, children: [
       paragraph(4, 10, [strong(4, 10, [text('bold', 6, 10)])]),

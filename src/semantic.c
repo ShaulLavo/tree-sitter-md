@@ -223,11 +223,16 @@ static TSNode final_math(Document *d, TSNode n) {
 static uint32_t math_container_end(Document *d, TSNode container, TSNode math) {
   return math_eof_prefix(d, math) ? end(container) : math_owned_end(d, math);
 }
+static uint32_t authored_end(Document *d, uint32_t a, uint32_t limit) {
+  uint32_t b = limit;
+  while (b > a && ws(d->text[b - 1])) b--;
+  while (b < limit && (d->text[b] == ' ' || d->text[b] == '\t')) b++;
+  return b;
+}
 static uint32_t content_end(Document *d, TSNode n) {
   TSNode math = final_math(d, n);
   if (!ts_node_is_null(math)) return math_container_end(d, n, math);
-  uint32_t b = end(n);
-  while (b > start(n) && ws(d->text[b - 1])) b--;
+  uint32_t b = authored_end(d, start(n), end(n));
   /* A trailing container marker is owned even when its final leaf ends earlier. */
   if (is(n, d->ids.block_quote) || is(n, d->ids.list)) return b;
   for (uint32_t i = ts_node_named_child_count(n); i > 0; i--) {
@@ -237,8 +242,7 @@ static uint32_t content_end(Document *d, TSNode n) {
     b = content_end(d, c);
     break;
   }
-  while (b > start(n) && ws(d->text[b - 1])) b--;
-  return b;
+  return authored_end(d, start(n), b);
 }
 static void inline_children(Semantic *, Leaf *, cmark_node *, uint32_t, bool);
 static void code_source_value(Semantic *, Leaf *, cmark_node *, uint32_t, uint32_t, uint32_t);
@@ -532,7 +536,9 @@ static void paragraph_part(Semantic *s, Leaf *l, uint32_t a, uint32_t limit, boo
     inline_children(s, l, root->first_child, body, false);
     cmark_node_free(root); return;
   }
-  separator(s, first); begin(s, "paragraph", mapped_start(l, body), mapped_end(l, b));
+  uint32_t finish = mapped_end(l, b);
+  while (finish < l->source_end && (s->d->text[finish] == ' ' || s->d->text[finish] == '\t')) finish++;
+  separator(s, first); begin(s, "paragraph", mapped_start(l, body), finish);
   child_array(s, "children"); inline_children(s, l, root->first_child, body, false); child_array_end(s);
   cmark_node_free(root);
 }
@@ -1221,9 +1227,15 @@ static void list(Semantic *s, TSNode n) {
   }
   child_array_end(s);
 }
-static void cells(Document *d, TSNode row, Words *out) {
-  uint32_t a = start(row), b = end(row);
+static void cell_bounds(Document *d, Words *out, uint32_t a, uint32_t b, uint32_t from, uint32_t to) {
   while (a < b && ws(d->text[a])) a++;
+  while (b > a && ws(d->text[b - 1])) b--;
+  word(out, a); word(out, b); word(out, from); word(out, to);
+}
+static void cells(Document *d, TSNode row, Words *out) {
+  uint32_t a = start(row), b = authored_end(d, a, end(row)), finish = b;
+  while (a < b && ws(d->text[a])) a++;
+  uint32_t owner = a;
   while (b > a && ws(d->text[b - 1])) b--;
   if (a < b && d->text[a] == '|') a++;
   bool trailing = b > a && d->text[b - 1] == '|';
@@ -1237,43 +1249,47 @@ static void cells(Document *d, TSNode row, Words *out) {
   for (; a < b; a++) {
     if (d->text[a] == '\\' && a + 1 < b) { a++; continue; }
     if (d->text[a] != '|') continue;
-    uint32_t x = from, y = a; while (x < y && ws(d->text[x])) x++; while (y > x && ws(d->text[y - 1])) y--;
-    word(out, x); word(out, y); from = a + 1;
+    cell_bounds(d, out, from, a, owner, a); from = a + 1; owner = a;
   }
-  while (from < b && ws(d->text[from])) from++; while (b > from && ws(d->text[b - 1])) b--;
-  word(out, from); word(out, b);
+  cell_bounds(d, out, from, b, owner, finish);
+}
+static void table_cell(Semantic *s, uint32_t a, uint32_t b, uint32_t from, uint32_t to) {
+  begin(s, "tableCell", from, to); child_array(s, "children");
+  leaf_single(s->d, a, b);
+  Leaf *leaf = &s->d->leaf; uint32_t at = 0;
+  for (uint32_t j = 0; j < leaf->n; j++) {
+    uint32_t start = j;
+    if (leaf->text[j] == '\\' && j + 1 < leaf->n && leaf->text[j + 1] == '|') j++;
+    leaf->text[at] = leaf->text[j]; leaf->starts.v[at] = leaf->starts.v[start]; leaf->ends.v[at++] = leaf->ends.v[j];
+  }
+  leaf->n = at; leaf->text[at] = 0; leaf->starts.v[at] = b;
+  parse_inlines(s, leaf, 0); child_array_end(s);
 }
 static void table_row(Semantic *s, TSNode row, uint32_t columns) {
   Words positions = {0}; cells(s->d, row, &positions);
-  begin(s, "tableRow", start(row), content_end(s->d, row)); child_array(s, "cells");
+  uint32_t from = start(row);
+  while (from < end(row) && (s->d->text[from] == ' ' || s->d->text[from] == '\t')) from++;
+  begin(s, "tableRow", from, content_end(s->d, row)); child_array(s, "cells");
   bool first = true;
   for (uint32_t i = 0; i < columns; i++) {
     separator(s, &first);
-    if (i * 2 >= positions.n) {
+    if (i * 4 >= positions.n) {
       put(s, "{\"type\":\"tableCell\",\"range\":null,\"children\":[]}"); continue;
     }
-    uint32_t a = end(row), b = a;
-    if (i * 2 < positions.n) { a = positions.v[i * 2]; b = positions.v[i * 2 + 1]; }
-    begin(s, "tableCell", a, b); child_array(s, "children");
-    leaf_single(s->d, a, b);
-    Leaf *leaf = &s->d->leaf; uint32_t at = 0;
-    for (uint32_t j = 0; j < leaf->n; j++) {
-      uint32_t from = j;
-      if (leaf->text[j] == '\\' && j + 1 < leaf->n && leaf->text[j + 1] == '|') j++;
-      leaf->text[at] = leaf->text[j]; leaf->starts.v[at] = leaf->starts.v[from]; leaf->ends.v[at++] = leaf->ends.v[j];
-    }
-    leaf->n = at; leaf->text[at] = 0; leaf->starts.v[at] = b;
-    parse_inlines(s, leaf, 0); child_array_end(s);
+    uint32_t *cell = positions.v + i * 4;
+    table_cell(s, cell[0], cell[1], cell[2], cell[3]);
   }
   free(positions.v); child_array_end(s);
 }
 static void table(Semantic *s, TSNode n) {
   Document *d = s->d; TSNode delimiter = find_child(d, n, d->ids.pipe_table_delimiter_row);
-  Words positions = {0}; cells(d, delimiter, &positions); uint32_t columns = positions.n / 2;
-  begin(s, "table", start(n), content_end(d, n)); put(s, ",\"align\":[");
+  Words positions = {0}; cells(d, delimiter, &positions); uint32_t columns = positions.n / 4;
+  uint32_t from = start(n);
+  while (from < end(n) && (d->text[from] == ' ' || d->text[from] == '\t')) from++;
+  begin(s, "table", from, content_end(d, n)); put(s, ",\"align\":[");
   for (uint32_t i = 0; i < columns; i++) {
     if (i) put(s, ",");
-    uint32_t a = positions.v[i * 2], b = positions.v[i * 2 + 1];
+    uint32_t a = positions.v[i * 4], b = positions.v[i * 4 + 1];
     bool left = a < b && d->text[a] == ':', right = a < b && d->text[b - 1] == ':';
     if (left && right) put(s, "\"center\"");
     else if (left) put(s, "\"left\"");
