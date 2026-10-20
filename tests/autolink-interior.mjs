@@ -27,19 +27,19 @@ function linkDecorations(source, decorations) {
 }
 
 test('GFM URL interior delimiters do not close surrounding strong emphasis', () => {
-  const source = 'A **see(https://exa**mple.test/a)ded** message.\n\n'
+  const source = 'A **see(https://exa.test**mple.test/a)ded** message.\n\n'
   for (const input of [undefined, 'open', 'ended']) {
     const { root, decorations } = read(source, input)
     const strong = nodes(root, 'strong')[0]
     const link = nodes(root, 'link')[0]
-    assert.deepEqual(strong.range, { start: 2, end: 38 })
+    assert.deepEqual(strong.range, { start: 2, end: 43 })
     assert.deepEqual(link, {
-      type: 'link', range: { start: 8, end: 36 },
-      url: 'https://exa**mple.test/a)ded', title: null, origin: 'gfm-autolink',
-      sourceValue: 'https://exa**mple.test/a)ded', sourceUrl: 'https://exa**mple.test/a)ded',
-      children: [{ type: 'text', range: { start: 8, end: 36 }, value: 'https://exa**mple.test/a)ded' }],
+      type: 'link', range: { start: 8, end: 41 },
+      url: 'https://exa.test**mple.test/a)ded', title: null, origin: 'gfm-autolink',
+      sourceValue: 'https://exa.test**mple.test/a)ded', sourceUrl: 'https://exa.test**mple.test/a)ded',
+      children: [{ type: 'text', range: { start: 8, end: 41 }, value: 'https://exa.test**mple.test/a)ded' }],
     })
-    assert.deepEqual(linkDecorations(source, decorations), ['https://exa**mple.test/a)ded'])
+    assert.deepEqual(linkDecorations(source, decorations), ['https://exa.test**mple.test/a)ded'])
   }
 })
 
@@ -48,7 +48,7 @@ const literals = [
   ['*https://example.test/a*b*', 'https://example.test/a*b'],
   ['_https://example.test/a_b_', 'https://example.test/a_b'],
   ['~~https://example.test/a~~b~~', 'https://example.test/a~~b'],
-  ['**https://exa**mple.test/a**', 'https://exa**mple.test/a'],
+  ['**https://exa.test**mple.test/a**', 'https://exa.test**mple.test/a'],
   ['**www.example.test/a**b**', 'www.example.test/a**b'],
   ['**WWW.example.test/a**b**', 'WWW.example.test/a**b'],
   ['**https://example.test/a(b))**', 'https://example.test/a(b)'],
@@ -62,7 +62,7 @@ const literals = [
   ['**https://example.test/a<x**', 'https://example.test/a'],
   ['**https://example.test/a?x=1&amp;y=2**', 'https://example.test/a?x=1&amp;y=2'],
   ['**www.example.test/&#58;@b**', 'www.example.test/&#58;@b'],
-  ['中文 **https://exa**mple.test/a** 中文', 'https://exa**mple.test/a'],
+  ['中文 **https://exa.test**mple.test/a** 中文', 'https://exa.test**mple.test/a'],
 ]
 function assertLiteral(source, literal, cjk, input) {
   const { root } = read(source, input, { cjk })
@@ -83,10 +83,10 @@ for (const [source, literal] of literals) test('GFM URL punctuation and source c
 })
 
 test('CJK URL boundaries retain following punctuation and emphasis', () => {
-  const source = '**see(https://exa**mple.test/a。)ded**'
-  assertLiteral(source, 'https://exa**mple.test/a', true)
-  assertLiteral(source, 'https://exa**mple.test/a。)ded', false)
-  assert.equal(semanticHtml(read(source, undefined, { cjk: true })), '<p><strong>see(<a href="https://exa**mple.test/a">https://exa**mple.test/a</a>。)ded</strong></p>\n')
+  const source = '**see(https://exa.test**mple.test/a。)ded**'
+  assertLiteral(source, 'https://exa.test**mple.test/a', true)
+  assertLiteral(source, 'https://exa.test**mple.test/a。)ded', false)
+  assert.equal(semanticHtml(read(source, undefined, { cjk: true })), '<p><strong>see(<a href="https://exa.test**mple.test/a">https://exa.test**mple.test/a</a>。)ded</strong></p>\n')
 })
 
 test('literal URLs do not replace explicit links, code or disabled GFM', () => {

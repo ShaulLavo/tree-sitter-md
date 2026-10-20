@@ -158,58 +158,34 @@ static size_t autolink_delim(uint8_t *data, size_t link_end) {
   return link_end;
 }
 
-static size_t check_domain(uint8_t *data, size_t size, int allow_short) {
-  if (size < 2)
-    return size && allow_short && is_valid_hostchar(data, size) ? size : 0;
-  size_t i, np = 0, uscore1 = 0, uscore2 = 0;
+static size_t check_domain(const uint8_t *data, size_t size) {
+  size_t i = 0, np = 0, uscore1 = 0, uscore2 = 0;
 
-  /* The purpose of this code is to reject urls that contain an underscore
-   * in one of the last two segments. Examples:
-   *
-   *   www.xxx.yyy.zzz     autolinked
-   *   www.xxx.yyy._zzz    not autolinked
-   *   www.xxx._yyy.zzz    not autolinked
-   *   www._xxx.yyy.zzz    autolinked
-   *
-   * The reason is that domain names are allowed to include underscores,
-   * but host names are not. See: https://stackoverflow.com/a/2183140
-   */
-  for (i = 1; i < size - 1; i++) {
-    if (data[i] == '\\' && i < size - 2)
+  /* GFM 6.9 requires a dot and no underscores in the last two labels.
+   * Advance by decoded scalar width, never through UTF-8 continuation bytes. */
+  while (i < size) {
+    if (data[i] == '\\' && i + 1 < size)
       i++;
-    if (data[i] == '_')
+    int32_t ch;
+    int width = cmark_utf8proc_iterate(data + i, (bufsize_t)(size - i), &ch);
+    if (width <= 0)
+      break;
+    if (ch == '_')
       uscore2++;
-    else if (data[i] == '.') {
+    else if (ch == '.') {
       uscore1 = uscore2;
       uscore2 = 0;
       np++;
-    } else if (!is_valid_hostchar(data + i, size - i) && data[i] != '-')
+    } else if (ch != '-' && (cmark_utf8proc_is_space(ch) || cmark_utf8proc_is_punct(ch)))
       break;
+    i += width;
   }
 
-  if (uscore1 > 0 || uscore2 > 0) {
-    /* If the url is very long then accept it despite the underscores,
-     * to avoid quadratic behavior causing a denial of service. See:
-     * https://github.com/github/cmark-gfm/security/advisories/GHSA-29g3-96g3-jg6c
-     * Reasonable urls are unlikely to have more than 10 segments, so
-     * this extra condition shouldn't have any impact on normal usage.
-     */
-    if (np <= 10) {
-      return 0;
-    }
-  }
-
-  if (allow_short) {
-    /* We don't need a valid domain in the strict sense (with
-     * least one dot; so just make sure it's composed of valid
-     * domain characters and return the length of the the valid
-     * sequence. */
-    return i;
-  } else {
-    /* a valid domain needs to have at least a dot.
-     * that's as far as we get */
-    return np ? i : 0;
-  }
+  /* Retain cmark-gfm's bounded rejection policy for very long domains:
+   * https://github.com/github/cmark-gfm/security/advisories/GHSA-29g3-96g3-jg6c */
+  if (np <= 10 && (uscore1 || uscore2))
+    return 0;
+  return np ? i : 0;
 }
 
 static bool email_protocol(uint8_t *data, size_t at, const char *protocol) {
@@ -281,21 +257,20 @@ size_t tsmd_cjk_autolink_end(const uint8_t *data, size_t a, size_t b) {
 bool tsmd_gfm_autolink_match(const uint8_t *data, size_t size, size_t at,
                              size_t *begin, size_t *end, bool cjk) {
   size_t start = at, finish = 0;
-  bool www = false;
+  size_t domain = at;
 
   if (at >= size)
     return false;
   if (size - at >= 4 && !strncasecmp((const char *)data + at, "www.", 4) &&
       (!at || cmark_isspace(data[at - 1]) || strchr("*_~([]", data[at - 1]))) {
-    www = true;
     finish = at + 4;
   } else if (data[at] == ':' && size - at > 3 && data[at + 1] == '/' && data[at + 2] == '/') {
     while (start > 0 && cmark_isalpha(data[start - 1]))
       start--;
-    if (!sd_autolink_issafe(data + start, size - start) ||
-        !check_domain((uint8_t *)data + at + 3, size - at - 3, 1))
+    if (!sd_autolink_issafe(data + start, size - start))
       return false;
     finish = at + 3;
+    domain = finish;
   } else {
     return false;
   }
@@ -304,7 +279,7 @@ bool tsmd_gfm_autolink_match(const uint8_t *data, size_t size, size_t at,
   if (cjk) finish = tsmd_cjk_autolink_end(data, start, finish);
   if (finish <= start)
     return false;
-  if (www && !check_domain((uint8_t *)data + start, finish - start, 0))
+  if (finish <= domain || !check_domain(data + domain, finish - domain))
     return false;
   *begin = start;
   *end = finish;

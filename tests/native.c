@@ -1,4 +1,5 @@
 #include "resolver.h"
+#include "autolink.h"
 #include "native-language.h"
 #include <assert.h>
 Document *tsmd_new(uint32_t, const TSLanguage *);
@@ -204,7 +205,30 @@ static void long_fences(void) {
   }
   tsmd_free(d);
 }
+static void gfm_domains(void) {
+  const struct { const char *source; bool valid; } cases[] = {
+    {"https://examarget", false},
+    {"https://examarget/a.b", false},
+    {"https://examarget:8080/a.b", false},
+    {"https://foo_bar.test/a", false},
+    {"https://éxam_ple.test/a", false},
+    {"https://ex🧑‍💻am_ple.test/a", false},
+    {"https://foo.test_/", false},
+    {"https://a.b", true},
+    {"https://foo_bar.example.test/a", true},
+    {"https://éxam_ple.example.test/a", true},
+  };
+  for (size_t i = 0; i < sizeof(cases) / sizeof(*cases); i++) {
+    size_t begin = 0, end = 0;
+    const char *source = cases[i].source;
+    bool matched = tsmd_gfm_autolink_match((const uint8_t *)source, strlen(source),
+                                          5, &begin, &end, false);
+    assert(matched == cases[i].valid);
+  }
+}
+
 int main(void) {
+  gfm_domains();
   long_fences();
   table_blocks();
   ordinary_text_runs();
@@ -225,7 +249,7 @@ int main(void) {
     "> - [ ]\n> - x\n> -",
     "Title\n---\n\n| a | b |\n| --- | --- |\n| c | d |",
     "$$same *line*\nnext\n$$",
-    "A **see(https://exa**mple.test/a)ded** message.\n\n",
+    "A **see(https://exa.test**mple.test/a)ded** message.\n\n",
     "**www.example.test/a**b** **https://example.test/a\\*b**",
     "**www.** **www.!** **www.?**",
     "[https://example.test/a](target) **[https://example.test/a](target)**"
