@@ -573,24 +573,8 @@ static void append_utf16(cmark_strbuf *out, Document *d, uint32_t a, uint32_t b)
     cmark_utf8proc_encode_char(c, out);
   }
 }
-static uint32_t column_at(Document *d, uint32_t a) {
-  uint32_t line = a, column = 0;
-  while (line && d->text[line - 1] != '\n' && d->text[line - 1] != '\r') line--;
-  for (; line < a; line++) column += d->text[line] == '\t' ? 4 - column % 4 : 1;
-  return column;
-}
-static uint32_t item_indent(Document *d, TSNode item) {
-  TSNode marker = ts_node_named_child(item, 0); uint32_t a = start(marker), b = end(marker);
-  uint32_t original = column_at(d, a), column = original;
-  while (a < b && ws(d->text[a])) { column += d->text[a] == '\t' ? 4 - column % 4 : 1; a++; }
-  while (a < b && !ws(d->text[a])) { column++; a++; }
-  uint32_t padding = column;
-  while (a < b && ws(d->text[a])) { column += d->text[a] == '\t' ? 4 - column % 4 : 1; a++; }
-  uint32_t spaces = column - padding;
-  return padding - original + (spaces == 0 || spaces > 4 ? 1 : spaces);
-}
 static void append_line(cmark_strbuf *out, Document *d, uint32_t a, uint32_t b) {
-  uint32_t column = column_at(d, a);
+  uint32_t column = source_column(d, a);
   while (a < b && (d->text[a] == ' ' || d->text[a] == '\t')) {
     uint32_t width = d->text[a++] == '\t' ? 4 - column % 4 : 1;
     column += width;
@@ -606,10 +590,10 @@ static uint32_t container_prefix(Document *d, Document *context, TSNode parent, 
   }
   uint32_t virtual_spaces = 0;
   while (count) {
-    TSNode n = path[--count]; uint32_t column = column_at(d, a), width = 0;
+    TSNode n = path[--count]; uint32_t column = source_column(d, a), width = 0;
     uint32_t saved = a, saved_virtual = virtual_spaces;
     bool list = is(n, context->ids.list_item);
-    uint32_t required = list ? item_indent(context, n) : (literal ? UINT32_MAX : 3);
+    uint32_t required = list ? list_item_indent(context, n) : (literal ? UINT32_MAX : 3);
     if (literal) { width = virtual_spaces < required ? virtual_spaces : required; virtual_spaces -= width; }
     while (a < b && width < required && (d->text[a] == ' ' || d->text[a] == '\t')) {
       uint32_t added = d->text[a] == '\t' ? 4 - column % 4 : 1;
@@ -729,7 +713,7 @@ static uint32_t math_spaces(Document *d, uint32_t stop, uint32_t *at, uint32_t *
   uint32_t count = *virtual < limit ? *virtual : limit;
   *virtual -= count;
   while (*at < stop && count < limit && (d->text[*at] == ' ' || d->text[*at] == '\t')) {
-    uint32_t width = d->text[*at] == '\t' ? 4 - column_at(d, *at) % 4 : 1;
+    uint32_t width = d->text[*at] == '\t' ? 4 - source_column(d, *at) % 4 : 1;
     (*at)++;
     uint32_t used = width < limit - count ? width : limit - count;
     count += used; *virtual += width - used;
@@ -741,10 +725,10 @@ static bool math_prefix_item(Document *d, TSNode item, uint32_t required, uint32
                              uint32_t *at, uint32_t *virtual) {
   TSNode marker = ts_node_named_child(item, 0);
   if (*at != start(marker)) return math_spaces(d, stop, at, virtual, required) == required;
-  uint32_t before = column_at(d, *at);
+  uint32_t before = source_column(d, *at);
   while (*at < end(marker) && ws(d->text[*at])) (*at)++;
   while (*at < stop && !ws(d->text[*at])) (*at)++;
-  required -= column_at(d, *at) - before + *virtual;
+  required -= source_column(d, *at) - before + *virtual;
   *virtual = 0;
   return math_spaces(d, stop, at, virtual, required) == required;
 }
@@ -777,7 +761,7 @@ static bool math_prefix(Document *d, TSNode n, uint32_t row, uint32_t stop, uint
     TSNode marker = ts_node_named_child(item, 0);
     uint32_t marker_at, marker_virtual;
     math_prefix_path(d, path + i, count - i, start(marker), start(marker), &marker_at, &marker_virtual);
-    path[i - 1].indent = item_indent(d, item) + marker_virtual;
+    path[i - 1].indent = list_item_indent(d, item) + marker_virtual;
   }
   return math_prefix_path(d, path, count, row, stop, at, virtual);
 }
@@ -896,14 +880,14 @@ static void code(Semantic *s, TSNode n, bool fenced) {
       bool only_indent = true;
       for (uint32_t at = line; at < start(n); at++)
         if (d->text[at] != ' ' && d->text[at] != '\t') only_indent = false;
-      uint32_t columns = column_at(d, start(n));
+      uint32_t columns = source_column(d, start(n));
       if (only_indent && columns > 4) first_padding = columns - 4;
     }
     if (is(parent, d->ids.list_item)) {
       TSNode marker = ts_node_named_child(parent, 0);
       if (end(marker) == start(n)) {
-        uint32_t marker_width = column_at(d, end(marker)) - column_at(d, start(marker));
-        uint32_t required = item_indent(d, parent) + 4;
+        uint32_t marker_width = source_column(d, end(marker)) - source_column(d, start(marker));
+        uint32_t required = list_item_indent(d, parent) + 4;
         if (marker_width > required) first_padding = marker_width - required;
       }
       for (uint32_t i = 0; i < ts_node_named_child_count(parent); i++) {
@@ -913,7 +897,7 @@ static void code(Semantic *s, TSNode n, bool fenced) {
         uint32_t width = 0;
         for (uint32_t at = start(child); at < end(child); at++)
           width += d->text[at] == '\t' ? 4 - width % 4 : 1;
-        if (width > item_indent(d, parent)) first_padding = width - item_indent(d, parent);
+        if (width > list_item_indent(d, parent)) first_padding = width - list_item_indent(d, parent);
       }
     }
     if (is(parent, d->ids.block_quote)) {
@@ -1052,7 +1036,7 @@ static bool item_spread(Document *d, TSNode item) {
     TSNode c = ts_node_named_child(item, i);
     if (!block_kind(d, c)) continue;
     if (found && blank_between(d, previous, start(c))) return true;
-    previous = is(c, d->ids.block_quote) ? end(c) : content_end(d, c); found = true;
+    previous = content_end(d, c); found = true;
   }
   return false;
 }
@@ -1063,13 +1047,6 @@ static bool list_spread(Document *d, TSNode list) {
     if (!is(item, d->ids.list_item)) continue;
     if (item_spread(d, item) || (found && blank_between(d, previous, start(item)))) return true;
     previous = content_end(d, item);
-    uint32_t count = ts_node_named_child_count(item);
-    for (uint32_t j = count; j > 0; j--) {
-      TSNode child = ts_node_named_child(item, j - 1);
-      if (!block_kind(d, child)) continue;
-      if (is(child, d->ids.block_quote)) previous = end(child);
-      break;
-    }
     found = true;
   }
   return false;
