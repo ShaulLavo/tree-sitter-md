@@ -30,10 +30,15 @@ typedef struct {
   size_t count, capacity;
 } cmark_reference_uses;
 
+typedef struct {
+  const uint16_t *utf16;
+  const uint32_t *starts;
+} cmark_inline_source;
+
 void cmark_reference_uses_free(cmark_mem *, cmark_reference_uses *);
 void cmark_parse_inlines(cmark_mem *mem, cmark_node *parent,
                          cmark_reference_map *refmap, int options,
-                         cmark_reference_uses *uses);
+                         cmark_reference_uses *uses, const cmark_inline_source *source);
 
 bufsize_t cmark_reference_definition_length(cmark_chunk *input, bufsize_t *title_start);
 

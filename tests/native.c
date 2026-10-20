@@ -142,7 +142,7 @@ static void ordinary_text_runs(void) {
     cmark_reference_map *refs = cmark_reference_map_new(cmark_get_default_mem_allocator());
     root->data = (unsigned char *)fixtures[i]; root->len = strlen(fixtures[i]);
     root->start_line = 1; root->start_column = 1;
-    cmark_parse_inlines(cmark_get_default_mem_allocator(), root, refs, CMARK_OPT_GFM, NULL);
+    cmark_parse_inlines(cmark_get_default_mem_allocator(), root, refs, CMARK_OPT_GFM, NULL, NULL);
     assert(root->first_child && root->first_child->type == CMARK_NODE_TEXT);
     assert(!root->first_child->next && root->first_child->len == root->len);
     root->data = NULL; root->len = 0;

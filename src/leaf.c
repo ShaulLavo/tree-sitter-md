@@ -129,6 +129,7 @@ static void push_lines(Document *d, uint32_t a, uint32_t b, bool *line_start) {
 }
 void leaf_single(Document *d, uint32_t a, uint32_t b) {
   leaf_clear(&d->leaf);
+  d->leaf.source = d->text;
   d->leaf.source_end = b;
   bool line_start = true;
   push_lines(d, a, b, &line_start);
@@ -323,9 +324,10 @@ static void retain_code_padding(Document *d, Words *generated) {
   root->start_line = root->start_column = 1;
   defs->match_autolink = tsmd_gfm_autolink_match;
   // Only tab-spill leaves pay for classification; ordinary breaks keep their bytes.
+  cmark_inline_source source = {leaf->source, leaf->starts.v + body};
   cmark_parse_inlines(cmark_get_default_mem_allocator(), root, defs,
                       (d->gfm ? CMARK_OPT_GFM : 0) | (d->cjk ? CMARK_OPT_CJK : 0) |
-                        (d->math ? CMARK_OPT_MATH : 0), NULL);
+                        (d->math ? CMARK_OPT_MATH : 0), NULL, &source);
   Words codes = {0};
   code_intervals(root->first_child, body, &codes);
   root->data = NULL;
@@ -339,6 +341,7 @@ static void retain_code_padding(Document *d, Words *generated) {
 
 void leaf_build(Document *d, TSNode node, int kind) {
   leaf_clear(&d->leaf);
+  d->leaf.source = d->text;
   d->leaf.source_end = end(node);
   TSNode in = {0};
   uint32_t count = ts_node_named_child_count(node);
@@ -509,9 +512,10 @@ void inline_resolve(Leaf *leaf, int kind, bool gfm, bool cjk, bool math, cmark_r
   defs->match_autolink = tsmd_gfm_autolink_match;
   defs->lookup_label = dependency;
   defs->lookup_context = deps;
+  cmark_inline_source source = {l->source, l->starts.v + body};
   cmark_parse_inlines(cmark_get_default_mem_allocator(), root, defs,
                       (gfm ? CMARK_OPT_GFM : 0) | (cjk ? CMARK_OPT_CJK : 0) |
-                        (math ? CMARK_OPT_MATH : 0), NULL);
+                        (math ? CMARK_OPT_MATH : 0), NULL, &source);
   defs->lookup_label = NULL;
   defs->lookup_context = NULL;
   inline_nodes(leaf, gfm, root->first_child, body, out, false, cjk);

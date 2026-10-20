@@ -38,3 +38,15 @@ Each footnote owner keeps its parsed container steps and removes only its own
 required prefix from authored physical lines. Inner code containers are stripped
 after this mapping, so lazy indentation is not lost in the canonical body copy.
 Canonical body extraction and its range maps are unchanged.
+
+Attention flanking reads the original UTF-16 neighbor when a leaf's UTF-8
+replacement character came from a lone surrogate. An authored U+FFFD keeps its
+existing Unicode category, and a valid supplementary pair remains one scalar.
+This applies to decorations, exact semantics and open/ended presentation.
+Delimiter allocation and original run lengths are unchanged.
+
+All three native inline parse sites lend cmark the original document units and
+the leaf's byte-to-source start map for the synchronous parse. The continuation-tab
+classifier uses the map before compaction. Sliced leaves retain the document
+pointer and shift only their byte map. Raw UTF-8 callers pass a null source
+context. No extra buffer is owned by cmark.

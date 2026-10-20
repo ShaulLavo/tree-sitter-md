@@ -71,6 +71,7 @@ typedef struct {
   int column_offset;
   cmark_reference_map *refmap;
   cmark_reference_uses *uses;
+  const cmark_inline_source *source;
   bufsize_t reference_label_start, reference_label_end;
   delimiter *last_delim;
   bracket *last_bracket;
@@ -221,6 +222,7 @@ static void subject_from_buf(cmark_mem *mem, int line_number, int block_offset, 
   e->column_offset = 0;
   e->refmap = refmap;
   e->uses = NULL;
+  e->source = NULL;
   e->reference_label_start = e->reference_label_end = -1;
   e->last_delim = NULL;
   e->last_bracket = NULL;
@@ -597,6 +599,13 @@ static uint32_t cjk_category(int32_t scalar) {
   return cjk_categories[low].category;
 }
 
+static int32_t source_neighbor(subject *subj, int32_t scalar, bufsize_t at) {
+  if (scalar != 0xfffd || !subj->source)
+    return scalar;
+  uint16_t unit = subj->source->utf16[subj->source->starts[at]];
+  return unit >= 0xd800 && unit < 0xe000 ? unit : scalar;
+}
+
 static int32_t previous_scalar(subject *subj, bufsize_t end) {
   if (end <= 0)
     return '\n';
@@ -605,7 +614,7 @@ static int32_t previous_scalar(subject *subj, bufsize_t end) {
     start--;
   int32_t scalar = '\n';
   cmark_utf8proc_iterate(subj->input.data + start, end - start, &scalar);
-  return scalar;
+  return source_neighbor(subj, scalar, start);
 }
 
 static uint32_t preceding_cjk_category(subject *subj, int32_t scalar, bufsize_t before) {
@@ -695,6 +704,8 @@ static int scan_delims(subject *subj, unsigned char c, bool *can_open,
   if (len == -1) {
     after_char = 10;
   }
+  before_char = source_neighbor(subj, before_char, before_char_pos);
+  after_char = source_neighbor(subj, after_char, subj->pos);
   if ((options & CMARK_OPT_CJK) && (c == '*' || c == '_' || c == '~')) {
     cjk_delims(subj, c, before_char, after_char, before_char_pos, options, can_open, can_close);
     return numdelims;
@@ -1998,7 +2009,7 @@ static int parse_inline(subject *subj, cmark_node *parent, int options) {
 // Parse inlines from parent's string_content, adding as children of parent.
 void cmark_parse_inlines(cmark_mem *mem, cmark_node *parent,
                          cmark_reference_map *refmap, int options,
-                         cmark_reference_uses *uses) {
+                         cmark_reference_uses *uses, const cmark_inline_source *source) {
   int internal_offset = parent->type == CMARK_NODE_HEADING ?
     parent->as.heading.internal_offset : 0;
   subject subj;
@@ -2007,6 +2018,7 @@ void cmark_parse_inlines(cmark_mem *mem, cmark_node *parent,
   cmark_chunk_rtrim(&subj.input);
   subj.temporary_eof = (options & CMARK_OPT_PRESENTATION) != 0;
   subj.uses = uses;
+  subj.source = source;
 
   while (!is_eof(&subj) && parse_inline(&subj, parent, options))
     ;

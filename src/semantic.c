@@ -471,11 +471,12 @@ static cmark_node *inline_root(Semantic *s, Leaf *l, uint32_t body, bool observe
   s->defs->lookup_footnote = lookup_footnote; s->defs->footnote_context = s->root_footnotes;
   s->defs->match_autolink = tsmd_gfm_autolink_match;
   cmark_reference_uses uses = {0};
+  cmark_inline_source source = {l->source, l->starts.v + body};
   cmark_parse_inlines(cmark_get_default_mem_allocator(), root, s->defs,
                       (s->d->gfm ? CMARK_OPT_GFM : 0) | (s->d->cjk ? CMARK_OPT_CJK : 0) |
                         (s->d->math ? CMARK_OPT_MATH : 0) | (s->d->gfm ? CMARK_OPT_FOOTNOTES : 0) |
                         (open_source_end(s, l->source_end) ? CMARK_OPT_PRESENTATION : 0),
-                      s->presentation && observe ? &uses : NULL);
+                      s->presentation && observe ? &uses : NULL, &source);
   collect_references(s, l, body, &uses);
   cmark_reference_uses_free(cmark_get_default_mem_allocator(), &uses);
   s->defs->lookup_footnote = NULL; s->defs->footnote_context = NULL;
