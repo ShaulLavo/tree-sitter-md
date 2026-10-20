@@ -81,19 +81,19 @@ const cases = [
     paragraph(0, 5, [text('和', 0, 1), strong(1, 5, [text('「字', 3, 5)])]),
   ], [provisional(['children', 0, 'children', 1])]],
   ['code normalization trims one matching pair of spaces', '` a ', [
-    paragraph(0, 4, [node('code', 0, 4, { value: 'a', sourceValue: 'a' })]),
+    paragraph(0, 4, [node('code', 0, 4, { value: 'a', sourceValue: 'a', sourceMap: { value: 'a', tokenLength: 4, runs: [{ kind: 'copy', valueStart: 0, length: 1, tokenOffset: 2 }] } })]),
   ], [provisional(path, 'unclosed-code')]],
   ['all-space code content is received content', '`   ', [
-    paragraph(0, 4, [node('code', 0, 4, { value: '   ', sourceValue: '   ' })]),
+    paragraph(0, 4, [node('code', 0, 4, { value: '   ', sourceValue: '   ', sourceMap: { value: '   ', tokenLength: 4, runs: [{ kind: 'copy', valueStart: 0, length: 3, tokenOffset: 1 }] } })]),
   ], [provisional(path, 'unclosed-code')]],
   ['code normalization replaces received newlines', '` a\nb ', [
-    paragraph(0, 6, [node('code', 0, 6, { value: 'a b', sourceValue: 'a\nb' })]),
+    paragraph(0, 6, [node('code', 0, 6, { value: 'a b', sourceValue: 'a\nb', sourceMap: { value: 'a\nb', tokenLength: 6, runs: [{ kind: 'copy', valueStart: 0, length: 3, tokenOffset: 2 }] } })]),
   ], [provisional(path, 'unclosed-code')]],
   ['a trailing code newline remains received code content', '`a\n', [
-    paragraph(0, 3, [node('code', 0, 3, { value: 'a ', sourceValue: 'a\n' })]),
+    paragraph(0, 3, [node('code', 0, 3, { value: 'a ', sourceValue: 'a\n', sourceMap: { value: 'a\n', tokenLength: 3, runs: [{ kind: 'copy', valueStart: 0, length: 2, tokenOffset: 1 }] } })]),
   ], [provisional(path, 'unclosed-code')]],
   ['a mismatched backtick run stays inside received code', '``a`b', [
-    paragraph(0, 5, [node('code', 0, 5, { value: 'a`b', sourceValue: 'a`b' })]),
+    paragraph(0, 5, [node('code', 0, 5, { value: 'a`b', sourceValue: 'a`b', sourceMap: { value: 'a`b', tokenLength: 5, runs: [{ kind: 'copy', valueStart: 0, length: 3, tokenOffset: 2 }] } })]),
   ], [provisional(path, 'unclosed-code')]],
   ['a pending label retains nested formatting', '[**label', [
     paragraph(0, 8, [node('pendingLink', 0, 8, { children: [strong(1, 8, [text('label', 3, 8)])] })]),
@@ -138,10 +138,10 @@ const cases = [
     node('heading', 0, 7, { depth: 1, children: [text('**x', 2, 5)] }),
   ], []],
   ['an open ATX heading retains temporary EOF through trailing spaces', '# **x  ', [
-    node('heading', 0, 5, { depth: 1, children: [strong(2, 5, [text('x', 4, 5)])] }),
+    node('heading', 0, 7, { depth: 1, children: [strong(2, 5, [text('x', 4, 5)])] }),
   ], [provisional(path)]],
   ['trailing ordinary spaces retain temporary EOF eligibility', '**bold  ', [
-    paragraph(0, 6, [strong(0, 6, [text('bold', 2, 6)])]),
+    paragraph(0, 8, [strong(0, 6, [text('bold', 2, 6)])]),
   ], [provisional(path)]],
   ['one trailing newline retains temporary EOF eligibility', '**bold\n', [
     paragraph(0, 6, [strong(0, 6, [text('bold', 2, 6)])]),
@@ -185,7 +185,7 @@ test('CJK and math speculation honor disabled capabilities', () => {
 test('trailing nested-container prefixes retain the existing leaf source mapping', () => {
   const document = new MarkdownDocument(options)
   const source = '> - **bold\n>   '
-  const children = [node('quote', 0, 12, { children: [node('list', 2, 12, {
+  const children = [node('quote', 0, 15, { children: [node('list', 2, 15, {
     ordered: false, start: null, spread: false,
     items: [node('listItem', 2, 10, { spread: false, checked: null, children: [
       paragraph(4, 10, [strong(4, 10, [text('bold', 6, 10)])]),

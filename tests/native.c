@@ -210,9 +210,13 @@ static void long_fences(void) {
 }
 static void gfm_domains(void) {
   const struct { const char *source; bool valid; } cases[] = {
-    {"https://examarget", false},
-    {"https://examarget/a.b", false},
-    {"https://examarget:8080/a.b", false},
+    {"https://examarget", true},
+    {"https://examarget/a.b", true},
+    {"https://examarget:8080/a.b", true},
+    {"https://exam[x", true},
+    {"https://ex**ample.ssage", true},
+    {"https://example[x].test/a", true},
+    {"https://foo._bar.test/a", false},
     {"https://foo_bar.test/a", false},
     {"https://éxam_ple.test/a", false},
     {"https://ex🧑‍💻am_ple.test/a", false},

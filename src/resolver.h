@@ -34,7 +34,7 @@ typedef struct Cache {
   struct Cache *next;
 } Cache;
 #include "ids.h"
-typedef struct {
+typedef struct Document {
   uint16_t *text, *source, *input;
   uint32_t len, cap, raw_cap, input_len, input_cap;
   Words lines, out, spare;
@@ -42,6 +42,9 @@ typedef struct {
   TSTree *tree;
   Ids ids;
   bool gfm, frontmatter, cjk, math;
+  struct Document *footnote_parent;
+  const uint32_t *footnote_origins;
+  uint32_t footnote_start;
   uint32_t metadata_end;
   Leaf leaf;
   DefSource *sources;
@@ -86,7 +89,11 @@ enum { PARAGRAPH, SETEXT, ATX, TABLE_LEAF };
 void reserve(void **p, uint32_t *cap, uint32_t n, size_t size);
 void word(Words *v, uint32_t x);
 void record(Words *v, uint32_t a, uint32_t b, uint32_t kind, uint32_t extra);
+bool footnote_lazy_continuation(Document *d, uint32_t at);
 bool leaf_lazy_definition_line(Document *d, TSNode paragraph);
+uint32_t source_column(Document *d, uint32_t at);
+uint32_t list_item_indent(Document *d, TSNode item);
+uint32_t leaf_definition_padding(Document *d, TSNode paragraph);
 void leaf_build(Document *d, TSNode node, int kind);
 void leaf_single(Document *d, uint32_t a, uint32_t b);
 uint32_t strip_definitions(Leaf *leaf, cmark_reference_map *map, Words *records);

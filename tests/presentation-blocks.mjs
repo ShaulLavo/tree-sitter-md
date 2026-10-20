@@ -123,7 +123,8 @@ test('table and setext edits replace earlier block classifications and undo clea
     assert.equal(table.type, 'table')
     assert.deepEqual(table.align, [null, null])
     assert.deepEqual(table.rows.map(row => row.cells.map(cell => cell.children[0].value)), [['a', 'b'], ['c', 'd']])
-    assert.deepEqual(table.rows.map(row => row.cells.map(cell => cell.range)), [[range(2, 3), range(6, 7)], [range(26, 27), range(30, 31)]])
+    assert.deepEqual(table.rows.map(row => row.cells.map(cell => cell.range)), [[range(0, 4), range(4, 9)], [range(24, 28), range(28, 33)]])
+    assert.deepEqual(table.rows.map(row => row.cells.map(cell => cell.children[0].range)), [[range(2, 3), range(6, 7)], [range(26, 27), range(30, 31)]])
     compareFresh(document, source)
     document.edit(14, source.length, '')
     assert.deepEqual(observation(verifyReads(document, '| a | b |\n| --')), observation(candidate))
@@ -141,6 +142,20 @@ test('table and setext edits replace earlier block classifications and undo clea
   }
 })
 
+function checkWideRowOwnership(source, row) {
+  let owner = row.range.start
+  for (const [index, cell] of row.cells.entries()) {
+    const inline = cell.children[0]
+    assert.equal(source.slice(inline.range.start, inline.range.end), inline.value)
+    assert.equal(cell.range.start, owner)
+    const nextPipe = source.indexOf('|', owner + 1)
+    assert.equal(cell.range.end, index + 1 === row.cells.length ? row.range.end : nextPipe)
+    assert.ok(cell.range.start <= inline.range.start && inline.range.end <= cell.range.end)
+    owner = cell.range.end
+  }
+  assert.equal(owner, row.range.end)
+}
+
 test('wide GFM tables retain every authored column, value and source span', () => {
   const document = new MarkdownDocument(options)
   const headers = Array.from({ length: 300 }, (_, index) => 'h' + index)
@@ -153,9 +168,7 @@ test('wide GFM tables retain every authored column, value and source span', () =
     assert.equal(table.align.length, 300)
     assert.deepEqual(table.rows.map(row => row.cells.length), [300, 300])
     assert.deepEqual(table.rows.map(row => row.cells.map(cell => cell.children[0].value)), [headers, values])
-    for (const cell of table.rows.flatMap(row => row.cells)) {
-      assert.equal(source.slice(cell.range.start, cell.range.end), cell.children[0].value)
-    }
+    for (const row of table.rows) checkWideRowOwnership(source, row)
   } finally {
     document.dispose()
   }

@@ -204,6 +204,7 @@ static const uint8_t STATE_MATCHING = 0x1 << 0;
 static const uint8_t STATE_WAS_SOFT_LINE_BREAK = 0x1 << 1;
 // Block should be closed after next line break
 static const uint8_t STATE_AFTER_DEFINITION = 0x1 << 2;
+static const uint8_t STATE_LIST_INTERRUPTS_PARAGRAPH = 0x1 << 3;
 static const uint8_t STATE_CLOSE_BLOCK = 0x1 << 4;
 static const uint8_t STATE_TABLE_REJECTED = 0x1 << 5;
 
@@ -372,6 +373,8 @@ static bool error(TSLexer *lexer) {
 // Also keeps track of the current column, counting tabs as spaces with tab stop
 // 4 See https://github.github.com/gfm/#tabs
 static size_t advance(Scanner *s, TSLexer *lexer) {
+    if (lexer->lookahead == '\n' || lexer->lookahead == '\r')
+        s->state &= ~STATE_LIST_INTERRUPTS_PARAGRAPH;
     size_t size = 1;
     if (lexer->lookahead == '\t') {
         size = 4 - s->column;
@@ -748,6 +751,13 @@ static bool parse_fenced_code_block(Scanner *s, const char delimiter,
     return false;
 }
 
+static bool empty_list_marker_allowed(const Scanner *s) {
+    if (!(s->state & STATE_LIST_INTERRUPTS_PARAGRAPH) || !s->open_blocks.size)
+        return true;
+    Block parent = s->open_blocks.items[s->open_blocks.size - 1];
+    return parent < LIST_ITEM || parent > LIST_ITEM_MAX_INDENTATION;
+}
+
 static bool parse_star(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
     advance(s, lexer);
     mark_end(s, lexer);
@@ -780,7 +790,7 @@ static bool parse_star(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
     bool line_end = lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->eof(lexer);
     bool dont_interrupt = false;
     if (star_count == 1 && line_end) {
-        extra_indentation = 1;
+        extra_indentation = empty_list_marker_allowed(s) ? 1 : 0;
         // line is empty so don't interrupt paragraphs if this is a list marker
         dont_interrupt = s->matched == s->open_blocks.size;
     }
@@ -988,7 +998,7 @@ static bool parse_plus(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
             }
             bool dont_interrupt = false;
             if (lexer->lookahead == '\r' || lexer->lookahead == '\n' || lexer->eof(lexer)) {
-                extra_indentation = 1;
+                extra_indentation = empty_list_marker_allowed(s) ? 1 : 0;
                 dont_interrupt = true;
             }
             dont_interrupt =
@@ -1051,7 +1061,7 @@ static bool parse_ordered_list_marker(Scanner *s, TSLexer *lexer,
                 bool line_end =
                     lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->eof(lexer);
                 if (line_end) {
-                    extra_indentation = 1;
+                    extra_indentation = empty_list_marker_allowed(s) ? 1 : 0;
                     dont_interrupt = true;
                 }
                 dont_interrupt =
@@ -1120,7 +1130,7 @@ static bool parse_minus(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
         bool line_end = lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->eof(lexer);
         bool dont_interrupt = false;
         if (minus_count == 1 && line_end) {
-            extra_indentation = 1;
+            extra_indentation = empty_list_marker_allowed(s) ? 1 : 0;
             dont_interrupt = true;
         }
         dont_interrupt = dont_interrupt && s->matched == s->open_blocks.size;
@@ -1575,6 +1585,10 @@ static bool parse_pipe_table(Scanner *s, TSLexer *lexer, bool header_prefix) {
         }
     }
 
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+        s->indentation += advance(s, lexer);
+    }
+    if (s->indentation >= 4) return false;
     if (!parse_pipe_table_delimiter(s, lexer, cell_count)) return false;
 
     lexer->result_symbol = PIPE_TABLE_START;
@@ -1582,8 +1596,13 @@ static bool parse_pipe_table(Scanner *s, TSLexer *lexer, bool header_prefix) {
 }
 
 static bool scan_continuation_interrupt(Scanner *s, TSLexer *lexer, bool table) {
-    if (!table)
-        return scan(s, lexer, paragraph_interrupt_symbols);
+    if (!table) {
+        bool interrupted = scan(s, lexer, paragraph_interrupt_symbols);
+        if (interrupted && lexer->result_symbol >= LIST_MARKER_MINUS &&
+            lexer->result_symbol <= LIST_MARKER_DOT)
+            s->state |= STATE_LIST_INTERRUPTS_PARAGRAPH;
+        return interrupted;
+    }
     bool symbols[sizeof(paragraph_interrupt_symbols) / sizeof(bool)];
     memcpy(symbols, paragraph_interrupt_symbols, sizeof(symbols));
     symbols[PIPE_TABLE_START] = false;
@@ -1704,6 +1723,9 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
             after_definition[LIST_MARKER_DOT_DONT_INTERRUPT] = false;
             after_definition[LIST_MARKER_PARENTHESIS_DONT_INTERRUPT] = false;
             after_definition[HTML_BLOCK_7_START] = false;
+            bool definition_start = s->matched == s->open_blocks.size || !s->indentation;
+            after_definition[REFERENCE_START] &= definition_start;
+            after_definition[STANDALONE_REFERENCE_START] &= definition_start;
             valid_symbols = after_definition;
             if (lexer->lookahead != '\n' && lexer->lookahead != '\r')
                 s->state &= ~STATE_AFTER_DEFINITION;
@@ -1821,6 +1843,12 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
             s->state |= STATE_WAS_SOFT_LINE_BREAK;
             lexer->result_symbol = BLOCK_CONTINUATION;
             return true;
+        }
+
+        // The close token ends before the failed match, so its indentation is unconsumed.
+        if ((s->state & STATE_AFTER_DEFINITION) && s->matched < s->open_blocks.size) {
+            s->indentation = before_match.indentation;
+            s->column = before_match.column;
         }
 
         if (partial_success) {

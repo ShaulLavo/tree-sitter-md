@@ -29,7 +29,10 @@ test('table recognition retains the exact unmatched-backtick development source'
     assert.equal(table.type, 'table', JSON.stringify(source))
     assert.deepEqual(table.range, { start: 0, end: source.length })
     assert.deepEqual(table.rows.map(row => row.cells.map(cellText)), [['`>a', 'b'], ['**see', ''], ['_ded', '']])
-    assert.deepEqual(table.rows[0].cells[0].range, { start: 0, end: 3 })
+    assert.deepEqual(table.rows[0].cells[0].range, { start: 0, end: 4 })
+    const inline = table.rows[0].cells[0].children[0]
+    assert.deepEqual(inline.range, { start: 0, end: 3 })
+    assert.equal(source.slice(inline.range.start, inline.range.end), '`>a')
     assert.deepEqual(snapshot(source, { gfm: false }).children.map(node => node.type), ['paragraph'])
   }
 })

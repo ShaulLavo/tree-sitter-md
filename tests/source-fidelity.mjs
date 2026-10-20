@@ -39,6 +39,7 @@ for (const [source, expected] of literals) test('inline sourceValue ' + JSON.str
   for (const input of [undefined, 'open', 'ended']) {
     const code = nodes(read(source, input), 'code')[0]
     assert.equal(code.sourceValue, expected)
+    assertCodeSourceMap(source, code)
     assert.deepEqual(code.range, { start: source.indexOf('`'), end: source.length })
   }
 })
@@ -121,34 +122,47 @@ test('single-line code retains existing cell escape handling', () => {
   const code = nodes(read(source), 'code')[0]
   assert.equal(code.value, 'x|y')
   assert.equal(code.sourceValue, 'x|y')
+  assertCodeSourceMap(source, code)
+  assert.deepEqual(code.sourceMap.runs, [
+    { kind: 'copy', valueStart: 0, length: 1, tokenOffset: 1 },
+    { kind: 'atom', valueStart: 1, valueLength: 1, tokenOffset: 2, sourceLength: 2 },
+    { kind: 'copy', valueStart: 2, length: 1, tokenOffset: 4 },
+  ])
   assert.deepEqual(code.range, { start: 14, end: 20 })
 })
 
 const footnoteLiterals = [
   ['lazy one', '[^x]: `a{eol} b`', 'a{eol} b', 'a  b'],
   ['lazy two', '[^x]: `a{eol}  b`', 'a{eol}  b', 'a   b'],
-  ['required indent', '[^x]: `a{eol}    b`', 'a{eol}b', 'a     b'],
-  ['extra indent', '[^x]: `a{eol}     b`', 'a{eol} b', 'a      b'],
-  ['inner list lazy', '[^x]: - `a{eol}   b`', 'a{eol} b', 'a  b'],
+  ['required indent', '[^x]: `a{eol}    b`', 'a{eol}b', 'a b'],
+  ['extra indent', '[^x]: `a{eol}     b`', 'a{eol} b', 'a  b'],
+  ['inner list lazy', '[^x]: - `a{eol}   b`', 'a{eol} b', 'a    b'],
   ['inner quote', '[^x]: > `a{eol}    >  b`', 'a{eol} b', 'a  b'],
-  ['outer quote lazy', '> [^x]: `a{eol}>  b`', 'a{eol} b'],
-  ['outer list tab', '- [^x]: `a{eol}\t   b`', 'a{eol} b', 'a \t   b'],
-  ['nested footnote', '[^x]: [^y]: `a{eol}     b`', 'a{eol} b', 'a      b'],
-  ['nested quote footnote', '[^x]: > [^y]: `a{eol}    >  b`', 'a{eol} b'],
+  ['outer quote lazy', '> [^x]: `a{eol}>  b`', 'a{eol} b', 'a  b'],
+  ['outer list tab', '- [^x]: `a{eol}\t   b`', 'a{eol} b', 'a  b'],
+  ['nested footnote', '[^x]: [^y]: `a{eol}     b`', 'a{eol} b', 'a  b'],
+  ['nested quote footnote', '[^x]: > [^y]: `a{eol}    >  b`', 'a{eol} b', 'a  b'],
 ]
-function checkFootnoteLiteral(source, expected, canonical) {
+function checkFootnoteLiteral(source, expected, canonical, options) {
   for (const input of [undefined, 'open', 'ended']) {
-    const code = nodes(read(source, input), 'code')[0]
+    const code = nodes(read(source, input, options), 'code')[0]
     assert.ok(code, 'canonical code node exists')
     assert.equal(code.sourceValue, expected)
+    assertCodeSourceMap(source, code)
     assert.equal(code.value, canonical)
     assert.deepEqual(code.range, { start: source.indexOf('`'), end: source.length })
   }
 }
-for (const eol of ['\n', '\r\n', '\r']) {
-  for (const [name, template, value, crValue] of footnoteLiterals.filter(row => eol !== '\r' || row.length === 4)) test('footnote source mapping ' + name + ' ' + JSON.stringify(eol), () => {
-    checkFootnoteLiteral(template.replaceAll('{eol}', eol), value.replaceAll('{eol}', eol), eol === '\r' ? crValue : 'a b')
+function registerFootnoteLiteral(row, eol, math) {
+  const [name, template, value, canonical] = row
+  test('footnote source mapping ' + name + ' ' + JSON.stringify({ eol, math }), () => {
+    checkFootnoteLiteral(template.replaceAll('{eol}', eol), value.replaceAll('{eol}', eol), canonical ?? 'a b', { math })
   })
+}
+for (const eol of ['\n', '\r\n', '\r']) {
+  for (const row of footnoteLiterals.filter(row => eol !== '\r' || !['outer quote lazy', 'nested quote footnote'].includes(row[0]))) {
+    for (const math of [false, true]) registerFootnoteLiteral(row, eol, math)
+  }
 }
 
 test('lazy footnote literal mapping retains the accepted referenced definition', () => {
@@ -156,7 +170,238 @@ test('lazy footnote literal mapping retains the accepted referenced definition',
   for (const input of [undefined, 'open', 'ended']) {
     const code = nodes(read(source, input), 'code')[0]
     assert.equal(code.sourceValue, 'a\n b')
-    assert.equal(code.value, 'a b')
+    assert.equal(code.value, 'a  b')
     assert.deepEqual(code.range, { start: 6, end: 12 })
+  }
+})
+
+function assertCodeSourceMap(source, code) {
+  const map = code.sourceMap
+  assert.ok(map, 'inline code requires a producer-owned sourceMap')
+  assert.equal(map.value, code.sourceValue)
+  assert.equal(map.tokenLength, code.range.end - code.range.start)
+  assert.ok(Array.isArray(map.runs))
+  let valueEnd = 0, sourceEnd = 0
+  for (const run of map.runs) {
+    assert.equal(run.valueStart, valueEnd)
+    assert.ok(Number.isSafeInteger(run.tokenOffset) && run.tokenOffset >= sourceEnd)
+    const valueLength = run.kind === 'copy' ? run.length : run.valueLength
+    const sourceLength = run.kind === 'copy' ? run.length : run.sourceLength
+    assert.ok(Number.isSafeInteger(valueLength) && valueLength > 0)
+    assert.ok(Number.isSafeInteger(sourceLength) && sourceLength > 0)
+    assert.ok(run.tokenOffset + sourceLength <= map.tokenLength)
+    assert.ok(run.kind === 'copy' || run.kind === 'atom')
+    if (run.kind === 'copy') {
+      assert.equal(map.value.slice(run.valueStart, run.valueStart + run.length),
+        source.slice(code.range.start + run.tokenOffset, code.range.start + run.tokenOffset + run.length))
+    }
+    valueEnd += valueLength; sourceEnd = run.tokenOffset + sourceLength
+  }
+  assert.equal(valueEnd, map.value.length)
+}
+
+for (const eol of ['\n', '\r\n', '\r']) test('producer witness distinguishes inline code EOL placement ' + JSON.stringify(eol), () => {
+  for (const source of ['`one' + eol + 'two three`', '`one two' + eol + 'three`']) {
+    for (const input of [undefined, 'open', 'ended']) {
+      const code = nodes(read(source, input), 'code')[0]
+      assertCodeSourceMap(source, code)
+      assert.deepEqual(code.sourceMap.runs, [{ kind: 'copy', valueStart: 0, length: source.length - 2, tokenOffset: 1 }])
+    }
+  }
+})
+
+test('footnote producer witnesses retained lazy spaces and local virtual tabs', () => {
+  for (const source of ['[^x]: `a\n b`', '- [^x]: `a\n\t   b`', '[^x]: [^y]: `a\n     b`']) {
+    for (const input of [undefined, 'open', 'ended']) {
+      const code = nodes(read(source, input), 'code')[0]
+      assertCodeSourceMap(source, code)
+    }
+  }
+})
+
+
+function assertRepeatedCodeWitness(document, prefix) {
+  const source = prefix + '`one\ntwo three` and `one two\nthree`'
+  document.setText(source)
+  const code = nodes(document.semantics().root, 'code')
+  assert.equal(code.length, 2)
+  for (const entry of code) assertCodeSourceMap(source, entry)
+  assert.notEqual(code[0].range.start, code[1].range.start)
+  assert.equal(code[0].sourceMap.runs[0].tokenOffset, 1)
+  assert.equal(code[1].sourceMap.runs[0].tokenOffset, 1)
+}
+
+test('producer witness follows equal occurrences and repeated setText calls', () => {
+  const document = new MarkdownDocument()
+  try {
+    for (const prefix of ['', '🙂\ud800 before\n\n']) assertRepeatedCodeWitness(document, prefix)
+  } finally { document.dispose() }
+})
+
+for (const source of ['``a`b``', '`&amp; \\ 🙂 é 👩‍💻`', '\ud800 `x\udc00🙂` \udc00', '`a\0b`']) test('producer UTF16 witness ' + JSON.stringify(source), () => {
+  for (const input of [undefined, 'open', 'ended']) assertCodeSourceMap(source, nodes(read(source, input), 'code')[0])
+})
+
+test('decoder rejects missing, stale, partial, unordered and nonnumeric code maps', () => {
+  const source = '`abc`'
+  const mutations = [
+    code => { delete code.sourceMap },
+    code => { code.sourceMap.value = 'stale' },
+    code => { code.sourceMap.tokenLength = 99 },
+    code => { code.sourceMap.runs = [] },
+    code => { code.sourceMap.runs[0].valueStart = 1 },
+    code => { code.sourceMap.runs[0].length = 0 },
+    code => { code.sourceMap.runs[0].length = 4 },
+    code => { code.sourceMap.runs[0].tokenOffset = -1 },
+    code => { code.sourceMap.runs[0].tokenOffset = 0.5 },
+    code => { code.sourceMap.runs[0].kind = 'unknown' },
+    code => { code.sourceMap.runs = [{ kind: 'copy', valueStart: 0, length: 1, tokenOffset: 1 }, { kind: 'copy', valueStart: 1, length: 2, tokenOffset: 1 }] },
+    code => { code.sourceMap.runs = [{ kind: 'atom', valueStart: 0, valueLength: 3, tokenOffset: 1, sourceLength: 0 }] },
+    code => { code.sourceMap.runs = [{ kind: 'atom', valueStart: 0, valueLength: 3, tokenOffset: 1, sourceLength: 0.5 }] },
+    code => { code.sourceMap.runs[0].length = Number.MAX_SAFE_INTEGER },
+    code => { code.sourceMap.runs.push({ kind: 'atom', valueStart: 3, valueLength: 1, tokenOffset: 1, sourceLength: 1 }) },
+  ]
+  for (const mutate of mutations) {
+    const root = read(source)
+    mutate(nodes(root, 'code')[0])
+    assert.throws(() => decodeSemanticRoot(JSON.stringify(root), source.length), TypeError)
+  }
+})
+
+for (const [source, tabOffset, canonical] of [
+  ['- `a\n\tb`', 3, 'a   b'], ['> `a\n>\tb`', 4, 'a   b'],
+  ['> [^x]: `a\n>\t\tb`', 5, 'a   b'], ['- [^x]: `a\n\t\tb`', 4, 'a   b'],
+  ['[^x]: > `a\n    >\tb`', 8, 'a   b'], ['> [^x]: [^y]: `a\n>\t\tb`', 5, 'a   b'],
+]) test('virtual tab has one exact local contribution ' + JSON.stringify(source), () => {
+  for (const input of [undefined, 'open', 'ended']) {
+    const code = nodes(read(source, input), 'code')[0]
+    assert.equal(code.sourceValue, 'a\n  b')
+    assert.equal(code.value, canonical)
+    assertCodeSourceMap(source, code)
+    assert.deepEqual(code.sourceMap.runs, [
+      { kind: 'copy', valueStart: 0, length: 2, tokenOffset: 1 },
+      { kind: 'atom', valueStart: 2, valueLength: 2, tokenOffset: tabOffset, sourceLength: 1 },
+      { kind: 'copy', valueStart: 4, length: 1, tokenOffset: tabOffset + 1 },
+    ])
+    assert.equal(source[code.range.start + tabOffset], '\t')
+  }
+})
+
+for (const eol of ['\n', '\r\n', '\r']) test('newline padding has no literal contribution ' + JSON.stringify(eol), () => {
+  const source = '`' + eol + '🙂' + eol + 'x' + eol + '`'
+  const code = nodes(read(source), 'code')[0]
+  assert.equal(code.sourceValue, '🙂' + eol + 'x')
+  assertCodeSourceMap(source, code)
+  assert.deepEqual(code.sourceMap.runs, [{ kind: 'copy', valueStart: 0, length: 3 + eol.length, tokenOffset: 1 + eol.length }])
+})
+
+test('local NUL atom and surrogate copies compose inside a footnote', () => {
+  const source = '[^x]: `🙂\n \ud800\0b`'
+  const code = nodes(read(source), 'code')[0]
+  assert.equal(code.sourceValue, '🙂\n \ud800�b')
+  assertCodeSourceMap(source, code)
+  assert.deepEqual(code.sourceMap.runs, [
+    { kind: 'copy', valueStart: 0, length: 5, tokenOffset: 1 },
+    { kind: 'atom', valueStart: 5, valueLength: 1, tokenOffset: 6, sourceLength: 1 },
+    { kind: 'copy', valueStart: 6, length: 1, tokenOffset: 7 },
+  ])
+})
+
+test('an edit before equal code occurrences shifts ranges without changing token maps', () => {
+  const document = new MarkdownDocument()
+  const source = '`one\ntwo three` and `one two\nthree`'
+  const prefix = '🙂\ud800 before\n\n'
+  try {
+    document.setText(source)
+    const before = nodes(document.semantics().root, 'code')
+    document.edit(0, 0, prefix)
+    const after = nodes(document.semantics().root, 'code')
+    assert.equal(after.length, before.length)
+    for (let i = 0; i < before.length; i++) {
+      assert.equal(after[i].range.start, before[i].range.start + prefix.length)
+      assert.deepEqual(after[i].sourceMap, before[i].sourceMap)
+      assertCodeSourceMap(prefix + source, after[i])
+    }
+  } finally { document.dispose() }
+})
+
+function ordinaryTabSnapshot(document, source, expected) {
+  const exact = document.semantics().root
+  for (const input of ['open', 'ended']) {
+    const view = document.presentation({ input })
+    assert.equal(view.source, source)
+    assert.deepEqual(view.root, exact)
+  }
+  const code = nodes(exact, 'code')[0]
+  assert.equal(code.value, expected)
+  assertCodeSourceMap(source, code)
+  assert.deepEqual(code.range, { start: source.indexOf('`'), end: source.length })
+  return exact
+}
+
+function checkOrdinaryTabState(document, source, expected, eol, math) {
+  const root = ordinaryTabSnapshot(document, source, expected)
+  assert.deepEqual(root, read(source, undefined, { math }))
+  const code = nodes(root, 'code')[0]
+  const spill = expected.length - 3
+  assert.equal(code.sourceValue, 'a' + eol + ' '.repeat(spill) + 'b')
+  const atoms = code.sourceMap.runs.filter(run => run.kind === 'atom')
+  assert.equal(atoms.length, spill > 0 ? 1 : 0)
+  if (spill > 0) assert.deepEqual(atoms, [{
+    kind: 'atom', valueStart: 1 + eol.length, valueLength: spill,
+    tokenOffset: source.indexOf('\t') - code.range.start, sourceLength: 1,
+  }])
+  document.reparse()
+  assert.deepEqual(ordinaryTabSnapshot(document, source, expected), root)
+  return root
+}
+
+function ordinaryTabSequence(shape, eol, math) {
+  const originals = ['- `a' + eol + '\tb`', '> `a' + eol + '>\tb`']
+  const source = originals[shape]
+  const prefix = shape === 0 ? '  ' : ' '
+  const edited = source.replace('\t', prefix)
+  const tab = source.indexOf('\t')
+  const document = new MarkdownDocument({ math })
+  const retained = []
+  function check(value, canonical) {
+    const root = checkOrdinaryTabState(document, value, canonical, eol, math)
+    retained.push([root, JSON.stringify(root)])
+  }
+  try {
+    document.setText(source); check(source, 'a   b')
+    document.edit(tab, tab + 1, prefix); check(edited, 'a b')
+    document.edit(tab, tab + prefix.length, '\t'); check(source, 'a   b')
+    document.setText(originals[1 - shape]); check(originals[1 - shape], 'a   b')
+    document.setText(source); check(source, 'a   b')
+  } finally { document.dispose() }
+  for (const [root, saved] of retained) assert.equal(JSON.stringify(root), saved)
+}
+
+function registerOrdinaryTabs(eol, math) {
+  for (const shape of [0, 1]) test('ordinary continuation tab lifecycle ' + JSON.stringify({ shape, eol, math }), () => {
+    ordinaryTabSequence(shape, eol, math)
+  })
+  for (const [indent, expected] of [['  ', 'a b'], ['   ', 'a    b']]) test('ordinary continuation tab stop ' + JSON.stringify({ indent, eol, math }), () => {
+    const source = indent + '> `a' + eol + indent + '>\tb`'
+    const document = new MarkdownDocument({ math })
+    try {
+      document.setText(source)
+      checkOrdinaryTabState(document, source, expected, eol, math)
+    } finally { document.dispose() }
+  })
+}
+for (const eol of ['\n', '\r\n', '\r']) {
+  for (const math of [false, true]) registerOrdinaryTabs(eol, math)
+}
+
+for (const source of ['- a\n\tb', '> a\n>\tb']) test('ordinary continuation tab preserves text ' + JSON.stringify(source), () => {
+  for (const math of [false, true]) {
+    const paragraph = nodes(read(source, undefined, { math }), 'paragraph')[0]
+    assert.deepEqual(paragraph.children, [
+      { type: 'text', range: { start: 2, end: 3 }, value: 'a' },
+      { type: 'break', range: { start: 3, end: 4 }, hard: false },
+      { type: 'text', range: { start: source.length - 1, end: source.length }, value: 'b' },
+    ])
   }
 })

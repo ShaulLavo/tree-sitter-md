@@ -54,17 +54,23 @@ function check(source: string, expected: readonly string[], cjk = false): void {
 }
 
 
-// GFM 6.9 requires a period and forbids underscores in the last two domain labels.
-// These rules do not apply to CommonMark angle autolinks or explicit links.
-for (const source of ['http://a', 'https://examarget', 'https://examarget:8080/a.b',
-  'https://examarget/a.b', 'https://examarget?x=a.b', 'https://examarget#x.y', 'https://examarget.', 'https://examarget_?!',
-  'https://foo_bar.test/a', 'https://foo.bar_baz/a', 'https://foo._bar.test/a',
+// Literal HTTP(S) hosts may be dotless. Final-label underscore checks still apply.
+// CommonMark angle autolinks and explicit links have their own rules.
+for (const source of ['https://foo_bar.test/a', 'https://foo.bar_baz/a', 'https://foo._bar.test/a',
   'https://éxam_ple.test/a', 'https://ex🧑‍💻am_ple.test/a', 'https://foo.test_/',
   'www.éxam_ple.test/a', 'www.foo.bar_baz/a']) {
   test('invalid extended domain: ' + source, () => check(source, []))
 }
 
 const valid = [
+  ['http://a', 'http://a'],
+  ['https://examarget', 'https://examarget'],
+  ['https://examarget:8080/a.b', 'https://examarget:8080/a.b'],
+  ['https://examarget/a.b', 'https://examarget/a.b'],
+  ['https://examarget?x=a.b', 'https://examarget?x=a.b'],
+  ['https://examarget#x.y', 'https://examarget#x.y'],
+  ['https://examarget.', 'https://examarget'],
+  ['https://examarget_?!', 'https://examarget'],
   ['http://a.b', 'http://a.b'],
   ['https://example.test', 'https://example.test'],
   ['HTTPS://EXAMPLE.TEST:8080/a_b?q=x.y#z', 'HTTPS://EXAMPLE.TEST:8080/a_b?q=x.y#z'],

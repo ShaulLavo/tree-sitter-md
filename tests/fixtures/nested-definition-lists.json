@@ -1,0 +1,398 @@
+[
+  {
+    "id": "tab-lazy/LF",
+    "source": "- > [x]: /target\n\tcode\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "3947959a8163a30b9f68b6ff2c9b1d98d878ee5649ac9e9799e443758fc873bc"
+  },
+  {
+    "id": "tab-lazy/CRLF",
+    "source": "- > [x]: /target\r\n\tcode\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "ec5037d785cb9fb43cd947619d3898462af9311c85eb32dba119521167c3b2bd"
+  },
+  {
+    "id": "spaces-lazy/LF",
+    "source": "- > [x]: /target\n    code\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "470f9552a0d749c25bf71d769d29452a973d3ecdf8818f60c9f3af1922aa32e2"
+  },
+  {
+    "id": "spaces-lazy/CRLF",
+    "source": "- > [x]: /target\r\n    code\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "4b9231e2616edc38be2df30ab76102cb49bf1d075e4c904323cabf3125e15291"
+  },
+  {
+    "id": "tab-extra-lazy/LF",
+    "source": "- > [x]: /target\n\t code\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>   code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "7a74e097c1386219bfc08657c435cb2a129eb2fddd002ea752a12ef74ef68cfc"
+  },
+  {
+    "id": "tab-extra-lazy/CRLF",
+    "source": "- > [x]: /target\r\n\t code\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>   code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "f9b5d77d7c61056cc862c3c558c1ac20d592beef4ba2ad7d8fdb9374d809ec8b"
+  },
+  {
+    "id": "plus-tab-lazy/LF",
+    "source": "+ > [x]: /target\n\tcode\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "01823d7ce69ea9f0cc3d870b8215fed44d32a3eeea577fb5b9438deff72b6bf5"
+  },
+  {
+    "id": "plus-tab-lazy/CRLF",
+    "source": "+ > [x]: /target\r\n\tcode\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "78012a1032c6d6f790f30c65b5ba2a8b05b9f797235a5f18e0fa2d5286d96f26"
+  },
+  {
+    "id": "ordered-tab-lazy/LF",
+    "source": "1. > [x]: /target\n\tcode\n\n[x]",
+    "oracleHtml": "<ol>\n<li>\n<blockquote>\n<p> code</p>\n</blockquote>\n</li>\n</ol>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "69453a792edccb4dac0e0b3227e0692c97accd8985e3b23d1194d84799e5d29f"
+  },
+  {
+    "id": "ordered-tab-lazy/CRLF",
+    "source": "1. > [x]: /target\r\n\tcode\r\n\r\n[x]",
+    "oracleHtml": "<ol>\n<li>\n<blockquote>\n<p> code</p>\n</blockquote>\n</li>\n</ol>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "6557c692da11826e21bff7a99dbc696e10d5194b5bf15573619dd5ff7333c0d9"
+  },
+  {
+    "id": "wide-ordered-tab/LF",
+    "source": "10. > [x]: /target\n\tcode\n\n[x]",
+    "oracleHtml": "<ol start=\"10\">\n<li>\n<blockquote>\n<p>code</p>\n</blockquote>\n</li>\n</ol>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "3134018dfe98b27761c1389fb90773007b044035fcc4fb441a7096c09e550e97"
+  },
+  {
+    "id": "wide-ordered-tab/CRLF",
+    "source": "10. > [x]: /target\r\n\tcode\r\n\r\n[x]",
+    "oracleHtml": "<ol start=\"10\">\n<li>\n<blockquote>\n<p>code</p>\n</blockquote>\n</li>\n</ol>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "77a0016e8cda65a7a2da7d664b5cdf2c9239bc1fefec2371981f361b9131d25e"
+  },
+  {
+    "id": "outer-quote-tab/LF",
+    "source": "> - > [x]: /target\n> \tcode\n>\n[x]",
+    "oracleHtml": "<blockquote>\n<ul>\n<li>\n<blockquote>\n<p>code</p>\n</blockquote>\n</li>\n</ul>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "659832b458c95ec03fe3a431e5e5f272e7fdfd110ab21cfc2feaacc8485e9c9a"
+  },
+  {
+    "id": "outer-quote-tab/CRLF",
+    "source": "> - > [x]: /target\r\n> \tcode\r\n>\r\n[x]",
+    "oracleHtml": "<blockquote>\n<ul>\n<li>\n<blockquote>\n<p>code</p>\n</blockquote>\n</li>\n</ul>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "3c03a72f1f29e4c9c758b42a0a59b30ef63817db88cfcd3a33613140557b440d"
+  },
+  {
+    "id": "tab-quote-prefix/LF",
+    "source": "- > [x]: /target\n\t> code\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "1a63f30509267c66dcb7c2da309516a3bccf441573f886d795b753648f946744"
+  },
+  {
+    "id": "tab-quote-prefix/CRLF",
+    "source": "- > [x]: /target\r\n\t> code\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "ca5ac626eebe9bf2adaaf263c79c6bbcbc62dc431e828bd230fdcd2c370cdd04"
+  },
+  {
+    "id": "spaces-separated/LF",
+    "source": "- > [x]: /target\n\n    code\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "e31359db7b1f22f7b60a86bc4ab610527908c3522c61bfa960f5f0c175f5b4e2"
+  },
+  {
+    "id": "spaces-separated/CRLF",
+    "source": "- > [x]: /target\r\n\r\n    code\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "5c23b3e10592fcdd91fe114c4ff3a425cf33bb2e8340042ca0a92b363de856dc"
+  },
+  {
+    "id": "tab-separated/LF",
+    "source": "- > [x]: /target\n\n\tcode\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "73d342985680af1fe59e056a23b60ef05d89d139d0909926a475375a18757652"
+  },
+  {
+    "id": "tab-separated/CRLF",
+    "source": "- > [x]: /target\r\n\r\n\tcode\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "948db86240f668527232080bfd1398ff78dcdf759b0dacad66416506cc35d434"
+  },
+  {
+    "id": "plus-separated/LF",
+    "source": "+ > [x]: /target\n\n    code\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "315ddbb98d707d7b1dac85f96ae83cb075450a872aa1b0650dda870835798323"
+  },
+  {
+    "id": "plus-separated/CRLF",
+    "source": "+ > [x]: /target\r\n\r\n    code\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "bcef8ccfcedc606f370177ccfd623453b89e5a06fd7d6f9136487799d6d06561"
+  },
+  {
+    "id": "ordered-separated/LF",
+    "source": "1. > [x]: /target\n\n    code\n\n[x]",
+    "oracleHtml": "<ol>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n</ol>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "1266e1f43dd4e3de0216d816714aaab7d385454118c44af9ebf272a2142bec18"
+  },
+  {
+    "id": "ordered-separated/CRLF",
+    "source": "1. > [x]: /target\r\n\r\n    code\r\n\r\n[x]",
+    "oracleHtml": "<ol>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n</ol>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "3c8af5a3c59cb96c3e1fc2537b15dce8b6f97024b1df082d6eadbe95a8e7d68a"
+  },
+  {
+    "id": "quote-owned-blank/LF",
+    "source": "- > [x]: /target\n  >\n    code\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\ncode</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "e187014081c2a3a751ef42fab5c41cf364d46cf81b9c2d8ddfc058361c1352c7"
+  },
+  {
+    "id": "quote-owned-blank/CRLF",
+    "source": "- > [x]: /target\r\n  >\r\n    code\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\ncode</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "5f90ad9a1721c3fa21c9f6769df28f4c3ae1404f00ef0901882717510fe9e664"
+  },
+  {
+    "id": "quote-owned-paragraph/LF",
+    "source": "- > [x]: /target\n  > body\n\n    code\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>body</p>\n</blockquote>\n<p>code</p>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "f3d8cd861ea75d28547ba21def40f3f99ac336e7de7fa6d0539fd0e5c1a187ba"
+  },
+  {
+    "id": "quote-owned-paragraph/CRLF",
+    "source": "- > [x]: /target\r\n  > body\r\n\r\n    code\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>body</p>\n</blockquote>\n<p>code</p>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "39f043582953a3815f2caced3b7fe0922840f9da8eac2f55c0ab708e09bfe620"
+  },
+  {
+    "id": "list-sibling/LF",
+    "source": "- > [x]: /target\n\n    code\n- sibling\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n<li>\n<p>sibling</p>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "3c0de5681ea0cd2a6386cfa1388e040ce79264faa4952b8dca122f70778a19cd"
+  },
+  {
+    "id": "list-sibling/CRLF",
+    "source": "- > [x]: /target\r\n\r\n    code\r\n- sibling\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n<li>\n<p>sibling</p>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "d017c6a2877b0924fc36bf49e942ee4c3ee394dfa23fbaea87fafd90c1718b1c"
+  },
+  {
+    "id": "nested-list-sibling/LF",
+    "source": "- > [x]: /target\n\n  - code\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<ul>\n<li>code</li>\n</ul>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "dbe07922379f61737569348381c7b0670eefa7d3c17e1631aa8c1815006d91c6"
+  },
+  {
+    "id": "nested-list-sibling/CRLF",
+    "source": "- > [x]: /target\r\n\r\n  - code\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<ul>\n<li>code</li>\n</ul>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "04cb96adf66d8d95c5a7c76780618cb29fd97ead736293fcdeb94e94d5dbbc35"
+  },
+  {
+    "id": "quote-sibling/LF",
+    "source": "- > [x]: /target\n\n  > code\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<blockquote>\n<p>code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "cd16f6d22ac05fe65be2042b989c87c45c3790d1c92c60048703763240aefea4"
+  },
+  {
+    "id": "quote-sibling/CRLF",
+    "source": "- > [x]: /target\r\n\r\n  > code\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<blockquote>\n<p>code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "17f19ad88bc99cd304ea30bc9c0aae257c2802ef6756daab3376f3b6b7fd46f8"
+  },
+  {
+    "id": "tight-quote-sibling/LF",
+    "source": "- > [x]: /target\n  > code\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "a8af70946ecad0bc4b0624115ed1f49b1347b8c0a8d331f4fb89c6ac153a53a8"
+  },
+  {
+    "id": "tight-quote-sibling/CRLF",
+    "source": "- > [x]: /target\r\n  > code\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "b778f4d7d4dbecd80e6a5d7a4b885e0db11c2c947267e5194e1688ba07604851"
+  },
+  {
+    "id": "outer-quote-separated/LF",
+    "source": "> - > [x]: /target\n>\n>     code\n>\n[x]",
+    "oracleHtml": "<blockquote>\n<ul>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n</ul>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "12eea9f3d3ad31006cea31cc331139a025373d4534240c6c9f0e17853c08f386"
+  },
+  {
+    "id": "outer-quote-separated/CRLF",
+    "source": "> - > [x]: /target\r\n>\r\n>     code\r\n>\r\n[x]",
+    "oracleHtml": "<blockquote>\n<ul>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n</ul>\n</blockquote>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "ec3be491eed5d9c428488b406e276a2e1107b34c090366f343d57a4e2f80603e"
+  },
+  {
+    "id": "unicode-tab-lazy/LF",
+    "source": "- > [x]: /target\n\t**é**\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  <strong>é</strong></p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "714becd72a9885b1a48c32a06d8658cc2e00c55f9ad4594be82516a8887bd8ac"
+  },
+  {
+    "id": "unicode-tab-lazy/CRLF",
+    "source": "- > [x]: /target\r\n\t**é**\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  <strong>é</strong></p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "51bc8fffe0ad9875b52ea4dbba95c9aaeb904dc72299ca7212011d2d96ea25c3"
+  },
+  {
+    "id": "lazy-definition/R01/LF",
+    "source": "- > [x]: /target\n\t [y]: /second\n\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>   [y]: /second</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "0206531dafd9f4abf6ab305a932c3339ee3b5abd21ef8c48da88266d61a4610d"
+  },
+  {
+    "id": "lazy-definition/R01/CRLF",
+    "source": "- > [x]: /target\r\n\t [y]: /second\r\n\r\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>   [y]: /second</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "bf84ac37266704c1f9685b542c427c256b700beff4463fae4e0fc5d03b5058eb"
+  },
+  {
+    "id": "lazy-definition/R02/LF",
+    "source": "- > [x]: /target\n\t\t[y]: /second\n\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  \t[y]: /second</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "47e98bdce1c861f5c586277aa5c4d24fcf5eacb4564fb8e8ef5c7e9a341a50fa"
+  },
+  {
+    "id": "lazy-definition/R02/CRLF",
+    "source": "- > [x]: /target\r\n\t\t[y]: /second\r\n\r\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  \t[y]: /second</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "c70dff9be5780e49532b0295d936f8a8beee6204117656383366f1651456cb2f"
+  },
+  {
+    "id": "lazy-definition/R03/LF",
+    "source": "- - > [x]: /target\n\t [y]: /second\n\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<ul>\n<li>\n<blockquote>\n<p> [y]: /second</p>\n</blockquote>\n</li>\n</ul>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "85c640f7c0ff200200e8a46cd7536bbdbcb97400acdf663d4576722619a631bc"
+  },
+  {
+    "id": "lazy-definition/R03/CRLF",
+    "source": "- - > [x]: /target\r\n\t [y]: /second\r\n\r\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<ul>\n<li>\n<blockquote>\n<p> [y]: /second</p>\n</blockquote>\n</li>\n</ul>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "e9a5831300bf95fd4d5c2764d5bc83e8dcaf4cd5406470e1faed687c3f88a0b8"
+  },
+  {
+    "id": "lazy-definition/R04/LF",
+    "source": "- - > [x]: /target\n\t\t[y]: /second\n\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<ul>\n<li>\n<blockquote>\n<p>\t[y]: /second</p>\n</blockquote>\n</li>\n</ul>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "3ee2d4c443a9be7a6df67a7ca9eb843324aedb0132901972627e8ed922df70e9"
+  },
+  {
+    "id": "lazy-definition/R04/CRLF",
+    "source": "- - > [x]: /target\r\n\t\t[y]: /second\r\n\r\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<ul>\n<li>\n<blockquote>\n<p>\t[y]: /second</p>\n</blockquote>\n</li>\n</ul>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "41a953de687444d30b84f723eb5e42bf51ee6f92318fd56d3ee53a609b956859"
+  },
+  {
+    "id": "lazy-definition/R05/LF",
+    "source": "> - > [x]: /target\n\t[y]: /second\n\n[x] [y]",
+    "oracleHtml": "<blockquote>\n<ul>\n<li>\n<blockquote>\n<p>\t[y]: /second</p>\n</blockquote>\n</li>\n</ul>\n</blockquote>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "be9443a8e4fb834efae0353fd03b1a72abfbfed32f3a5036688cc843d3371518"
+  },
+  {
+    "id": "lazy-definition/R05/CRLF",
+    "source": "> - > [x]: /target\r\n\t[y]: /second\r\n\r\n[x] [y]",
+    "oracleHtml": "<blockquote>\n<ul>\n<li>\n<blockquote>\n<p>\t[y]: /second</p>\n</blockquote>\n</li>\n</ul>\n</blockquote>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "15a62ab125e243ddb7ef0c5f2ee8cc41b9ffcdf056ba2ec467cc3cc76bf81438"
+  },
+  {
+    "id": "lazy-definition/R06/LF",
+    "source": "- > [x]: /target\n\t[y]: /second\n    trailing\n\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  [y]: /second\ntrailing</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "38183b37e97e148ddf5efea22e922a764818857482267dc20a81579c798c644d"
+  },
+  {
+    "id": "lazy-definition/R06/CRLF",
+    "source": "- > [x]: /target\r\n\t[y]: /second\r\n    trailing\r\n\r\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  [y]: /second\ntrailing</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "49238cff84d9ce5c4e72678eeec22d1e5baa1f421016cfb03f0b2b2f37949f87"
+  },
+  {
+    "id": "lazy-definition/R07/LF",
+    "source": "- - > [x]: /target\n\t [y]: /second\n    trailing\n\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<ul>\n<li>\n<blockquote>\n<p> [y]: /second\ntrailing</p>\n</blockquote>\n</li>\n</ul>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "85c5656ec9a4dbe4d76f3e15e5811ca89ce6a699dcae4778aa8c5b94c41230ee"
+  },
+  {
+    "id": "lazy-definition/R07/CRLF",
+    "source": "- - > [x]: /target\r\n\t [y]: /second\r\n    trailing\r\n\r\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<ul>\n<li>\n<blockquote>\n<p> [y]: /second\ntrailing</p>\n</blockquote>\n</li>\n</ul>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "762efd92f8ca571e2b657b0184ac910e83dd549952dead3a5c6e03eae471c649"
+  },
+  {
+    "id": "lazy-definition/R08/LF",
+    "source": "- > [x]: /target\n\t [x]: /alternate\n\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>   <a href=\"/target\">x</a>: /alternate</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "43f4c058c2a7d55842a9a5cf4d9309c9f500c9fa7e3d7b21736ecbe6f4ed27b5"
+  },
+  {
+    "id": "lazy-definition/R08/CRLF",
+    "source": "- > [x]: /target\r\n\t [x]: /alternate\r\n\r\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>   <a href=\"/target\">x</a>: /alternate</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "c3e69e832c093ac08cf9f59d6fc6b3e9508e81f30bf56dc82d9a612fce3530b9"
+  },
+  {
+    "id": "lazy-definition/R09/LF",
+    "source": "- - > [x]: /target\n\t [y]: /second \"title\"\n\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<ul>\n<li>\n<blockquote>\n<p> [y]: /second &quot;title&quot;</p>\n</blockquote>\n</li>\n</ul>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "566bc07473e6b644f15bf5ab0814cabaa0b39a28ba77f2b088922b31ce0a6e20"
+  },
+  {
+    "id": "lazy-definition/R09/CRLF",
+    "source": "- - > [x]: /target\r\n\t [y]: /second \"title\"\r\n\r\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<ul>\n<li>\n<blockquote>\n<p> [y]: /second &quot;title&quot;</p>\n</blockquote>\n</li>\n</ul>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> [y]</p>\n",
+    "utf16LeSha256": "f84df75cd99044d1c09073d63c079053e060cca3f38b4726a178691fa242df48"
+  },
+  {
+    "id": "lazy-definition/R10/LF",
+    "source": "- > [x]: /target\n\tcode\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "3947959a8163a30b9f68b6ff2c9b1d98d878ee5649ac9e9799e443758fc873bc"
+  },
+  {
+    "id": "lazy-definition/R10/CRLF",
+    "source": "- > [x]: /target\r\n\tcode\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n<p>  code</p>\n</blockquote>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "ec5037d785cb9fb43cd947619d3898462af9311c85eb32dba119521167c3b2bd"
+  },
+  {
+    "id": "lazy-definition/R11/LF",
+    "source": "> [x]: /target\n> [y]: /second\n\n[x] [y]",
+    "oracleHtml": "<blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a> <a href=\"/second\">y</a></p>\n",
+    "utf16LeSha256": "063c5adf79b1d8818fdb5371c4145eb586bb961d98bbdf6a3aae95122b34d081"
+  },
+  {
+    "id": "lazy-definition/R11/CRLF",
+    "source": "> [x]: /target\r\n> [y]: /second\r\n\r\n[x] [y]",
+    "oracleHtml": "<blockquote>\n</blockquote>\n<p><a href=\"/target\">x</a> <a href=\"/second\">y</a></p>\n",
+    "utf16LeSha256": "236a416c5e5b047da92cf9334abc488eb440fec90221f1de6ae3b88458b1a25c"
+  },
+  {
+    "id": "lazy-definition/R12/LF",
+    "source": "- > [x]: /target\n\n    code\n\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "e31359db7b1f22f7b60a86bc4ab610527908c3522c61bfa960f5f0c175f5b4e2"
+  },
+  {
+    "id": "lazy-definition/R12/CRLF",
+    "source": "- > [x]: /target\r\n\r\n    code\r\n\r\n[x]",
+    "oracleHtml": "<ul>\n<li>\n<blockquote>\n</blockquote>\n<p>code</p>\n</li>\n</ul>\n<p><a href=\"/target\">x</a></p>\n",
+    "utf16LeSha256": "5c23b3e10592fcdd91fe114c4ff3a425cf33bb2e8340042ca0a92b363de856dc"
+  },
+  {
+    "id": "lazy-definition/R13/LF",
+    "source": "- - > [x]: /target\n\t[y]: /second\n\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<ul>\n<li>\n<blockquote>\n</blockquote>\n</li>\n</ul>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> <a href=\"/second\">y</a></p>\n",
+    "utf16LeSha256": "aef0f8e8815429c4634a782f76143758d580f168ec0a57fbccabf79ebd00953a"
+  },
+  {
+    "id": "lazy-definition/R13/CRLF",
+    "source": "- - > [x]: /target\r\n\t[y]: /second\r\n\r\n[x] [y]",
+    "oracleHtml": "<ul>\n<li>\n<ul>\n<li>\n<blockquote>\n</blockquote>\n</li>\n</ul>\n</li>\n</ul>\n<p><a href=\"/target\">x</a> <a href=\"/second\">y</a></p>\n",
+    "utf16LeSha256": "202ec9e39bb1b8bb1fd256ebdd36bb25a89e63511a2ff07d0fa8fa7e4449673c"
+  }
+]

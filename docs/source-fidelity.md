@@ -45,7 +45,8 @@ existing Unicode category, and a valid supplementary pair remains one scalar.
 This applies to decorations, exact semantics and open/ended presentation.
 Delimiter allocation and original run lengths are unchanged.
 
-Both native inline producers lend cmark the original document units and the
-leaf's byte-to-source start map for the duration of the synchronous parse.
-Sliced leaves retain the document pointer and shift only their byte map.
-Raw UTF-8 callers pass a null source context. No extra buffer is owned by cmark.
+All three native inline parse sites lend cmark the original document units and
+the leaf's byte-to-source start map for the synchronous parse. The continuation-tab
+classifier uses the map before compaction. Sliced leaves retain the document
+pointer and shift only their byte map. Raw UTF-8 callers pass a null source
+context. No extra buffer is owned by cmark.

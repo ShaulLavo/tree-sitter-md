@@ -197,6 +197,148 @@ bool leaf_lazy_definition_line(Document *d, TSNode paragraph) {
   return true;
 }
 
+uint32_t source_column(Document *d, uint32_t a) {
+  uint32_t line = a, column = 0;
+  while (line && d->text[line - 1] != '\n' && d->text[line - 1] != '\r') line--;
+  for (; line < a; line++) column += d->text[line] == '\t' ? 4 - column % 4 : 1;
+  return column;
+}
+uint32_t list_item_indent(Document *d, TSNode item) {
+  TSNode marker = ts_node_named_child(item, 0); uint32_t a = start(marker), b = end(marker);
+  uint32_t original = source_column(d, a), column = original;
+  while (a < b && ws(d->text[a])) { column += d->text[a] == '\t' ? 4 - column % 4 : 1; a++; }
+  while (a < b && !ws(d->text[a])) { column++; a++; }
+  uint32_t padding = column;
+  while (a < b && ws(d->text[a])) { column += d->text[a] == '\t' ? 4 - column % 4 : 1; a++; }
+  uint32_t spaces = column - padding;
+  return padding - original + (spaces == 0 || spaces > 4 ? 1 : spaces);
+}
+static uint32_t prefix_width(Document *d, uint32_t at) {
+  return d->text[at] == '\t' ? 4 - source_column(d, at) % 4 : 1;
+}
+static bool definition_prefix(Document *d, TSNode container, uint32_t *at,
+                              uint32_t limit, uint32_t *padding) {
+  if (is(container, d->ids.list_item)) {
+    uint32_t required = list_item_indent(d, container);
+    while (*padding < required && *at < limit && (d->text[*at] == ' ' || d->text[*at] == '\t')) {
+      *padding += prefix_width(d, *at); (*at)++;
+    }
+    if (*padding < required) return false;
+    *padding -= required;
+    return true;
+  }
+  while (*at < limit && (d->text[*at] == ' ' || d->text[*at] == '\t')) (*at)++;
+  if (*at == limit || d->text[*at] != '>') return false;
+  (*at)++; *padding = 0;
+  if (*at == limit) return true;
+  if (d->text[*at] == ' ') { (*at)++; return true; }
+  if (d->text[*at] == '\t') { *padding = prefix_width(d, *at) - 1; (*at)++; }
+  return true;
+}
+uint32_t leaf_definition_padding(Document *d, TSNode paragraph) {
+  if (!leaf_lazy_definition_line(d, paragraph)) return 0;
+  TSNode previous = ts_node_prev_named_sibling(paragraph);
+  TSNode tail = ts_node_named_child(previous, ts_node_named_child_count(previous) - 1);
+  TSNode path[200]; uint32_t count = 0;
+  for (TSNode n = ts_node_parent(paragraph); !ts_node_is_null(n); n = ts_node_parent(n)) {
+    if (count == 200) break;
+    if (is(n, d->ids.list_item) || is(n, d->ids.block_quote)) path[count++] = n;
+  }
+  uint32_t at = start(tail), padding = 0;
+  while (count) {
+    if (!definition_prefix(d, path[--count], &at, end(tail), &padding)) break;
+  }
+  return padding;
+}
+
+static void push_canonical_lines(Document *d, uint32_t a, uint32_t b, bool *line_start) {
+  if (!d->footnote_parent) { push_lines(d, a, b, line_start); return; }
+  while (a < b) {
+    *line_start = false;
+    a = push_line_scalar(d, a, b, line_start);
+  }
+}
+
+static bool prepared_lazy_prefix(Document *d, TSNode node) {
+  if (!d->footnote_parent) return false;
+  for (uint32_t at = start(node); at < end(node); at++)
+    if (d->text[at] != ' ' && d->text[at] != '\t') return false;
+  return footnote_lazy_continuation(d, start(node));
+}
+
+static uint32_t continuation_padding(Document *d, TSNode paragraph, TSNode continuation) {
+  TSNode path[200]; uint32_t count = 0;
+  for (TSNode node = ts_node_parent(paragraph); !ts_node_is_null(node); node = ts_node_parent(node)) {
+    if (!is(node, d->ids.list_item) && !is(node, d->ids.block_quote)) continue;
+    if (count == 200) return 0;
+    path[count++] = node;
+  }
+  uint32_t at = start(continuation), padding = 0;
+  while (count) {
+    if (!definition_prefix(d, path[--count], &at, end(continuation), &padding)) return 0;
+  }
+  return padding;
+}
+
+static void push_continuation_padding(Document *d, TSNode continuation, uint32_t padding,
+                                       bool ordinary, Words *generated) {
+  for (uint32_t j = 0; j < padding; j++) {
+    if (ordinary) word(generated, d->leaf.n);
+    push_character(&d->leaf, ' ', end(continuation) - 1, end(continuation));
+  }
+}
+
+static void code_intervals(cmark_node *node, uint32_t offset, Words *intervals) {
+  for (cmark_node *n = node; n; n = n->next) {
+    if (n->type == CMARK_NODE_CODE) {
+      word(intervals, offset + n->source_start);
+      word(intervals, offset + n->source_end);
+    }
+    if (n->first_child) code_intervals(n->first_child, offset, intervals);
+  }
+}
+
+static void compact_code_padding(Leaf *leaf, const Words *generated, const Words *codes) {
+  uint32_t written = 0, next = 0, code = 0;
+  for (uint32_t at = 0; at < leaf->n; at++) {
+    while (code < codes->n && codes->v[code + 1] <= at) code += 2;
+    bool padding = next < generated->n && generated->v[next] == at;
+    if (padding) next++;
+    if (padding && (code == codes->n || at < codes->v[code])) continue;
+    leaf->text[written] = leaf->text[at];
+    leaf->starts.v[written] = leaf->starts.v[at];
+    leaf->ends.v[written++] = leaf->ends.v[at];
+  }
+  leaf->n = leaf->starts.n = leaf->ends.n = written;
+  leaf->text[written] = 0;
+}
+
+static void retain_code_padding(Document *d, Words *generated) {
+  if (!generated->n) return;
+  Leaf *leaf = &d->leaf;
+  cmark_reference_map *defs = cmark_reference_map_new(cmark_get_default_mem_allocator());
+  uint32_t body = strip_definitions(leaf, defs, NULL);
+  cmark_node *root = cmark_node_new(CMARK_NODE_PARAGRAPH);
+  root->data = (unsigned char *)leaf->text + body;
+  root->len = leaf->n - body;
+  root->start_line = root->start_column = 1;
+  defs->match_autolink = tsmd_gfm_autolink_match;
+  // Only tab-spill leaves pay for classification; ordinary breaks keep their bytes.
+  cmark_inline_source source = {leaf->source, leaf->starts.v + body};
+  cmark_parse_inlines(cmark_get_default_mem_allocator(), root, defs,
+                      (d->gfm ? CMARK_OPT_GFM : 0) | (d->cjk ? CMARK_OPT_CJK : 0) |
+                        (d->math ? CMARK_OPT_MATH : 0), NULL, &source);
+  Words codes = {0};
+  code_intervals(root->first_child, body, &codes);
+  root->data = NULL;
+  root->len = 0;
+  cmark_node_free(root);
+  cmark_reference_map_free(defs);
+  compact_code_padding(leaf, generated, &codes);
+  free(codes.v);
+  free(generated->v);
+}
+
 void leaf_build(Document *d, TSNode node, int kind) {
   leaf_clear(&d->leaf);
   d->leaf.source = d->text;
@@ -237,18 +379,31 @@ void leaf_build(Document *d, TSNode node, int kind) {
     return;
   }
   // The first body line after a definition can already be a lazy continuation.
-  bool line_start = kind != PARAGRAPH || !leaf_lazy_definition_line(d, node);
+  bool lazy = kind == PARAGRAPH && leaf_lazy_definition_line(d, node);
+  bool line_start = !lazy;
+  uint32_t padding = lazy ? leaf_definition_padding(d, node) : 0;
+  uint32_t prefix = lazy ? start(node) : a;
+  // Virtual columns belong to the consumed tab, before any authored inline prefix.
+  for (uint32_t i = 0; i < padding; i++) push_character(&d->leaf, ' ', prefix - 1, prefix);
+  if (lazy) a = prefix;
   if (kind == PARAGRAPH) push_task_prefix(d, node, a, &line_start);
+  Words generated = {0};
   count = ts_node_named_child_count(in);
   for (uint32_t i = 0; i < count; i++) {
     TSNode c = ts_node_named_child(in, i);
     if (!is(c, d->ids.block_continuation))
       continue;
-    push_lines(d, a, start(c), &line_start);
-    a = end(c);
+    push_canonical_lines(d, a, start(c), &line_start);
+    bool lazy = prepared_lazy_prefix(d, c);
+    uint32_t padding = 0;
+    if (!lazy && (d->footnote_parent || kind == PARAGRAPH))
+      padding = continuation_padding(d, node, c);
+    push_continuation_padding(d, c, padding, !d->footnote_parent && kind == PARAGRAPH, &generated);
+    a = lazy ? start(c) : end(c);
   }
-  push_lines(d, a, b, &line_start);
+  push_canonical_lines(d, a, b, &line_start);
   if (kind == PARAGRAPH && b < end(node)) b = push_block_tail(d, node, b, &line_start);
+  retain_code_padding(d, &generated);
   word(&d->leaf.starts, b);
 }
 static void leaf_record(Leaf *l, Words *out, uint32_t a, uint32_t b, uint32_t kind) {
