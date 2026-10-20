@@ -269,7 +269,7 @@ test('decoder rejects missing, stale, partial, unordered and nonnumeric code map
 })
 
 for (const [source, tabOffset, canonical] of [
-  ['- `a\n\tb`', 3, 'a b'], ['> `a\n>\tb`', 4, 'a b'],
+  ['- `a\n\tb`', 3, 'a   b'], ['> `a\n>\tb`', 4, 'a   b'],
   ['> [^x]: `a\n>\t\tb`', 5, 'a   b'], ['- [^x]: `a\n\t\tb`', 4, 'a   b'],
   ['[^x]: > `a\n    >\tb`', 8, 'a   b'], ['> [^x]: [^y]: `a\n>\t\tb`', 5, 'a   b'],
 ]) test('virtual tab has one exact local contribution ' + JSON.stringify(source), () => {
@@ -323,4 +323,85 @@ test('an edit before equal code occurrences shifts ranges without changing token
       assertCodeSourceMap(prefix + source, after[i])
     }
   } finally { document.dispose() }
+})
+
+function ordinaryTabSnapshot(document, source, expected) {
+  const exact = document.semantics().root
+  for (const input of ['open', 'ended']) {
+    const view = document.presentation({ input })
+    assert.equal(view.source, source)
+    assert.deepEqual(view.root, exact)
+  }
+  const code = nodes(exact, 'code')[0]
+  assert.equal(code.value, expected)
+  assertCodeSourceMap(source, code)
+  assert.deepEqual(code.range, { start: source.indexOf('`'), end: source.length })
+  return exact
+}
+
+function checkOrdinaryTabState(document, source, expected, eol, math) {
+  const root = ordinaryTabSnapshot(document, source, expected)
+  assert.deepEqual(root, read(source, undefined, { math }))
+  const code = nodes(root, 'code')[0]
+  const spill = expected.length - 3
+  assert.equal(code.sourceValue, 'a' + eol + ' '.repeat(spill) + 'b')
+  const atoms = code.sourceMap.runs.filter(run => run.kind === 'atom')
+  assert.equal(atoms.length, spill > 0 ? 1 : 0)
+  if (spill > 0) assert.deepEqual(atoms, [{
+    kind: 'atom', valueStart: 1 + eol.length, valueLength: spill,
+    tokenOffset: source.indexOf('\t') - code.range.start, sourceLength: 1,
+  }])
+  document.reparse()
+  assert.deepEqual(ordinaryTabSnapshot(document, source, expected), root)
+  return root
+}
+
+function ordinaryTabSequence(shape, eol, math) {
+  const originals = ['- `a' + eol + '\tb`', '> `a' + eol + '>\tb`']
+  const source = originals[shape]
+  const prefix = shape === 0 ? '  ' : ' '
+  const edited = source.replace('\t', prefix)
+  const tab = source.indexOf('\t')
+  const document = new MarkdownDocument({ math })
+  const retained = []
+  function check(value, canonical) {
+    const root = checkOrdinaryTabState(document, value, canonical, eol, math)
+    retained.push([root, JSON.stringify(root)])
+  }
+  try {
+    document.setText(source); check(source, 'a   b')
+    document.edit(tab, tab + 1, prefix); check(edited, 'a b')
+    document.edit(tab, tab + prefix.length, '\t'); check(source, 'a   b')
+    document.setText(originals[1 - shape]); check(originals[1 - shape], 'a   b')
+    document.setText(source); check(source, 'a   b')
+  } finally { document.dispose() }
+  for (const [root, saved] of retained) assert.equal(JSON.stringify(root), saved)
+}
+
+function registerOrdinaryTabs(eol, math) {
+  for (const shape of [0, 1]) test('ordinary continuation tab lifecycle ' + JSON.stringify({ shape, eol, math }), () => {
+    ordinaryTabSequence(shape, eol, math)
+  })
+  for (const [indent, expected] of [['  ', 'a b'], ['   ', 'a    b']]) test('ordinary continuation tab stop ' + JSON.stringify({ indent, eol, math }), () => {
+    const source = indent + '> `a' + eol + indent + '>\tb`'
+    const document = new MarkdownDocument({ math })
+    try {
+      document.setText(source)
+      checkOrdinaryTabState(document, source, expected, eol, math)
+    } finally { document.dispose() }
+  })
+}
+for (const eol of ['\n', '\r\n', '\r']) {
+  for (const math of [false, true]) registerOrdinaryTabs(eol, math)
+}
+
+for (const source of ['- a\n\tb', '> a\n>\tb']) test('ordinary continuation tab preserves text ' + JSON.stringify(source), () => {
+  for (const math of [false, true]) {
+    const paragraph = nodes(read(source, undefined, { math }), 'paragraph')[0]
+    assert.deepEqual(paragraph.children, [
+      { type: 'text', range: { start: 2, end: 3 }, value: 'a' },
+      { type: 'break', range: { start: 3, end: 4 }, hard: false },
+      { type: 'text', range: { start: source.length - 1, end: source.length }, value: 'b' },
+    ])
+  }
 })
