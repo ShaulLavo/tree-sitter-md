@@ -1585,6 +1585,10 @@ static bool parse_pipe_table(Scanner *s, TSLexer *lexer, bool header_prefix) {
         }
     }
 
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+        s->indentation += advance(s, lexer);
+    }
+    if (s->indentation >= 4) return false;
     if (!parse_pipe_table_delimiter(s, lexer, cell_count)) return false;
 
     lexer->result_symbol = PIPE_TABLE_START;

@@ -12,11 +12,16 @@ typedef struct { uint32_t width, from; } SourcePadding;
 
 static bool horizontal(uint16_t c) { return c == ' ' || c == '\t'; }
 static uint32_t line_end(Document *d, uint32_t at, uint32_t limit) {
-  while (at < limit && d->text[at] != '\n') at++;
+  while (at < limit && d->text[at] != '\r' && d->text[at] != '\n') at++;
   return at;
 }
 static uint32_t line_start(Document *d, uint32_t at) {
-  while (at && d->text[at - 1] != '\n') at--;
+  while (at && d->text[at - 1] != '\r' && d->text[at - 1] != '\n') at--;
+  return at;
+}
+static uint32_t next_line(Document *d, uint32_t at, uint32_t limit) {
+  if (at == limit) return at;
+  if (d->text[at++] == '\r' && at < limit && d->text[at] == '\n') at++;
   return at;
 }
 static uint32_t trim_end(Document *d, uint32_t at, uint32_t from) {
@@ -145,14 +150,14 @@ static void build_body(Document *d, Footnote *note, Container container) {
   note->body->cjk = d->cjk; note->body->math = d->math;
   tsmd_input(note->body, 0); tsmd_set_text(note->body);
   uint32_t stop = line_end(d, note->body_start, container.limit);
-  uint32_t cursor = stop < container.limit ? stop + 1 : stop;
+  uint32_t cursor = next_line(d, stop, container.limit);
   append(d, note, note->body_start, cursor, 0);
   note->end = trim_end(d, stop, note->start);
   note->consumed_end = cursor;
   bool blank = stop == note->body_start;
   while (cursor < container.limit) {
     uint32_t a = cursor, b = line_end(d, cursor, container.limit);
-    uint32_t next = b < container.limit ? b + 1 : b;
+    uint32_t next = next_line(d, b, container.limit);
     if (!strip_container(d, &a, b, container, NULL)) break;
     uint32_t columns = indentation(d, &a, b, 4);
     bool empty = trim_end(d, b, a) == a;
