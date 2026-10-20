@@ -121,3 +121,24 @@ Record parse, semantic conversion, transfer, memory, cold load and incremental u
 M0 precedes M1; M1 enables Fregat and Singapore prototypes in parallel with M2/M3. All M1-M4 gates are required for production parser cutover. The existing `tree-sitter-x` extension ABI is reused. Open a runtime change only for a demonstrated missing export or lifetime defect, with a minimal reproduction and a link from this plan; a speculative runtime rewrite is not a dependency.
 
 Completion requires passing semantic/profile tests, release/consumer evidence and updated companion pins. Merging this planning revision alone satisfies none of those implementation gates.
+
+### Definition-adjacent nested-list follow-ups
+
+Two bounded probes still differ from cmark 0.31.2 on the PR31 base and the
+adjacent-definition fix. Keep these expectations when fixing them:
+
+- Input `"- > [x]: /target\n\tcode\n\n[x]"` must retain two spaces before
+  `code` inside the quote paragraph. Container matching consumes the whole tab
+  while retaining two virtual indentation columns; the leaf text loses those
+  columns. Inspect `grammar/src/scanner.c` container matching and `src/leaf.c`
+  paragraph construction. The space-only counterpart passes and protects it.
+- Input `"- > [x]: /target\n\n    code\n\n[x]"` must produce a loose list item
+  with `<p>code</p>` after its empty quote. Current semantics render a tight
+  item. Inspect list spread calculation independently of definition laziness.
+
+Reproduce with `MarkdownDocument.setText`, then `semanticHtml` from
+`tests/semantic-html.mjs` after recursively removing definition blocks, as in
+`tests/definition-adjacent.test.ts`. Both must end with a resolved `/target`
+reference. No fix or comparison waiver is claimed here. These are follow-ups
+owned by this semantic-compatibility plan, outside the two proven direct-quote
+and title bug classes in this patch.

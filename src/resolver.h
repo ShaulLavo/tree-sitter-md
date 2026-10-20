@@ -85,6 +85,7 @@ enum { PARAGRAPH, SETEXT, ATX, TABLE_LEAF };
 void reserve(void **p, uint32_t *cap, uint32_t n, size_t size);
 void word(Words *v, uint32_t x);
 void record(Words *v, uint32_t a, uint32_t b, uint32_t kind, uint32_t extra);
+bool leaf_lazy_definition_line(Document *d, TSNode paragraph);
 void leaf_build(Document *d, TSNode node, int kind);
 void leaf_single(Document *d, uint32_t a, uint32_t b);
 uint32_t strip_definitions(Leaf *leaf, cmark_reference_map *map, Words *records);
