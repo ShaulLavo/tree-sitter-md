@@ -94,6 +94,8 @@ const bracketed = [
   ['[ https://example.t x', ['https://example.t']],
   ['[ https://example.tes| x', ['https://example.tes|']],
   ['[ https://example x', []],
+  ['[ https://例子. x', []],
+  ['[ https://ex例. x', []],
 ] as const
 // The open presentation holds text after an unclosed bracket, so only exact and ended output apply.
 function checkSettled(source: string, expected: readonly string[], cjk = false): void {

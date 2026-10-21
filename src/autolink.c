@@ -169,6 +169,16 @@ static size_t check_domain(const uint8_t *data, size_t size, bool explicit_schem
   return (np || explicit_scheme) ? i : 0;
 }
 
+static bool ascii_host_has_dot(const uint8_t *data, size_t size) {
+  for (size_t i = 0; i < size; i++) {
+    if (data[i] == '.')
+      return true;
+    if (!cmark_isalnum(data[i]) && data[i] != '-' && data[i] != '_')
+      return false;
+  }
+  return false;
+}
+
 static bool email_protocol(uint8_t *data, size_t at, const char *protocol) {
   size_t n = strlen(protocol);
   if (at < n || strncasecmp((char *)data + at - n, protocol, n))
@@ -261,9 +271,8 @@ static bool autolink_match(const uint8_t *data, size_t size, size_t at,
   finish = start + autolink_delim((uint8_t *)data + start, extent - start, false);
   if (finish <= start)
     return false;
-  /* Text fallback needs a dot in the authored host; a trailing one counts once trimmed. */
-  bool short_host = explicit_scheme &&
-                    (!text_fallback || (extent > domain && check_domain(data + domain, extent - domain, false)));
+  /* Text fallback needs a dot in the authored ASCII host; a trailing one counts once trimmed. */
+  bool short_host = explicit_scheme && (!text_fallback || ascii_host_has_dot(data + domain, extent - domain));
   if (finish <= domain || !check_domain(data + domain, finish - domain, short_host))
     return false;
   /* Validate the authored host before text-only terminal punctuation is removed. */
