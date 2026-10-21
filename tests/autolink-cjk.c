@@ -55,7 +55,9 @@ static void prefixed_match(void) {
 }
 
 void test_cjk_terminal_dots(void) {
-  match_with_fallback("https://dotless.。", "https://dotless", NULL, true);
+  // The fallback counts the authored trailing dot, then trims it.
+  match("https://dotless.。", "https://dotless", true);
+  match_with_fallback("https://dotless。", "https://dotless", NULL, true);
   match("https://foo_bar.test.。", NULL, true);
   match("www.。", NULL, true);
   match("https://example.test.!。tail", "https://example.test", true);
@@ -67,5 +69,5 @@ void test_cjk_terminal_dots(void) {
   match("https://foo_bar.test.。", "https://foo_bar.test.。", false);
   match("www.。", "www.。", false);
   prefixed_match();
-  puts("CJK terminal-dot matcher and mapped fallback: 11 controls each; prefixed byte-range control passed");
+  puts("CJK terminal-dot matcher and mapped fallback: 12 controls each; prefixed byte-range control passed");
 }

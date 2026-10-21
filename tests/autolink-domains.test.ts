@@ -88,6 +88,36 @@ const valid = [
 ]
 for (const [source, url] of valid) test('valid link control: ' + source, () => check(source, [url]))
 
+// An unclosed bracket leaves the text to the literal fallback, which needs a dot in the authored host.
+const bracketed = [
+  ['[ https://example. x', ['https://example']],
+  ['[ https://example.t x', ['https://example.t']],
+  ['[ https://example.tes| x', ['https://example.tes|']],
+  ['[ https://example x', []],
+] as const
+// The open presentation holds text after an unclosed bracket, so only exact and ended output apply.
+function checkSettled(source: string, expected: readonly string[], cjk = false): void {
+  const document = new MarkdownDocument({ gfm: true, cjk })
+  try {
+    document.setText(source)
+    for (const root of [document.semantics().root, document.presentation({ input: 'ended' }).root]) {
+      assert.deepEqual(links(root).map(link => link.url), expected, JSON.stringify(source))
+    }
+    assert.equal(linkDecorationCount(document, source.length), expected.length,
+      'decoration agreement: ' + JSON.stringify(source))
+  } finally { document.dispose() }
+}
+for (const [source, urls] of bracketed) test('bracketed literal host: ' + source, () => checkSettled(source, urls))
+
+test('saved fuzz witness 210/completed/58 keeps the link before its trailing dot', () => {
+  const source = "|*>\r\n * \n\na&amp;| a b &amp;|\n|----|\n---|\n |--| a | b\n.[`| a | b |\n|`---|- (https://example. |\n|---|-|\n\n"
+  assert.equal(source.length, 103)
+  assert.equal(createHash('sha256').update(Buffer.from(source, 'utf16le')).digest('hex'),
+    '823608e2bbf9198c6dd27817a4c647044ed2137b39596e7278d11b74ed876633')
+  checkSettled(source, ['https://example'])
+  checkSettled(source, ['https://example'], true)
+})
+
 const saved = [
   { id: "181/completed/39", units: 58,
     sha256: "8ba08a9c8efd285760aa2b76691f25b7c2bd0295b4c01d84c7e05447370de272",

@@ -1598,8 +1598,10 @@ static bool parse_pipe_table(Scanner *s, TSLexer *lexer, bool header_prefix) {
 static bool scan_continuation_interrupt(Scanner *s, TSLexer *lexer, bool table) {
     if (!table) {
         bool interrupted = scan(s, lexer, paragraph_interrupt_symbols);
+        // A line that closes the paragraph's container ends the paragraph instead,
+        // so its new list may still nest an empty item.
         if (interrupted && lexer->result_symbol >= LIST_MARKER_MINUS &&
-            lexer->result_symbol <= LIST_MARKER_DOT)
+            lexer->result_symbol <= LIST_MARKER_DOT && s->matched == s->open_blocks.size)
             s->state |= STATE_LIST_INTERRUPTS_PARAGRAPH;
         return interrupted;
     }

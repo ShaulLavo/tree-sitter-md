@@ -225,16 +225,14 @@ static size_t cjk_autolink_end(const uint8_t *data, size_t a, size_t b) {
   }
   return b;
 }
-static size_t url_end(uint8_t *data, size_t size, size_t begin, size_t finish, bool cjk) {
+static size_t url_extent(const uint8_t *data, size_t size, size_t begin, size_t finish, bool cjk) {
   while (finish < size && !cmark_isspace(data[finish]) && data[finish] != '<') {
     if (data[finish] == ']' && finish + 1 < size &&
         (cmark_isspace(data[finish + 1]) || strchr("([", data[finish + 1])))
       break;
     finish++;
   }
-  if (cjk) finish = cjk_autolink_end(data, begin, finish);
-  finish = begin + autolink_delim(data + begin, finish - begin, false);
-  return finish;
+  return cjk ? cjk_autolink_end(data, begin, finish) : finish;
 }
 static bool autolink_match(const uint8_t *data, size_t size, size_t at,
                            size_t *begin, size_t *end, bool cjk, bool text_fallback) {
@@ -259,10 +257,14 @@ static bool autolink_match(const uint8_t *data, size_t size, size_t at,
     return false;
   }
 
-  finish = url_end((uint8_t *)data, size, start, finish, cjk);
+  size_t extent = url_extent(data, size, start, finish, cjk);
+  finish = start + autolink_delim((uint8_t *)data + start, extent - start, false);
   if (finish <= start)
     return false;
-  if (finish <= domain || !check_domain(data + domain, finish - domain, explicit_scheme && !text_fallback))
+  /* Text fallback needs a dot in the authored host; a trailing one counts once trimmed. */
+  bool short_host = explicit_scheme &&
+                    (!text_fallback || (extent > domain && check_domain(data + domain, extent - domain, false)));
+  if (finish <= domain || !check_domain(data + domain, finish - domain, short_host))
     return false;
   /* Validate the authored host before text-only terminal punctuation is removed. */
   if (text_fallback && explicit_scheme)
@@ -284,6 +286,10 @@ static bool truncated_invalid_url(const uint8_t *data, size_t size, size_t sourc
   /* An unterminated candidate can be a host split before an underscore. */
   return !tsmd_gfm_autolink_match(data, source_size, at, &begin, &end, cjk);
 }
+/* A host accepted only for its trimmed trailing dot can continue past this text node. */
+static bool trailing_dot_host(const uint8_t *data, size_t at, size_t finish) {
+  return data[at] == ':' && finish > at + 3 && !memchr(data + at + 3, '.', finish - at - 3);
+}
 void autolinks(Leaf *l, uint32_t a, uint32_t b, Words *out, bool cjk) {
   uint8_t *data = (uint8_t *)l->text + a;
   size_t size = b - a, consumed = 0;
@@ -295,7 +301,8 @@ void autolinks(Leaf *l, uint32_t a, uint32_t b, Words *out, bool cjk) {
       autolink_match(data, size, i, &begin, &finish, cjk, true);
     if (!finish)
       continue;
-    if (finish == size && truncated_invalid_url(data, size, l->n - a, i, cjk))
+    size_t reach = trailing_dot_host(data, i, finish) ? url_extent(data, size, begin, finish, cjk) : finish;
+    if (reach == size && truncated_invalid_url(data, size, l->n - a, i, cjk))
       continue;
     if (finish <= begin)
       continue;
