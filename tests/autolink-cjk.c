@@ -62,7 +62,8 @@ void test_cjk_terminal_dots(void) {
   match("www.。", NULL, true);
   match("https://example.test.!。tail", "https://example.test", true);
   match("www.example.test.。tail", "www.example.test", true);
-  match("https://例子.test.。tail", "https://例子.test", true);
+  // The fallback reads only ASCII hosts, like the reference.
+  match_with_fallback("https://例子.test.。tail", "https://例子.test", NULL, true);
   match("https://example.test/a(b).。tail", "https://example.test/a(b)", true);
   match("https://foo_bar.example.test.。tail", "https://foo_bar.example.test", true);
   match("https://dotless.。", "https://dotless.。", false);

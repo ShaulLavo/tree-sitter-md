@@ -169,14 +169,32 @@ static size_t check_domain(const uint8_t *data, size_t size, bool explicit_schem
   return (np || explicit_scheme) ? i : 0;
 }
 
-static bool ascii_host_has_dot(const uint8_t *data, size_t size) {
+static bool host_label_ok(const uint8_t *data, size_t size) {
+  if (!size)
+    return true;
+  bool alnum = false;
   for (size_t i = 0; i < size; i++) {
-    if (data[i] == '.')
-      return true;
-    if (!cmark_isalnum(data[i]) && data[i] != '-' && data[i] != '_')
+    if (data[i] == '_')
       return false;
+    alnum = alnum || cmark_isalnum(data[i]);
   }
-  return false;
+  return alnum;
+}
+
+/* The reference fallback reads the ASCII host run, needs a dot, and checks its last two labels. */
+static bool fallback_host(const uint8_t *data, size_t size) {
+  size_t end = 0, last = 0, previous = 0, dots = 0;
+  while (end < size && (cmark_isalnum(data[end]) || data[end] == '-' || data[end] == '_' || data[end] == '.')) {
+    if (data[end] == '.') {
+      previous = last;
+      last = end + 1;
+      dots++;
+    }
+    end++;
+  }
+  if (!dots)
+    return false;
+  return host_label_ok(data + last, end - last) && host_label_ok(data + previous, last - 1 - previous);
 }
 
 static bool email_protocol(uint8_t *data, size_t at, const char *protocol) {
@@ -258,6 +276,9 @@ static bool autolink_match(const uint8_t *data, size_t size, size_t at,
   } else if (data[at] == ':' && size - at > 3 && data[at + 1] == '/' && data[at + 2] == '/') {
     while (start > 0 && cmark_isalpha(data[start - 1]))
       start--;
+    /* The reference fallback needs whitespace or punctuation before the scheme. */
+    if (text_fallback && start > 0 && cmark_isdigit(data[start - 1]))
+      return false;
     if (!sd_autolink_issafe(data + start, size - start))
       return false;
     finish = at + 3;
@@ -271,9 +292,10 @@ static bool autolink_match(const uint8_t *data, size_t size, size_t at,
   finish = start + autolink_delim((uint8_t *)data + start, extent - start, false);
   if (finish <= start)
     return false;
-  /* Text fallback needs a dot in the authored ASCII host; a trailing one counts once trimmed. */
-  bool short_host = explicit_scheme && (!text_fallback || ascii_host_has_dot(data + domain, extent - domain));
-  if (finish <= domain || !check_domain(data + domain, finish - domain, short_host))
+  /* Text fallback validates the authored ASCII host; a trailing dot counts once trimmed. */
+  if (text_fallback && explicit_scheme && !fallback_host(data + domain, extent - domain))
+    return false;
+  if (finish <= domain || !check_domain(data + domain, finish - domain, explicit_scheme))
     return false;
   /* Validate the authored host before text-only terminal punctuation is removed. */
   if (text_fallback && explicit_scheme)
