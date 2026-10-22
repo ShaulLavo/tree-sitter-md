@@ -180,19 +180,23 @@ static bool word_before(const uint8_t *data, size_t start) {
   int32_t ch;
   if (cmark_utf8proc_iterate(data + at, (bufsize_t)(start - at), &ch) <= 0)
     return false;
+  if (ch == 0x2028 || ch == 0x2029 || ch == 0xfeff)
+    return false;
   return ch > 0xffff || (!cmark_utf8proc_is_space(ch) && !cmark_utf8proc_is_punctuation_or_symbol(ch));
 }
 
+/* Labels are checked on their unescaped text, so a label that is only an escape is empty. */
 static bool host_label_ok(const uint8_t *data, size_t size) {
-  if (!size)
-    return true;
-  bool alnum = false;
+  bool text = false, alnum = false;
   for (size_t i = 0; i < size; i++) {
+    if (data[i] == '\\')
+      continue;
     if (data[i] == '_')
       return false;
+    text = true;
     alnum = alnum || cmark_isalnum(data[i]);
   }
-  return alnum;
+  return !text || alnum;
 }
 
 /* The reference fallback reads the ASCII host run, needs a dot, and checks its last two labels. */

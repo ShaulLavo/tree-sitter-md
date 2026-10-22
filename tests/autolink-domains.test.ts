@@ -110,6 +110,11 @@ const bracketed = [
   ['[ https://a\\.b.c x', ['https://a.b.c']],
   ['[ https://example\\.x', ['https://example.x']],
   ['[ https://a\\_b.c x', []],
+  ['[ https://a.\\.c x', ['https://a..c']],
+  ['[ https://a\\.\\.c x', ['https://a..c']],
+  ['[ https://a.b.\\_ x', []],
+  ['[ \u2028https://a.b x', ['https://a.b']],
+  ['[ \ufeffhttps://example. x', ['https://example']],
 ] as const
 // The open presentation holds text after an unclosed bracket, so only exact and ended output apply.
 function checkSettled(source: string, expected: readonly string[], cjk = false): void {
