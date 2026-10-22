@@ -169,6 +169,20 @@ static size_t check_domain(const uint8_t *data, size_t size, bool explicit_schem
   return (np || explicit_scheme) ? i : 0;
 }
 
+/* The reference fallback needs whitespace, punctuation or a symbol in the UTF-16 unit before the
+ * scheme, so a supplementary-plane character there counts as a word character. */
+static bool word_before(const uint8_t *data, size_t start) {
+  if (!start)
+    return false;
+  size_t at = start - 1;
+  while (at > 0 && start - at < 4 && (data[at] & 0xc0) == 0x80)
+    at--;
+  int32_t ch;
+  if (cmark_utf8proc_iterate(data + at, (bufsize_t)(start - at), &ch) <= 0)
+    return false;
+  return ch > 0xffff || (!cmark_utf8proc_is_space(ch) && !cmark_utf8proc_is_punctuation_or_symbol(ch));
+}
+
 static bool host_label_ok(const uint8_t *data, size_t size) {
   if (!size)
     return true;
@@ -184,13 +198,18 @@ static bool host_label_ok(const uint8_t *data, size_t size) {
 /* The reference fallback reads the ASCII host run, needs a dot, and checks its last two labels. */
 static bool fallback_host(const uint8_t *data, size_t size) {
   size_t end = 0, last = 0, previous = 0, dots = 0;
-  while (end < size && (cmark_isalnum(data[end]) || data[end] == '-' || data[end] == '_' || data[end] == '.')) {
-    if (data[end] == '.') {
-      previous = last;
-      last = end + 1;
-      dots++;
-    }
-    end++;
+  while (end < size) {
+    /* The reference unescapes `\.`, `\-` and `\_` before reading the host. */
+    size_t width = data[end] == '\\' && end + 1 < size && data[end + 1] && strchr(".-_", data[end + 1]) ? 2 : 1;
+    uint8_t c = data[end + width - 1];
+    if (!cmark_isalnum(c) && c != '-' && c != '_' && c != '.')
+      break;
+    end += width;
+    if (c != '.')
+      continue;
+    previous = last;
+    last = end;
+    dots++;
   }
   if (!dots)
     return false;
@@ -276,8 +295,7 @@ static bool autolink_match(const uint8_t *data, size_t size, size_t at,
   } else if (data[at] == ':' && size - at > 3 && data[at + 1] == '/' && data[at + 2] == '/') {
     while (start > 0 && cmark_isalpha(data[start - 1]))
       start--;
-    /* The reference fallback needs whitespace or punctuation before the scheme. */
-    if (text_fallback && start > 0 && cmark_isdigit(data[start - 1]))
+    if (text_fallback && word_before(data, start))
       return false;
     if (!sd_autolink_issafe(data + start, size - start))
       return false;
