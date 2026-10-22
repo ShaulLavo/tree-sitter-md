@@ -169,6 +169,57 @@ static size_t check_domain(const uint8_t *data, size_t size, bool explicit_schem
   return (np || explicit_scheme) ? i : 0;
 }
 
+/* The reference fallback needs whitespace, punctuation or a symbol in the UTF-16 unit before the
+ * scheme, so a supplementary-plane character there counts as a word character. */
+static bool word_before(const uint8_t *data, size_t start) {
+  if (!start)
+    return false;
+  size_t at = start - 1;
+  while (at > 0 && start - at < 4 && (data[at] & 0xc0) == 0x80)
+    at--;
+  int32_t ch;
+  if (cmark_utf8proc_iterate(data + at, (bufsize_t)(start - at), &ch) <= 0)
+    return false;
+  if (ch == 0x2028 || ch == 0x2029 || ch == 0xfeff)
+    return false;
+  return ch > 0xffff || (!cmark_utf8proc_is_space(ch) && !cmark_utf8proc_is_punctuation_or_symbol(ch));
+}
+
+/* Labels are checked on their unescaped text, so a label that is only an escape is empty. */
+static bool host_label_ok(const uint8_t *data, size_t size) {
+  bool text = false, alnum = false;
+  for (size_t i = 0; i < size; i++) {
+    if (data[i] == '\\')
+      continue;
+    if (data[i] == '_')
+      return false;
+    text = true;
+    alnum = alnum || cmark_isalnum(data[i]);
+  }
+  return !text || alnum;
+}
+
+/* The reference fallback reads the ASCII host run, needs a dot, and checks its last two labels. */
+static bool fallback_host(const uint8_t *data, size_t size) {
+  size_t end = 0, last = 0, previous = 0, dots = 0;
+  while (end < size) {
+    /* The reference unescapes `\.`, `\-` and `\_` before reading the host. */
+    size_t width = data[end] == '\\' && end + 1 < size && data[end + 1] && strchr(".-_", data[end + 1]) ? 2 : 1;
+    uint8_t c = data[end + width - 1];
+    if (!cmark_isalnum(c) && c != '-' && c != '_' && c != '.')
+      break;
+    end += width;
+    if (c != '.')
+      continue;
+    previous = last;
+    last = end;
+    dots++;
+  }
+  if (!dots)
+    return false;
+  return host_label_ok(data + last, end - last) && host_label_ok(data + previous, last - 1 - previous);
+}
+
 static bool email_protocol(uint8_t *data, size_t at, const char *protocol) {
   size_t n = strlen(protocol);
   if (at < n || strncasecmp((char *)data + at - n, protocol, n))
@@ -225,16 +276,14 @@ static size_t cjk_autolink_end(const uint8_t *data, size_t a, size_t b) {
   }
   return b;
 }
-static size_t url_end(uint8_t *data, size_t size, size_t begin, size_t finish, bool cjk) {
+static size_t url_extent(const uint8_t *data, size_t size, size_t begin, size_t finish, bool cjk) {
   while (finish < size && !cmark_isspace(data[finish]) && data[finish] != '<') {
     if (data[finish] == ']' && finish + 1 < size &&
         (cmark_isspace(data[finish + 1]) || strchr("([", data[finish + 1])))
       break;
     finish++;
   }
-  if (cjk) finish = cjk_autolink_end(data, begin, finish);
-  finish = begin + autolink_delim(data + begin, finish - begin, false);
-  return finish;
+  return cjk ? cjk_autolink_end(data, begin, finish) : finish;
 }
 static bool autolink_match(const uint8_t *data, size_t size, size_t at,
                            size_t *begin, size_t *end, bool cjk, bool text_fallback) {
@@ -250,6 +299,8 @@ static bool autolink_match(const uint8_t *data, size_t size, size_t at,
   } else if (data[at] == ':' && size - at > 3 && data[at + 1] == '/' && data[at + 2] == '/') {
     while (start > 0 && cmark_isalpha(data[start - 1]))
       start--;
+    if (text_fallback && word_before(data, start))
+      return false;
     if (!sd_autolink_issafe(data + start, size - start))
       return false;
     finish = at + 3;
@@ -259,10 +310,14 @@ static bool autolink_match(const uint8_t *data, size_t size, size_t at,
     return false;
   }
 
-  finish = url_end((uint8_t *)data, size, start, finish, cjk);
+  size_t extent = url_extent(data, size, start, finish, cjk);
+  finish = start + autolink_delim((uint8_t *)data + start, extent - start, false);
   if (finish <= start)
     return false;
-  if (finish <= domain || !check_domain(data + domain, finish - domain, explicit_scheme && !text_fallback))
+  /* Text fallback validates the authored ASCII host; a trailing dot counts once trimmed. */
+  if (text_fallback && explicit_scheme && !fallback_host(data + domain, extent - domain))
+    return false;
+  if (finish <= domain || !check_domain(data + domain, finish - domain, explicit_scheme))
     return false;
   /* Validate the authored host before text-only terminal punctuation is removed. */
   if (text_fallback && explicit_scheme)
@@ -284,6 +339,10 @@ static bool truncated_invalid_url(const uint8_t *data, size_t size, size_t sourc
   /* An unterminated candidate can be a host split before an underscore. */
   return !tsmd_gfm_autolink_match(data, source_size, at, &begin, &end, cjk);
 }
+/* A host accepted only for its trimmed trailing dot can continue past this text node. */
+static bool trailing_dot_host(const uint8_t *data, size_t at, size_t finish) {
+  return data[at] == ':' && finish > at + 3 && !memchr(data + at + 3, '.', finish - at - 3);
+}
 void autolinks(Leaf *l, uint32_t a, uint32_t b, Words *out, bool cjk) {
   uint8_t *data = (uint8_t *)l->text + a;
   size_t size = b - a, consumed = 0;
@@ -295,7 +354,8 @@ void autolinks(Leaf *l, uint32_t a, uint32_t b, Words *out, bool cjk) {
       autolink_match(data, size, i, &begin, &finish, cjk, true);
     if (!finish)
       continue;
-    if (finish == size && truncated_invalid_url(data, size, l->n - a, i, cjk))
+    size_t reach = trailing_dot_host(data, i, finish) ? url_extent(data, size, begin, finish, cjk) : finish;
+    if (reach == size && truncated_invalid_url(data, size, l->n - a, i, cjk))
       continue;
     if (finish <= begin)
       continue;
