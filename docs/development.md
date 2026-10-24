@@ -9,9 +9,8 @@ extension: it runs inside the same runtime and memory as every other language an
 C. JavaScript gets compact records for the rows it asks about: decoration ranges and kinds,
 highlight captures, fold ranges and fence injections.
 
-Release 0.1 passes all 676 CommonMark/GFM examples, 183 chat fixtures and the pinned
-497-document repository corpus. Current correctness gates and Chromium measurements are in
-[docs/RELEASE-0.1.md](RELEASE-0.1.md).
+`bun run check` requires all 676 CommonMark/GFM examples, the 183 chat fixtures and the pinned
+497-document repository corpus.
 
 ## Layout
 
@@ -68,7 +67,7 @@ node keystroke.mjs docs/big.md         # first frame, full parse, 200 keystrokes
 node fuzz.mjs docs/agents.md 11000 1    # incremental result equals a fresh parse after random edits
 node memory.mjs                        # wasm memory per document
 bun chromium.mjs                       # cold load and first frame in Chromium, beside lezer
-sh run-all.sh                          # the three-run keystroke set used in FINDINGS.md
+sh run-all.sh                          # three runs of each keystroke case, then memory
 ```
 
 For the full correctness gate, run `bun run check` from the repository root after
@@ -89,7 +88,7 @@ package directory to check that artifact.
 
 The release workflow runs these checks plus all three wasm builds and native sanitizers.
 The native source revision is pinned separately from the built JavaScript host package. Paired timing checks use `scripts/compare-builds.sh` and
-`scripts/summarize.mjs` as described in FINDINGS.
+`scripts/summarize.mjs`.
 
 The normalizer (`bench/constructs.mjs`) and method are Plan 176's in the Platform repository, so
 numbers compare with its lezer and tree-sitter measurements. `corpus.mjs` reads the bundled [183-message chat corpus](../bench/corpus/README.md)

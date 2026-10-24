@@ -141,7 +141,7 @@ retain 40 independent cmark outputs, covering LF/CRLF, tab/space indentation,
 container siblings, edit/undo, reparse and streaming. Exact, open and ended
 records agree with fresh parses across both grammars and GFM settings. Native
 sanitizer tests also check that the two virtual spaces map to the authored tab.
-See `docs/nested-definition-lists.md` for verification and provenance. No
+See `.internal/change-notes/nested-definition-lists.md` for verification and provenance. No
 comparison allowance changed. These results resolve only these two findings;
 full product qualification remains NOT VERIFIED, with historical 192/8320 and
 F08 still strict RED. Downstream pins and installed consumers are unchanged.

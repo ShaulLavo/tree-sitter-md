@@ -70,9 +70,7 @@ the following line is parsed under its actual container. An unclosed flow is
 `math` after input ends. See the [CHAT math contract](chat-math.md).
 
 The authored streaming checkpoint matrix passes through `bun run streaming:check`.
-The [streaming qualification and presentation baseline](streaming-qualification.md)
-records exhaustive chunk, lifecycle, package, and complete-document measurements.
-CI and publication remain open in the [AI chat streaming plan](../plans/ai-chat-streaming.md).
+`bun run streaming:qualification` runs the exhaustive chunk and lifecycle matrix.
 
 Received source preserves NUL, BOM, CRLF, and lone surrogate units separately from
 Markdown normalization. Presentation trees are recursively distinct from exact

@@ -23,8 +23,5 @@ doc.dispose()
 
 - [API usage and source ownership](docs/usage.md)
 - [Build, tests, benchmarks, and licensing](docs/development.md)
-- [Streaming qualification and presentation baseline](docs/streaming-qualification.md)
-- [Release 0.1.10](docs/RELEASE-0.1.10.md)
-- [AI chat streaming plan](plans/ai-chat-streaming.md)
 
 MIT. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).

@@ -16,7 +16,7 @@ presentation checks. All 21 focused tests passed, and the recorded native
 ASan/UBSan and cursor checks passed. All nine packed Node, Bun, and Vite/Chromium
 initialization combinations passed, along with the dedicated Chromium 153
 resizable-memory suite. See the
-[qualification commands, counts, and evidence](streaming-qualification.md).
+[qualification commands, counts, and evidence](../streaming-qualification.md).
 
 The supported native reserve allocation-abort contract also passed in an owned
 child. The public build does not expose an allocator injection hook for the
@@ -25,7 +25,7 @@ default cmark/tree-sitter allocators.
 The local release gates passed all 1,791 Node tests, public type checks, 676
 official spec cases, 183 chat fixtures, and the 497-document pinned repository
 corpus. All 11,300 fuzz edits passed, and the 10 negative controls failed as
-expected. The [complete-document baseline](measurements/presentation-0.1.10.json)
+expected. The [complete-document baseline](../measurements/presentation-0.1.10.json)
 records all eight bounded workloads with five measured samples and one warmup per
 case. It records timing, retained memory, load observations, and artifact hashes.
 CI still awaits execution.

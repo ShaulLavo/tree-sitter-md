@@ -290,7 +290,7 @@ trap. The wasm ABI and `js/index.js` / `js/index.d.ts` are unchanged.
 ### One tree-sitter runtime
 
 **Possible with a host export change; not a drop-in replacement for stock web-tree-sitter.**
-The [minimal experiment](../experiments/side-module/README.md) loads the real grammar and cmark
+The minimal experiment loads the real grammar and cmark
 inline code in one PIC side module through web-tree-sitter 0.27.0. The host parses a block and
 JS calls the inline function on the same module using host-allocated memory. It passes.
 

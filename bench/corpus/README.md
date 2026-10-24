@@ -1,7 +1,6 @@
 # Chat corpus
 
-`chat.json` contains the 183 assistant messages used for the chat measurements in
-`docs/FINDINGS.md`. It is a JSON array of unmodified strings ordered by creation time.
+`chat.json` contains the 183 assistant messages used by the chat gate in `scripts/check-gates.mjs`. It is a JSON array of unmodified strings ordered by creation time.
 The messages span 59 Platform sessions from September 5–25, 2026.
 
 The corpus was originally exported from Platform's production SQLite state store

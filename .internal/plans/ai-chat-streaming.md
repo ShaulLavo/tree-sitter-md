@@ -33,7 +33,7 @@ open and ended checkpoints. The driver compares nested trees, ranges, interpreta
 metadata, and reference outcomes, and runs exact fresh/incremental comparisons.
 The Textual three-append replay and comparator corruption controls are included.
 Native presentation is still missing and produces a nonzero qualification result.
-See the [fixture contract and commands](../tests/streaming/README.md).
+See the [fixture contract and commands](../../tests/streaming/README.md).
 
 Deliver an AI chat presentation API in tree-sitter-md that interprets unfinished
 Markdown in native code, preserves received source, and permits earlier content to
@@ -250,7 +250,7 @@ Release 0.1.15 math dialect: a flow opener's same-line suffix is metadata.
 With `{ math: true }`, `$$x *a*` has meta `x *a*` and empty body value in both
 exact `math` and eligible open `pendingMath`. The opener requires at least two
 dollars and no later dollar on the opening line, so complete `$$x$$` follows the
-inline-math path. Single-dollar text remains literal. The [CHAT math contract](../docs/chat-math.md)
+inline-math path. Single-dollar text remains literal. The [CHAT math contract](../../docs/chat-math.md)
 records the pinned behavior and Streamdown's currency rationale.
 
 Reference metadata uses the existing `link` namespace for both reference links
@@ -274,7 +274,7 @@ or code whitespace, and no append-only correctness concessions.
 
 ### P4. Prove chunk, lifecycle, and lifetime correctness
 
-Local proof, 2026-10-18: the [recorded results](../docs/streaming-qualification.md)
+Local proof, 2026-10-18: the [recorded results](../streaming-qualification.md)
 report `READY`: 467 prefixes, 467 two-chunk boundaries, 2,312 corpus checkpoints,
 4,180 exact comparisons, and 8,360 presentation comparisons. The independent
 authored matrix adds 1,147 exact and 364 presentation checks. All have zero
@@ -284,7 +284,7 @@ ASan/UBSan and cursor checks. All nine packed runtime/initialization combination
 and the dedicated Chromium 153 resizable-memory suite passed. Local release gates
 passed 1,791 Node tests, public type checks, 676 spec cases, 183 chat fixtures,
 the 497-document pinned repository corpus, and 11,300 fuzz edits. All ten negative
-controls failed as expected. The [complete baseline](../docs/measurements/presentation-0.1.10.json)
+controls failed as expected. The [complete baseline](../measurements/presentation-0.1.10.json)
 records all eight workloads with five samples and one warmup per case. The
 measurement workspace and host lock were removed. CI and publication remain pending.
 
@@ -359,7 +359,7 @@ bun run test:browser
 bun run test:package
 ```
 
-`WASI_SDK` and `TREE_SITTER_LIB` follow the [development guide](../docs/development.md#build).
+`WASI_SDK` and `TREE_SITTER_LIB` follow the [development guide](../../docs/development.md#build).
 `node --test tests/streaming.mjs` runs the authored matrix.
 The exhaustive report uses `bun run streaming:qualification`. Package/browser
 prerequisites and host scheduling remain execution-environment concerns; committed

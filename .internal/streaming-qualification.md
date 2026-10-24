@@ -2,7 +2,7 @@
 
 Run these commands from the repository root with Node 26 or later, installed root
 and `bench` dependencies, and both built Wasm modules. Build and browser
-prerequisites are in the [development guide](development.md#build).
+prerequisites are in the [development guide](../docs/development.md#build).
 
 ## Run exhaustive snapshot qualification
 
