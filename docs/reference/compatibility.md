@@ -17,14 +17,24 @@ The wasm modules are platform independent. Tested operating systems are macOS on
 
 ## Host runtime
 
-tree-sitter-md loads into [tree-sitter-x](https://github.com/ShaulLavo/tree-sitter-x), a fork of the tree-sitter web runtime. It needs the `heap` and `loadExtension` exports, which let the resolver share the host's WebAssembly memory and tree-sitter C API.
+`package.json` declares the peer dependency `web-tree-sitter` `^0.28.1`. **No version in that range exists on npm.** The latest `web-tree-sitter` on npm is 0.27.1, so `npm install web-tree-sitter` cannot satisfy the peer range. The range is met only by the [tree-sitter-x](https://github.com/ShaulLavo/tree-sitter-x) build, which installs from Git as `web-tree-sitter` and reports version 0.28.4. npm does not warn when you install tree-sitter-md next to stock 0.27.1 (npm 11.19.1), and `init()` then fails on import.
+
+tree-sitter-md needs tree-sitter-x because it needs the `heap` and `loadExtension` exports. They let the resolver share the host's WebAssembly memory and tree-sitter C API. tree-sitter-x is a fork of the tree-sitter web runtime that adds them. Stock `web-tree-sitter` has neither.
+
+The working install command, which the README quick start uses:
+
+```sh
+npm install github:ShaulLavo/tree-sitter-md#main web-tree-sitter@github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385
+```
 
 | | |
 | --- | --- |
-| Peer dependency | `web-tree-sitter` `^0.28.1` |
-| Pinned build | `github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385` (development and packed-consumer tests) |
+| Peer dependency | `web-tree-sitter` `^0.28.1`. Not published on npm. |
+| Pinned build | `github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385`, version 0.28.4 (development and packed-consumer tests). |
 | Stock `web-tree-sitter` 0.26.9 and 0.27.1 (latest on npm) | Fail on import: `The requested module 'web-tree-sitter' does not provide an export named 'heap'`. |
 | Language ABI | 15 (`TREE_SITTER_LANGUAGE_VERSION`) |
+
+The block grammar alone does not need tree-sitter-x. See [How to use the block grammar in another tree-sitter host](../guides/use-the-grammar-alone.md).
 
 When another dependency pulls stock `web-tree-sitter`, force one build with an `overrides` entry in the root `package.json`:
 

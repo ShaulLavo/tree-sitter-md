@@ -39,7 +39,9 @@ Real output, for a reply that arrives in three chunks (`presentation({ input: 'o
 
 ## Quick start
 
-You need Node 26 or later (Bun 1.4.4 also works). The package has no current version on npm, so install from Git, together with the tree-sitter-x runtime it requires.
+You need Node 26 or later (Bun 1.4.4 also works). Install from Git, because npm has no current version of the package.
+
+The package needs `web-tree-sitter` `^0.28.1`, and npm only has up to 0.27.1. The stock build also lacks the `heap` and `loadExtension` exports the resolver uses. So you install [tree-sitter-x](https://github.com/ShaulLavo/tree-sitter-x), a fork that has them, from Git under the name `web-tree-sitter`. The command in step 1 does both. Details: [Compatibility and limits](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/compatibility.md#host-runtime).
 
 1. Create a project and install both packages.
 
