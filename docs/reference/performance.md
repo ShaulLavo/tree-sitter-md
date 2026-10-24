@@ -96,14 +96,14 @@ Bytes of the committed files. Gzip is `gzip -9n`.
 | --- | ---: | ---: |
 | `tree-sitter-md.wasm` (resolver) | 240,370 | 97,724 |
 | `tree-sitter-markdown.wasm` (base grammar) | 137,216 | 27,805 |
-| `tree-sitter-markdown-chat.wasm` (math grammar) | 143,368 | 28,755 |
+| `tree-sitter-markdown-math.wasm` (math grammar) | 143,368 | 28,755 |
 | `js/index.js`, `js/constants.js`, `js/semantic.js` | 18,299 | 5,574 |
 | Host runtime, `web-tree-sitter.wasm` and `web-tree-sitter.js` from tree-sitter-x | 340,415 | 113,758 |
 
 `init()` loads both grammars, so a page fetches all three `.wasm` files: 520,954 bytes raw and 154,284 gzip, plus the wrapper. An app that already ships the host runtime adds only those. Both grammars load even if no document uses `math: true`.
 
 ```sh
-wc -c tree-sitter-md.wasm tree-sitter-markdown.wasm tree-sitter-markdown-chat.wasm
+wc -c tree-sitter-md.wasm tree-sitter-markdown.wasm tree-sitter-markdown-math.wasm
 gzip -9n -c tree-sitter-md.wasm | wc -c
 ```
 

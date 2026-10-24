@@ -154,7 +154,7 @@ function checkOwnership(
     cjk: true,
     footnotes: true,
   });
-  assert.equal(state.exact.profile, "fregat-chat");
+  assert.equal(state.exact.profile, "gfm-extended");
   for (const result of [state.open, state.ended]) {
     assert.deepEqual(result.root, expected);
     assert.equal(result.source, source);

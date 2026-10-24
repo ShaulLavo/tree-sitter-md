@@ -64,7 +64,7 @@ typedef enum {
     REFERENCE_LINE,
     REFERENCE_LAST_LINE,
     STANDALONE_REFERENCE_START,
-#ifdef TSMD_CHAT_MATH
+#ifdef TSMD_MATH
     MATH_FLOW_START,
     MATH_FLOW_END,
 #endif
@@ -98,7 +98,7 @@ typedef enum {
     LIST_ITEM_14_INDENTATION,
     LIST_ITEM_MAX_INDENTATION,
     FENCED_CODE_BLOCK,
-#ifdef TSMD_CHAT_MATH
+#ifdef TSMD_MATH
     MATH_FLOW,
 #endif
     ANONYMOUS,
@@ -190,7 +190,7 @@ static const bool paragraph_interrupt_symbols[] = {
     false, // REFERENCE_LINE,
     false, // REFERENCE_LAST_LINE,
     false, // STANDALONE_REFERENCE_START,
-#ifdef TSMD_CHAT_MATH
+#ifdef TSMD_MATH
     true,  // MATH_FLOW_START,
     false, // MATH_FLOW_END,
 #endif
@@ -243,7 +243,7 @@ typedef struct {
     // The delimiter length of the currently open fenced code block
     uint32_t fenced_code_block_delimiter_length;
 
-#ifdef TSMD_CHAT_MATH
+#ifdef TSMD_MATH
     uint32_t math_flow_width;
 #endif
     uint32_t reference_lines;
@@ -276,7 +276,7 @@ static inline Block pop_block(Scanner *s) {
 // Write the whole state of a Scanner to a byte buffer
 static unsigned serialize(Scanner *s, char *buffer) {
     unsigned size = 0;
-#ifdef TSMD_CHAT_MATH
+#ifdef TSMD_MATH
     memcpy(buffer, &s->math_flow_width, sizeof(s->math_flow_width));
     size += sizeof(s->math_flow_width);
 #endif
@@ -301,7 +301,7 @@ static unsigned serialize(Scanner *s, char *buffer) {
 // Read the whole state of a Scanner from a byte buffer
 // `serizalize` and `deserialize` should be fully symmetric.
 static void deserialize(Scanner *s, const char *buffer, unsigned length) {
-#ifdef TSMD_CHAT_MATH
+#ifdef TSMD_MATH
     s->math_flow_width = 0;
 #endif
     s->reference_lines = 0;
@@ -314,7 +314,7 @@ static void deserialize(Scanner *s, const char *buffer, unsigned length) {
     s->fenced_code_block_delimiter_length = 0;
     if (length > 0) {
         size_t size = 0;
-#ifdef TSMD_CHAT_MATH
+#ifdef TSMD_MATH
         memcpy(&s->math_flow_width, buffer, sizeof(s->math_flow_width));
         size += sizeof(s->math_flow_width);
 #endif
@@ -453,7 +453,7 @@ static bool match(Scanner *s, TSLexer *lexer, Block block) {
             }
             break;
         case FENCED_CODE_BLOCK:
-#ifdef TSMD_CHAT_MATH
+#ifdef TSMD_MATH
         case MATH_FLOW:
 #endif
         case ANONYMOUS:
@@ -659,7 +659,7 @@ static void reject_table_delimiter_tail(Scanner *s, TSLexer *lexer, TableDelimit
 
 static bool parse_pipe_table(Scanner *s, TSLexer *lexer, bool header_prefix);
 
-#ifdef TSMD_CHAT_MATH
+#ifdef TSMD_MATH
 static bool parse_math_flow(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
     if (s->indentation >= 4) return false;
     uint32_t width = 0;
@@ -1749,7 +1749,7 @@ static bool scan(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
         if (lexer->lookahead == '[' && (valid_symbols[REFERENCE_START] || valid_symbols[STANDALONE_REFERENCE_START]))
             return parse_reference(s, lexer);
         switch (lexer->lookahead) {
-#ifdef TSMD_CHAT_MATH
+#ifdef TSMD_MATH
             case '$':
                 return parse_math_flow(s, lexer, valid_symbols);
 #endif

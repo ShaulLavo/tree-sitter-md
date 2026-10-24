@@ -4,7 +4,7 @@ Three vocabularies exist. This page lists all of them.
 
 | Vocabulary | Returned by | Section |
 | --- | --- | --- |
-| Block grammar node types | The tree-sitter parsers (`tree-sitter-markdown.wasm`, `tree-sitter-markdown-chat.wasm`) | [Block grammar node types](#block-grammar-node-types) |
+| Block grammar node types | The tree-sitter parsers (`tree-sitter-markdown.wasm`, `tree-sitter-markdown-math.wasm`) | [Block grammar node types](#block-grammar-node-types) |
 | `semantics()` and `presentation()` node types | `MarkdownDocument.semantics()` and `presentation()` | [semantics() and presentation() node types](#semantics-and-presentation-node-types) |
 | Record kinds, highlight captures | `decorations()`, `highlights()` | [Record kinds](#record-kinds) |
 
@@ -26,7 +26,7 @@ setext_h1_underline setext_h2_underline
 block_continuation block_quote_marker fenced_code_block_delimiter
 ```
 
-To regenerate the list, run this in a checkout of the repository (`git clone https://github.com/ShaulLavo/tree-sitter-md`). The `grammar/` directory is not part of the installed package. Use `grammar/chat/src/node-types.json` for the math grammar.
+To regenerate the list, run this in a checkout of the repository (`git clone https://github.com/ShaulLavo/tree-sitter-md`). The `grammar/` directory is not part of the installed package. Use `grammar/math/src/node-types.json` for the math grammar.
 
 ```sh
 node -e 'for (const n of JSON.parse(require("fs").readFileSync("grammar/src/node-types.json"))) if (n.named) console.log(n.type)'
@@ -58,7 +58,7 @@ Real output of `Parser.parse` on `# Title`, a paragraph, a pipe table, a fenced 
 
 ### Added by the math grammar
 
-`tree-sitter-markdown-chat.wasm` is selected when `math: true`. See [Math](math.md).
+`tree-sitter-markdown-math.wasm` is selected when `math: true`. See [Math](math.md).
 
 | Node type | Meaning |
 | --- | --- |

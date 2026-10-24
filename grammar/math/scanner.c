@@ -1,0 +1,8 @@
+// Use one scanner implementation with a language-local math profile.
+#define TSMD_MATH 1
+#define tree_sitter_markdown_external_scanner_create tree_sitter_markdown_math_external_scanner_create
+#define tree_sitter_markdown_external_scanner_destroy tree_sitter_markdown_math_external_scanner_destroy
+#define tree_sitter_markdown_external_scanner_scan tree_sitter_markdown_math_external_scanner_scan
+#define tree_sitter_markdown_external_scanner_serialize tree_sitter_markdown_math_external_scanner_serialize
+#define tree_sitter_markdown_external_scanner_deserialize tree_sitter_markdown_math_external_scanner_deserialize
+#include "../src/scanner.c"

@@ -6,7 +6,7 @@ Set up, build, test and measure tree-sitter-md. For how the parts fit together, 
 
 | Path | Contents |
 | --- | --- |
-| `grammar/` | The base block grammar (`grammar.js`, `src/scanner.c`) and the math grammar in `grammar/chat/`. `src/` and `chat/src/` are generated. |
+| `grammar/` | The base block grammar (`grammar.js`, `src/scanner.c`) and the math grammar in `grammar/math/`. `src/` and `math/src/` are generated. |
 | `src/document.c` | The UTF-16 document, the incremental tree, definitions, the per-leaf cache, record walks and the wasm exports. |
 | `src/leaf.c` | Leaf content and continuation mapping. Runs cmark's inline pass with no block parse. |
 | `src/semantic.c`, `src/footnote.c` | `semantics()` and `presentation()` extraction, footnotes. |
@@ -18,7 +18,7 @@ Set up, build, test and measure tree-sitter-md. For how the parts fit together, 
 | `scripts/` | Build, check and gate scripts. |
 | `experiments/perf-next/` | Benchmark and stress probes that take a checkout path. Not part of the package or CI. |
 
-Generated files (`grammar/src/parser.c`, `grammar/chat/src/`) are never edited by hand. Change `grammar.js` and run `npm run generate`.
+Generated files (`grammar/src/parser.c`, `grammar/math/src/`) are never edited by hand. Change `grammar.js` and run `npm run generate`.
 
 ## Install
 

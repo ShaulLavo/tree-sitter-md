@@ -11,7 +11,7 @@ Plain CommonMark and GFM documents must keep exact lazy-continuation and paragra
 
 ## Decision
 
-Derive a second grammar in `grammar/chat/`. `grammar/chat/grammar.js` extends the base grammar with the `math_flow` rules. `grammar/chat/scanner.c` compiles the shared scanner with `TSMD_CHAT_MATH` defined instead of copying it. `MarkdownDocument` selects the grammar per document: `math: true` uses `tree-sitter-markdown-chat.wasm`, and `math: false` uses the base grammar.
+Derive a second grammar in `grammar/math/`. `grammar/math/grammar.js` extends the base grammar with the `math_flow` rules. `grammar/math/scanner.c` compiles the shared scanner with `TSMD_MATH` defined instead of copying it. `MarkdownDocument` selects the grammar per document: `math: true` uses `tree-sitter-markdown-math.wasm`, and `math: false` uses the base grammar.
 
 ## Alternatives considered
 
@@ -21,6 +21,6 @@ Derive a second grammar in `grammar/chat/`. `grammar/chat/grammar.js` extends th
 ## Consequences
 
 - `init()` loads both grammars even when no document uses math. The math grammar is 143,368 bytes raw and 28,755 gzip.
-- Two parsers to regenerate: `npm run generate` runs the tree-sitter CLI in `grammar/` and `grammar/chat/`.
+- Two parsers to regenerate: `npm run generate` runs the tree-sitter CLI in `grammar/` and `grammar/math/`.
 - The base grammar's behavior is unchanged by math work, and the math grammar has its own tests in both profiles.
 - Documents never share scanner state across profiles. See [Math](../reference/math.md).

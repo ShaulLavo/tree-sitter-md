@@ -299,7 +299,7 @@ for (const eol of ['\n', '\r\n', '\r']) test('cell ownership preserves escaped p
   checkTablePadding(`| a\\|x | b |   ${eol}|:---|---:|${eol}| c |`)
 })
 
-const languages = await Promise.all(['../tree-sitter-markdown.wasm', '../tree-sitter-markdown-chat.wasm'].map(path =>
+const languages = await Promise.all(['../tree-sitter-markdown.wasm', '../tree-sitter-markdown-math.wasm'].map(path =>
   Language.load(readFileSync(new URL(path, import.meta.url)))))
 
 function checkMarkerCst(source: string, lists: number): void {

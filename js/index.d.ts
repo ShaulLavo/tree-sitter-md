@@ -13,7 +13,9 @@ export type WasmSource = URL | string | Response | Promise<Response> | ArrayBuff
 export declare function init(options?: {
   /** The block grammar, tree-sitter-markdown.wasm, or a Language already loaded by tree-sitter-x. */
   grammar?: URL | string | Response | Promise<Response> | ArrayBuffer | ArrayBufferView | Language
-  /** The CHAT block grammar, tree-sitter-markdown-chat.wasm, selected for math-enabled documents. */
+  /** The math block grammar, tree-sitter-markdown-math.wasm, selected for math-enabled documents. */
+  mathGrammar?: URL | string | Response | Promise<Response> | ArrayBuffer | ArrayBufferView | Language
+  /** @deprecated Renamed to `mathGrammar`. Removed in the next release. */
   chatGrammar?: URL | string | Response | Promise<Response> | ArrayBuffer | ArrayBufferView | Language
   /** The resolver, tree-sitter-md.wasm, loaded as a tree-sitter-x extension. */
   resolver?: WasmSource
