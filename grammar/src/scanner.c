@@ -708,7 +708,13 @@ static bool parse_fenced_code_block(Scanner *s, const char delimiter,
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
             advance(s, lexer);
         }
-        if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || lexer->eof(lexer)) {
+        const bool is_eof = lexer->eof(lexer);
+        if (is_eof) {
+            // A closing fence may end the input without a line ending. Nothing
+            // follows to consume the trailing whitespace, so it joins the token.
+            mark_end(s, lexer);
+        }
+        if (lexer->lookahead == '\n' || lexer->lookahead == '\r' || is_eof) {
             s->fenced_code_block_delimiter_length = 0;
             lexer->result_symbol = delimiter == '`'
                                        ? FENCED_CODE_BLOCK_END_BACKTICK
@@ -759,6 +765,12 @@ static bool empty_list_marker_allowed(const Scanner *s) {
 }
 
 static bool parse_star(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
+    // Nothing to emit here; bail before scanning the (possibly long) run of
+    // `*`, which would otherwise be O(n^2) across a paragraph.
+    if (!valid_symbols[THEMATIC_BREAK] && !valid_symbols[LIST_MARKER_STAR] &&
+        !valid_symbols[LIST_MARKER_STAR_DONT_INTERRUPT]) {
+        return false;
+    }
     advance(s, lexer);
     mark_end(s, lexer);
     // Otherwise count the number of stars permitting whitespaces between them.
@@ -844,6 +856,10 @@ static bool parse_star(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
 
 static bool parse_thematic_break_underscore(Scanner *s, TSLexer *lexer,
                                             const bool *valid_symbols) {
+    // Same as above for a run of `_` (only THEMATIC_BREAK is emittable here).
+    if (!valid_symbols[THEMATIC_BREAK]) {
+        return false;
+    }
     advance(s, lexer);
     mark_end(s, lexer);
     size_t underscore_count = 1;
@@ -1264,15 +1280,26 @@ static bool parse_html_block(Scanner *s, TSLexer *lexer,
         // could be block 2
         advance(s, lexer);
         if (lexer->lookahead == '-') {
+            // Block 2 ends at the first `-->`, which may overlap the opening
+            // `<!--` as in `<!-->` and `<!--->`. For those, end the token
+            // after `<!` so that the closing `-->` is left for the block.
+            mark_end(s, lexer);
+            uint8_t column = s->column;
             advance(s, lexer);
-            if (lexer->lookahead == '-' && valid_symbols[HTML_BLOCK_2_START]) {
-                advance(s, lexer);
-                lexer->result_symbol = HTML_BLOCK_2_START;
-                if (!s->simulate)
-                    if (!push_block(s, ANONYMOUS))
-                        return false;
-                return true;
+            if (lexer->lookahead != '-' || !valid_symbols[HTML_BLOCK_2_START]) {
+                return false;
             }
+            advance(s, lexer);
+            if (lexer->lookahead == '>' || lexer->lookahead == '-') {
+                s->column = column;
+            } else {
+                mark_end(s, lexer);
+            }
+            lexer->result_symbol = HTML_BLOCK_2_START;
+            if (!s->simulate)
+                if (!push_block(s, ANONYMOUS))
+                    return false;
+            return true;
         } else if ('A' <= lexer->lookahead && lexer->lookahead <= 'Z' &&
                    valid_symbols[HTML_BLOCK_4_START]) {
             advance(s, lexer);
