@@ -250,7 +250,7 @@ Release 0.1.15 math dialect: a flow opener's same-line suffix is metadata.
 With `{ math: true }`, `$$x *a*` has meta `x *a*` and empty body value in both
 exact `math` and eligible open `pendingMath`. The opener requires at least two
 dollars and no later dollar on the opening line, so complete `$$x$$` follows the
-inline-math path. Single-dollar text remains literal. The [CHAT math contract](../../docs/chat-math.md)
+inline-math path. Single-dollar text remains literal. The [CHAT math contract](../../docs/reference/chat-profile.md)
 records the pinned behavior and Streamdown's currency rationale.
 
 Reference metadata uses the existing `link` namespace for both reference links

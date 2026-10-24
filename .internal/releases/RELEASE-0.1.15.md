@@ -8,7 +8,7 @@ Flow math separates nullable opening `meta` from body `value`. The package adds
 `tree-sitter-markdown-chat.wasm` and `init({ chatGrammar })` for custom asset
 loading. Math-disabled documents retain the base grammar. Inline double-dollar
 math and literal single-dollar currency stay unchanged. The [CHAT contract and
-source inventory](../../docs/chat-math.md) describe the syntax, profile selection, and notices.
+source inventory](../../docs/reference/chat-profile.md) describe the syntax, profile selection, and notices.
 
 Direct checks of the preserved implementation passed 1,942 JavaScript tests,
 public types, 676 CommonMark/GFM cases, 183 chat fixtures, the 497-document pinned
