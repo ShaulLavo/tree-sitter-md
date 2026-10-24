@@ -3,14 +3,13 @@
 - `cmark/`: commonmark/cmark 0.31.2, commit `eec0eeba6d31189fd828314576494566d539b1e3`.
   Inline parsing, references, nodes, scanners, character classes, buffers, UTF-8, case folding,
   entity decoding. No block parser or renderers. The linker discards unused node APIs.
-- `tree-sitter/`: tree-sitter 0.27.0 C runtime from the same Cargo registry source used by the
-  Rust baseline. The runtime is compiled directly, with no Rust binding.
+- `tree-sitter/`: the tree-sitter 0.27.0 C API header (`include/tree_sitter/api.h`) only. The
+  runtime comes from the host, tree-sitter-x, and is not vendored.
 - `src/autolink.c` and the tilde branches of `cmark/inlines.c`: ported from github/cmark-gfm
   extensions at `499789b49373bfa045d0e7547e5ee63444c77bca`. No GFM core or other extensions.
 
 The changes against cmark 0.31.2 are also collected in [`cmark.patch`](cmark.patch), a zero-context
-patch suitable for `git apply --unidiff-zero`. The runtime omits its unused wasm-host stdlib
-and has trailing whitespace normalized.
+patch suitable for `git apply --unidiff-zero`.
 
 ## cmark adaptations
 
@@ -56,7 +55,7 @@ are checked in; `allocator.c` supplies the system C allocator. Notices are in `l
 
 ## Tree-sitter cursor correction
 
-The runtime also contains a correction for byte/point first-child seeks into a hidden subtree
+The host runtime (tree-sitter-x) contains a correction for byte/point first-child seeks into a hidden subtree
 whose trailing invisible content covers the query. Exhausting that subtree does not exclude a
 later visible sibling. A failed hidden descent advances to the next visible sibling, keeping the
 already-counted child index. It climbs through hidden entries without revisiting earlier visible

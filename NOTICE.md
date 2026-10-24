@@ -7,7 +7,7 @@ the notices in `licenses/`.
 | --- | --- | --- |
 | [tree-sitter-markdown](https://github.com/tree-sitter-grammars/tree-sitter-markdown) v0.5.3 | MIT, 2021 Matthias Deiml | Block grammar and external scanner in `grammar/` |
 | [tree-sitter CLI](https://github.com/tree-sitter/tree-sitter/tree/v0.26.9) 0.26.9 | MIT, 2018 Max Brunsfeld | Generated CHAT parse tables and support headers in `grammar/chat/src/` |
-| [tree-sitter](https://github.com/tree-sitter/tree-sitter) 0.27.0 | MIT, 2018 Max Brunsfeld | C runtime in `vendor/tree-sitter/` |
+| [tree-sitter](https://github.com/tree-sitter/tree-sitter) 0.27.0 | MIT, 2018 Max Brunsfeld | C API header in `vendor/tree-sitter/include/` |
 | [cmark](https://github.com/commonmark/cmark) 0.31.2 | BSD-2-Clause, 2014 John MacFarlane; bundled MIT components | Inline parser and dependencies in `vendor/cmark/` |
 | [cmark-gfm](https://github.com/github/cmark-gfm) `499789b49373bfa045d0e7547e5ee63444c77bca` | BSD-2-Clause; bundled MIT components | Strikethrough in the inline delimiter pass; autolink literals in `src/autolink.c` |
 | [markdown-cjk-friendly](https://github.com/tats-u/markdown-cjk-friendly) extensions 2.0.1, util 3.0.1; [get-east-asian-width](https://github.com/sindresorhus/get-east-asian-width) 1.7.0 | MIT | CJK delimiter flanking and Unicode 17.0 category tables in the inline resolver |
@@ -37,7 +37,5 @@ CC-BY-SA 4.0, John MacFarlane. `bench/web/lezer.min.js` bundles `@lezer/markdown
 concatenated and cut at 1,000,143 characters, the files Plan 176 measured.
 
 The adapted GFM domain validator retains the cmark-gfm attribution above.
-Its local changes and original regression evidence are classified in
-[the 0.1.17 source inventory](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/RELEASE-0.1.17.md#source-inventory).
-The CJK boundary integration and original terminal-dot controls are classified in
-[the 0.1.19 source inventory](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/RELEASE-0.1.19.md#source-inventory).
+Its local changes, the CJK boundary integration and the original regression tests are classified in
+[the source provenance table](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/provenance.md).
