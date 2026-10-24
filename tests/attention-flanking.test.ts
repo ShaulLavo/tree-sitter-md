@@ -96,6 +96,12 @@ test('tilde neighbors remain attention markers', () => {
   check('和~~「字」~~文', [text('和', 0, 1), span('delete', 1, 8, [text('「字」', 3, 6)]), text('文', 8, 9)])
 })
 
+test('mixed resolvers keep the first construct and closed-span ownership', () => {
+  check('~_~a_~', [text('~_', 0, 2), span('delete', 2, 6, [text('a_', 3, 5)])])
+  check('*~~a*~~', [span('emphasis', 0, 5, [text('~~a', 1, 4)]), text('~~', 5, 7)])
+  check('*~~*a~~*', [span('emphasis', 0, 4, [text('~~', 1, 3)]), text('a~~*', 4, 8)])
+})
+
 test('code and math keep interior markers opaque', () => {
   check('`*_*` $$*_*$$', [{ type: 'code', range: { start: 0, end: 5 }, value: '*_*', sourceValue: '*_*',
     sourceMap: { value: '*_*', tokenLength: 5, runs: [{ kind: 'copy', valueStart: 0, length: 3, tokenOffset: 1 }] } },
