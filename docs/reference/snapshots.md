@@ -1,6 +1,6 @@
 # Snapshots
 
-The types returned by `semantics()` and `presentation()`. The authoritative definitions are `js/semantic.d.ts`. Every node has `range: { start, end }` in original UTF-16 code units, except padded table cells, whose `range` is `null`.
+The types returned by `semantics()` and `presentation()`. The authoritative definitions are `js/semantic.d.ts`. The complete list of `type` values is in [Node types](node-types.md#semantics-and-presentation-node-types). Every node has `range: { start, end }` in original UTF-16 code units, except padded table cells, whose `range` is `null`.
 
 ## Snapshot fields
 

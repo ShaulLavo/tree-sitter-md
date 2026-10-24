@@ -1,12 +1,32 @@
 # Node types and record kinds
 
-Three vocabularies exist. The block grammars have tree-sitter node types. The resolver emits numeric record kinds and highlight captures. `semantics()` and `presentation()` return their own tree, described in [Snapshots](snapshots.md).
+Three vocabularies exist. This page lists all of them.
+
+| Vocabulary | Returned by | Section |
+| --- | --- | --- |
+| Block grammar node types | The tree-sitter parsers (`tree-sitter-markdown.wasm`, `tree-sitter-markdown-chat.wasm`) | [Block grammar node types](#block-grammar-node-types) |
+| `semantics()` and `presentation()` node types | `MarkdownDocument.semantics()` and `presentation()` | [semantics() and presentation() node types](#semantics-and-presentation-node-types) |
+| Record kinds, highlight captures | `decorations()`, `highlights()` | [Record kinds](#record-kinds) |
 
 The grammars parse block structure only. A paragraph, heading text, table row or definition is one `inline` or single-token node. The inline structure comes from the resolver.
 
 ## Block grammar node types
 
-`tree-sitter-markdown.wasm` (`grammar/src/node-types.json`, 38 named types). The CHAT grammar adds the four `math_flow*` types, for 42 named types. Regenerate the list with:
+`tree-sitter-markdown.wasm` has 38 named types. The CHAT grammar adds the four `math_flow*` types, for 42. This is the complete list of the base grammar:
+
+```text
+document section atx_heading setext_heading thematic_break paragraph inline
+indented_code_block fenced_code_block html_block block_quote list list_item
+pipe_table reference_definition code_fence_content info_string
+list_marker_dot list_marker_minus list_marker_parenthesis list_marker_plus list_marker_star
+task_list_marker_checked task_list_marker_unchecked
+pipe_table_header pipe_table_delimiter_row pipe_table_row
+atx_h1_marker atx_h2_marker atx_h3_marker atx_h4_marker atx_h5_marker atx_h6_marker
+setext_h1_underline setext_h2_underline
+block_continuation block_quote_marker fenced_code_block_delimiter
+```
+
+To regenerate the list, run this in a checkout of the repository (`git clone https://github.com/ShaulLavo/tree-sitter-md`). The `grammar/` directory is not part of the installed package. Use `grammar/chat/src/node-types.json` for the CHAT grammar.
 
 ```sh
 node -e 'for (const n of JSON.parse(require("fs").readFileSync("grammar/src/node-types.json"))) if (n.named) console.log(n.type)'
@@ -46,6 +66,26 @@ Real output of `Parser.parse` on `# Title`, a paragraph, a pipe table, a fenced 
 | `math_flow_delimiter` | The opening or closing run of dollars. |
 | `math_flow_meta` | The text after the opening run. |
 | `math_flow_content` | The body lines. |
+
+## semantics() and presentation() node types
+
+`semantics()` and `presentation()` return a tree of plain objects, not tree-sitter nodes. Every node has a `type` string. The authoritative definitions are `js/semantic.d.ts`, and the fields of each node are in [Snapshots](snapshots.md). This is the complete list of `type` values:
+
+| Level | `type` values |
+| --- | --- |
+| Root | `root` |
+| Block | `paragraph`, `heading`, `quote`, `list`, `code`, `html`, `math`, `thematicBreak`, `table`, `definition`, `footnoteDefinition` |
+| Block child | `listItem` (in `list.items`), `tableRow` (in `table.rows`), `tableCell` (in `tableRow.cells`) |
+| Inline | `text`, `html`, `math`, `code`, `emphasis`, `strong`, `delete`, `break`, `link`, `image`, `footnoteReference` |
+| `presentation({ input: 'open' })` only | `pendingLink`, `pendingImage`, `pendingMath` (inline), `pendingMath` (block) |
+
+The names differ from the block grammar's. A `heading` has `depth` 1 to 6 where the grammar has `atx_h1_marker` to `atx_h6_marker`, a `quote` is a `block_quote`, and a `delete` is strikethrough. `html`, `math` and `code` exist at both levels.
+
+To regenerate the list, run this in a checkout or in the installed package (use `node_modules/tree-sitter-md/js/semantic.d.ts` there):
+
+```sh
+grep -oE "type: '[A-Za-z' |]+'" js/semantic.d.ts | sed "s/type: //" | tr -d "' " | tr '|' '\n' | sort -u
+```
 
 ## Record kinds
 
