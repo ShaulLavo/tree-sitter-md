@@ -13,6 +13,8 @@ Append each chunk of a model reply to a `MarkdownDocument` and read an `'open'` 
 
 	`math: true` turns on `$$` math and selects the CHAT grammar. `cjk: true` fixes emphasis next to CJK punctuation. See [CHAT profile](../reference/chat-profile.md).
 
+	With these options, `doc.semantics().profile` and `doc.presentation(...).profile` are `'fregat-chat'`. The name comes from Fregat, the app this configuration was built for. It is only a label for "GFM plus `cjk` or `math`", and you do not set it. See [The name `fregat-chat`](../reference/chat-profile.md#the-name-fregat-chat).
+
 2. Append every chunk with `edit` and keep a running length.
 
 	```js

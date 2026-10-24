@@ -4,6 +4,17 @@
 
 `semantics().profile` is `'fregat-chat'` when `gfm` is true and `cjk` or `math` is true. The `cjk` option alone does not change the grammar. It changes emphasis flanking and autolink trimming. See [Supported syntax](syntax.md#options).
 
+### The name `fregat-chat`
+
+`'fregat-chat'` is a label, not a feature switch. It is named after [Fregat](https://github.com/ShaulLavo/fregat), the browser IDE whose chat panel this configuration was built for and which depends on this package. Nothing in the parser reads the string. `semantics()` returns it so a consumer can tell which option combination produced a tree. It does not mean the document came from a chat, and Fregat is not required. The three possible values are `'commonmark'`, `'gfm'` and `'fregat-chat'`. Compare with the exact string. The option combinations are in the table below.
+
+| `gfm` | `cjk` | `math` | `profile` |
+| --- | --- | --- | --- |
+| `false` | any | any | `'commonmark'` |
+| `true` | `false` | `false` | `'gfm'` |
+| `true` | `true` | any | `'fregat-chat'` |
+| `true` | any | `true` | `'fregat-chat'` |
+
 ## Dollar policy
 
 Inline math uses double dollars: `p $$x$$ q`. Single-dollar text such as `$x$` or `Costs $5 today` stays literal. Streamdown [documents this choice to avoid currency conflicts](https://github.com/vercel/streamdown/blob/4c55fad1bb739fba788b1f55bbe878983243edf0/apps/website/content/docs/plugins/math.mdx#currency-vs-math), and its [math plugin](https://github.com/vercel/streamdown/blob/4c55fad1bb739fba788b1f55bbe878983243edf0/packages/streamdown-math/index.ts) defaults `singleDollarTextMath` to false. tree-sitter-md has no option for single-dollar math.

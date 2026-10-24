@@ -1,5 +1,5 @@
 <h1 align="center">tree-sitter-md</h1>
-<p align="center">Markdown for editors and chat UIs: a tree-sitter block grammar and a CommonMark and GFM inline resolver that run inside one tree-sitter runtime.</p>
+<p align="center">Markdown for editors and chat UIs: a tree-sitter block grammar and a CommonMark and GFM inline resolver, shipped as three wasm modules that run inside one tree-sitter runtime.</p>
 <p align="center">
   <a href="https://github.com/ShaulLavo/tree-sitter-md/actions/workflows/check.yml"><img src="https://github.com/ShaulLavo/tree-sitter-md/actions/workflows/check.yml/badge.svg" alt="Parser release gates" /></a>
   <a href="https://github.com/ShaulLavo/tree-sitter-md/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license" /></a>
@@ -42,6 +42,8 @@ Real output, for a reply that arrives in three chunks (`presentation({ input: 'o
 You need Node 26 or later (Bun 1.4.4 also works). Install from Git, because npm has no current version of the package.
 
 The package needs `web-tree-sitter` `^0.28.1`, and npm only has up to 0.27.1. The stock build also lacks the `heap` and `loadExtension` exports the resolver uses. So you install [tree-sitter-x](https://github.com/ShaulLavo/tree-sitter-x), a fork that has them, from Git under the name `web-tree-sitter`. The command in step 1 does both. Details: [Compatibility and limits](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/compatibility.md#host-runtime).
+
+Only need block structure? Load `tree-sitter-markdown.wasm` in stock `web-tree-sitter` from npm, with no tree-sitter-x: [How to use the block grammar in another tree-sitter host](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/guides/use-the-grammar-alone.md).
 
 1. Create a project and install both packages.
 
@@ -115,7 +117,7 @@ Pre-1.0, at 0.1.32 in `package.json`. Expect changes between 0.1.x releases.
 
 - **npm.** `tree-sitter-md` on npm has only 0.1.0 and 0.1.1, both from 2026-09-28. 0.1.1 has no `semantics()`, no `presentation()`, no CHAT grammar and no `cjk` or `math` options. Install from Git as above.
 - **Runtimes.** Tested on Node 26, Bun 1.4.4 and Chromium 153. Node 24 fails at `init()`. Firefox and WebKit are not tested. See [Compatibility and limits](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/compatibility.md).
-- **Host runtime.** Stock `web-tree-sitter` does not work. You need the tree-sitter-x build.
+- **Host runtime.** Stock `web-tree-sitter` does not work, except for the block grammar alone. You need the tree-sitter-x build for everything else.
 - **Syntax limits.** Containers nest to 200. Single-dollar math is not supported. Raw HTML is kept as data and you sanitize it. Eight repository documents differ from micromark's construct lists, and 16 GFM spec examples differ in rendered output, each pinned by hash in the tests.
 - **Not measured.** Rendering time and Firefox or WebKit performance. Performance numbers come from one Apple M1 on a shared machine.
 
