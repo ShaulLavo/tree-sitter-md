@@ -20,7 +20,7 @@ The [upstream tree-sitter-markdown](https://github.com/tree-sitter-grammars/tree
 | Part | Where | Job |
 | --- | --- | --- |
 | Block grammar | `grammar/`, built as `tree-sitter-markdown.wasm` | Block structure. One token per line. The scanner validates leading reference definitions with cmark. |
-| math grammar | `grammar/chat/`, built as `tree-sitter-markdown-chat.wasm` | The same grammar plus `$$` flow math. Selected by `math: true`. See [ADR 004](../adr/004-math-as-a-separate-grammar.md). |
+| math grammar | `grammar/math/`, built as `tree-sitter-markdown-math.wasm` | The same grammar plus `$$` flow math. Selected by `math: true`. See [ADR 004](../adr/004-math-as-a-separate-grammar.md). |
 | Resolver | `src/` and `vendor/cmark/`, built as `tree-sitter-md.wasm` | Leaf mapping, cmark's inline pass, GFM autolinks, definitions, footnotes, records, highlights, folds, injections, semantic and presentation extraction. |
 | Binding | `js/` | `MarkdownDocument`. Writes UTF-16 text into shared memory and copies results out. |
 

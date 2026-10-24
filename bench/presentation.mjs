@@ -125,7 +125,7 @@ function validateSnapshots(exact, open, ended, source, options) {
   assert.equal(exact.revision, 1, 'snapshot reads must preserve the setText revision')
   assert.equal(open.revision, exact.revision)
   assert.equal(ended.revision, exact.revision)
-  assert.equal(exact.profile, 'fregat-chat')
+  assert.equal(exact.profile, 'gfm-extended')
   assert.deepEqual(exact.capabilities, { commonmark: true, gfm: options.gfm, footnotes: options.gfm, math: options.math, cjk: options.cjk })
   assert.deepEqual(open.capabilities, exact.capabilities)
   assert.equal(open.profile, exact.profile)

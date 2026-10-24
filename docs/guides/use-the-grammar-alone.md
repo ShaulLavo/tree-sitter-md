@@ -32,7 +32,7 @@ Real output, the same on stock 0.27.1 and on the tree-sitter-x build pinned in `
 (document (section (atx_heading (atx_h1_marker) heading_content: (inline)) (paragraph (inline)) (list (list_item (list_marker_minus) (task_list_marker_checked) (paragraph (inline))))))
 ```
 
-Use `tree-sitter-markdown-chat.wasm` for the math grammar, which adds `math_flow` nodes. The file name keeps the grammar's historical "chat" name. The node names are in [Node types and record kinds](../reference/node-types.md).
+Use `tree-sitter-markdown-math.wasm` for the math grammar, which adds `math_flow` nodes. The node names are in [Node types and record kinds](../reference/node-types.md).
 
 ## Compile the grammar into a native host
 
@@ -71,7 +71,7 @@ clang -std=c11 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE \
 
 It prints the same tree as the JavaScript example. This was run against tree-sitter-x commit `5c7a2916cdfa93f107833ddaa67688ec16d88a7d`, the one CI uses for the native tests. Other tree-sitter runtimes that load ABI 15 grammars are untested.
 
-The math grammar is `grammar/chat/src/parser.c` with `grammar/chat/scanner.c`, and its entry point is `tree_sitter_markdown_chat`.
+The math grammar is `grammar/math/src/parser.c` with `grammar/math/scanner.c`, and its entry point is `tree_sitter_markdown_math`.
 
 ## Edit and reparse
 

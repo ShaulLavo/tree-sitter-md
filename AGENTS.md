@@ -7,14 +7,14 @@
 - Run one test file: `node --test tests/<file>`. Run all JavaScript tests: `npm test`.
 - Run the correctness gate after any change to `src/`, `vendor/` or `grammar/`: `bun run check` (about 70 seconds).
 - Rebuild wasm with `WASI_SDK=<WASI SDK 34 dir> npm run build`, then commit the three `.wasm` files with the source change. The package ships them.
-- Regenerate parsers with `npm run generate` (tree-sitter CLI 0.26.9) after editing `grammar/grammar.js`. Never edit `grammar/src/parser.c` or `grammar/chat/src/`.
+- Regenerate parsers with `npm run generate` (tree-sitter CLI 0.26.9) after editing `grammar/grammar.js`. Never edit `grammar/src/parser.c` or `grammar/math/src/`.
 - Run `sh scripts/check-native.sh` on Linux with `TREE_SITTER_LIB` pointing at a tree-sitter-x `lib/`. On macOS it aborts, because ASan has no leak detection there.
 - Run `bun run test:types` with `--ignoreConfig` added if a parent directory has a `tsconfig.json`.
 - Run `bun run test:package` and `bun run test:browser` for changes to `js/` or `package.json`. They need Playwright Chromium.
 
 ## Verify a change
 
-- Grammar or scanner: run `npm test` and `bun run check`. Test both profiles (base and `math: true`), because `grammar/chat/scanner.c` includes `grammar/src/scanner.c`.
+- Grammar or scanner: run `npm test` and `bun run check`. Test both profiles (base and `math: true`), because `grammar/math/scanner.c` includes `grammar/src/scanner.c`.
 - Incremental behavior: compare an edit-then-undo result with a fresh parse. `bench/fuzz.mjs` does this in `bun run check`.
 - Public output shape: update `js/*.d.ts` and `tests/types/presentation.ts` together.
 

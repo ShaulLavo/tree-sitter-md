@@ -23,7 +23,7 @@ printf 'wasm: %s raw, %s gzip -9\n' "$(wc -c < tree-sitter-md.wasm)" "$(gzip -9n
 printf 'grammar wasm: %s raw, %s gzip -9\n' "$(wc -c < tree-sitter-markdown.wasm)" "$(gzip -9nc tree-sitter-markdown.wasm | wc -c)"
 
 "$WASI_SDK/bin/clang" --target=wasm32-wasip1 -fPIC -shared -nostdlib $OPT \
-  -DNDEBUG -std=c11 -D_POSIX_C_SOURCE=200809L -Igrammar/chat/src -Ivendor/cmark grammar/chat/src/parser.c grammar/chat/scanner.c vendor/cmark/*.c \
+  -DNDEBUG -std=c11 -D_POSIX_C_SOURCE=200809L -Igrammar/math/src -Ivendor/cmark grammar/math/src/parser.c grammar/math/scanner.c vendor/cmark/*.c \
   -Wl,--allow-undefined -Wl,--no-entry -Wl,--strip-all \
-  -Wl,--export=tree_sitter_markdown_chat -o tree-sitter-markdown-chat.wasm
-printf 'CHAT grammar wasm: %s raw\n' "$(wc -c < tree-sitter-markdown-chat.wasm)"
+  -Wl,--export=tree_sitter_markdown_math -o tree-sitter-markdown-math.wasm
+printf 'Math grammar wasm: %s raw\n' "$(wc -c < tree-sitter-markdown-math.wasm)"

@@ -1,7 +1,7 @@
-// CHAT adds concrete flow math to the upstream-derived base block grammar.
+// The math grammar adds concrete flow math to the upstream-derived base block grammar.
 // The base language and its lazy paragraph ownership remain unchanged.
 module.exports = grammar(require('../grammar'), {
-    name: 'markdown_chat',
+    name: 'markdown_math',
     rules: {
         _block_not_section: ($, original) => choice(original, $.math_flow),
         math_flow: $ => prec.right(choice(

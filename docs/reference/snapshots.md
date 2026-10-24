@@ -7,7 +7,7 @@ The types returned by `semantics()` and `presentation()`. The authoritative defi
 | Field | Type | Meaning |
 | --- | --- | --- |
 | `revision` | number | Advances by one for each `setText` and `edit`. Reads do not change it. |
-| `profile` | `'commonmark' \| 'gfm' \| 'fregat-chat'` | See [Supported syntax](syntax.md#options). |
+| `profile` | `'commonmark' \| 'gfm' \| 'gfm-extended'` | See [Supported syntax](syntax.md#options). |
 | `capabilities` | `{ commonmark: true, gfm, math, cjk, footnotes }` | The enabled options. `footnotes` equals `gfm`. |
 | `root` | `SemanticRoot` or `PresentationRoot` | The document. |
 

@@ -1,21 +1,34 @@
 # Math
 
-`math: true` turns on `$$` math. It does this by parsing blocks with a second block grammar, `tree-sitter-markdown-chat.wasm`. `math: false` keeps the base grammar and its ordinary lazy paragraph continuations. The choice belongs to each document, and scanner state is not shared between documents.
+`math: true` turns on `$$` math. It does this by parsing blocks with a second block grammar, `tree-sitter-markdown-math.wasm`. `math: false` keeps the base grammar and its ordinary lazy paragraph continuations. The choice belongs to each document, and scanner state is not shared between documents.
 
-The second grammar is the base grammar plus `$$` flow math blocks, and nothing else. The word "chat" in the file name, in the `chatGrammar` option of `init()`, and in the `'fregat-chat'` profile label is a name only: the grammar was built for a chat panel, but nothing in it is specific to chat. Read it as "the math grammar".
+The second grammar is the base grammar plus `$$` flow math blocks, and nothing else.
 
-`semantics().profile` is `'fregat-chat'` when `gfm` is true and `cjk` or `math` is true. The `cjk` option alone does not change the grammar. It changes emphasis flanking and autolink trimming. See [Supported syntax](syntax.md#options).
+`semantics().profile` is `'gfm-extended'` when `gfm` is true and `cjk` or `math` is true. The `cjk` option alone does not change the grammar. It changes emphasis flanking and autolink trimming. See [Supported syntax](syntax.md#options).
 
-### The name `fregat-chat`
+### The `profile` label
 
-`'fregat-chat'` is a label, not a feature switch. It is named after [Fregat](https://github.com/ShaulLavo/fregat), the browser IDE whose chat panel this configuration was built for and which depends on this package. Nothing in the parser reads the string. `semantics()` returns it so a consumer can tell which option combination produced a tree. It does not mean the document came from a chat, and Fregat is not required. The three possible values are `'commonmark'`, `'gfm'` and `'fregat-chat'`. Compare with the exact string. The option combinations are in the table below.
+`profile` is a label, not a feature switch. Nothing in the parser reads the string. `semantics()` returns it so a consumer can tell which option combination produced a tree. `capabilities` reports each option on its own. The three possible values are `'commonmark'`, `'gfm'` and `'gfm-extended'`. Compare with the exact string. The option combinations are in the table below.
 
 | `gfm` | `cjk` | `math` | `profile` |
 | --- | --- | --- | --- |
 | `false` | any | any | `'commonmark'` |
 | `true` | `false` | `false` | `'gfm'` |
-| `true` | `true` | any | `'fregat-chat'` |
-| `true` | any | `true` | `'fregat-chat'` |
+| `true` | `true` | any | `'gfm-extended'` |
+| `true` | any | `true` | `'gfm-extended'` |
+
+### Renamed from "chat"
+
+The math grammar used to be called the chat grammar. These names changed:
+
+| Before | Now |
+| --- | --- |
+| `tree-sitter-markdown-chat.wasm` | `tree-sitter-markdown-math.wasm` |
+| `init({ chatGrammar })` | `init({ mathGrammar })` |
+| `grammar/chat/`, `tree_sitter_markdown_chat` | `grammar/math/`, `tree_sitter_markdown_math` |
+| `profile: 'fregat-chat'` | `profile: 'gfm-extended'` |
+
+The package still exports `tree-sitter-md/tree-sitter-markdown-chat.wasm`, which resolves to the math file, and `init()` still accepts `chatGrammar` when `mathGrammar` is absent. Both are deprecated and go away in the next release. The `profile` value has no alias: change any comparison against `'fregat-chat'`.
 
 ## Dollar policy
 

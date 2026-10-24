@@ -59,12 +59,12 @@ TypeError: tree-sitter-md: edit requires a valid UTF-16 range and string
 import { Parser } from 'web-tree-sitter'
 import host from 'web-tree-sitter/web-tree-sitter.wasm?url'
 import grammar from 'tree-sitter-md/tree-sitter-markdown.wasm?url'
-import chatGrammar from 'tree-sitter-md/tree-sitter-markdown-chat.wasm?url'
+import mathGrammar from 'tree-sitter-md/tree-sitter-markdown-math.wasm?url'
 import resolver from 'tree-sitter-md/tree-sitter-md.wasm?url'
 import { init } from 'tree-sitter-md'
 
 await Parser.init({ locateFile: () => host })
-await init({ grammar, chatGrammar, resolver })
+await init({ grammar, mathGrammar, resolver })
 ```
 
 A production build prints a warning that `node:fs/promises` was externalized. The browser path never reaches that import, and the Chromium test passes with the warning. It fetches four `.wasm` files: these three and the host runtime's.

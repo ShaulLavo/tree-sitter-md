@@ -11,7 +11,8 @@
       "default": "./js/index.js"
     },
     "./tree-sitter-md.wasm": "./tree-sitter-md.wasm",
-    "./tree-sitter-markdown-chat.wasm": "./tree-sitter-markdown-chat.wasm",
+    "./tree-sitter-markdown-math.wasm": "./tree-sitter-markdown-math.wasm",
+    "./tree-sitter-markdown-chat.wasm": "./tree-sitter-markdown-math.wasm",
     "./tree-sitter-markdown.wasm": "./tree-sitter-markdown.wasm",
     "./package.json": "./package.json"
   },
@@ -24,7 +25,7 @@
     "js/semantic.d.ts",
     "tree-sitter-md.wasm",
     "tree-sitter-markdown.wasm",
-    "tree-sitter-markdown-chat.wasm",
+    "tree-sitter-markdown-math.wasm",
     "LICENSE",
     "NOTICE.md",
     "licenses/"
@@ -48,7 +49,7 @@
   ],
   "scripts": {
     "build": "sh scripts/build.sh",
-    "generate": "cd grammar && tree-sitter generate && cd chat && tree-sitter generate",
+    "generate": "cd grammar && tree-sitter generate && cd math && tree-sitter generate",
     "spec": "cd bench && node spec.mjs",
     "corpus": "cd bench && node corpus.mjs",
     "bench": "cd bench && node keystroke.mjs",

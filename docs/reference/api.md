@@ -2,7 +2,7 @@
 
 The package exports `init`, `MarkdownDocument`, `memoryBytes`, `Kind` and `CAPTURES`, with types in `js/index.d.ts` and `js/semantic.d.ts`. It is an ES module. Every call except `init` is synchronous.
 
-The package `exports` map also exposes `./tree-sitter-md.wasm`, `./tree-sitter-markdown.wasm`, `./tree-sitter-markdown-chat.wasm` and `./package.json`.
+The package `exports` map also exposes `./tree-sitter-md.wasm`, `./tree-sitter-markdown.wasm`, `./tree-sitter-markdown-math.wasm` and `./package.json`. The deprecated `./tree-sitter-markdown-chat.wasm` resolves to the math file.
 
 All offsets are UTF-16 code units, the units of JavaScript strings. Rows are zero-based.
 
@@ -11,6 +11,8 @@ All offsets are UTF-16 code units, the units of JavaScript strings. Rows are zer
 ```ts
 function init(options?: {
 	grammar?: URL | string | Response | Promise<Response> | ArrayBuffer | ArrayBufferView | Language
+	mathGrammar?: URL | string | Response | Promise<Response> | ArrayBuffer | ArrayBufferView | Language
+	/** @deprecated Renamed to `mathGrammar`. */
 	chatGrammar?: URL | string | Response | Promise<Response> | ArrayBuffer | ArrayBufferView | Language
 	resolver?: URL | string | Response | Promise<Response> | ArrayBuffer | ArrayBufferView | WebAssembly.Module
 }): Promise<void>
@@ -21,7 +23,8 @@ Loads the grammars and the resolver into the host's `web-tree-sitter` runtime. C
 | Option | Loads | Default |
 | --- | --- | --- |
 | `grammar` | The base block grammar. A `Language` that the host already loaded is used as is. | `../tree-sitter-markdown.wasm`, relative to `js/index.js`. |
-| `chatGrammar` | The math block grammar, used by documents with `math: true`. Accepts the same inputs. | `../tree-sitter-markdown-chat.wasm`. |
+| `mathGrammar` | The math block grammar, used by documents with `math: true`. Accepts the same inputs. | `../tree-sitter-markdown-math.wasm`. |
+| `chatGrammar` | Deprecated name of `mathGrammar`, read only when `mathGrammar` is absent. Removed in the next release. | |
 | `resolver` | The inline resolver, loaded as a tree-sitter-x extension. | `../tree-sitter-md.wasm`. |
 
 - A default `file:` URL is read with `node:fs/promises`. Any other URL is fetched.

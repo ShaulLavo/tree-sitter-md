@@ -15,7 +15,7 @@ What the parser recognizes, which option turns each part on, and how closely it 
 
 With `gfm: false`, a pipe table is a paragraph, `~~x~~` and `www.example.com` stay text, `- [x]` stays text, and `[^1]` is not a footnote.
 
-`semantics().profile` reports `'commonmark'` when `gfm` is false, `'gfm'` when `gfm` is true and both `cjk` and `math` are false, and `'fregat-chat'` when `gfm` is true and either `cjk` or `math` is true.
+`semantics().profile` reports `'commonmark'` when `gfm` is false, `'gfm'` when `gfm` is true and both `cjk` and `math` are false, and `'gfm-extended'` when `gfm` is true and either `cjk` or `math` is true.
 
 ## Blocks
 

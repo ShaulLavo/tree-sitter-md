@@ -6,7 +6,7 @@ the notices in `licenses/`.
 | Project | License | Used as |
 | --- | --- | --- |
 | [tree-sitter-markdown](https://github.com/tree-sitter-grammars/tree-sitter-markdown) v0.5.3 | MIT, 2021 Matthias Deiml | Block grammar and external scanner in `grammar/` |
-| [tree-sitter CLI](https://github.com/tree-sitter/tree-sitter/tree/v0.26.9) 0.26.9 | MIT, 2018 Max Brunsfeld | Generated CHAT parse tables and support headers in `grammar/chat/src/` |
+| [tree-sitter CLI](https://github.com/tree-sitter/tree-sitter/tree/v0.26.9) 0.26.9 | MIT, 2018 Max Brunsfeld | Generated math-grammar parse tables and support headers in `grammar/math/src/` |
 | [tree-sitter](https://github.com/tree-sitter/tree-sitter) 0.27.0 | MIT, 2018 Max Brunsfeld | C API header in `vendor/tree-sitter/include/` |
 | [cmark](https://github.com/commonmark/cmark) 0.31.2 | BSD-2-Clause, 2014 John MacFarlane; bundled MIT components | Inline parser and dependencies in `vendor/cmark/` |
 | [cmark-gfm](https://github.com/github/cmark-gfm) `499789b49373bfa045d0e7547e5ee63444c77bca` | BSD-2-Clause; bundled MIT components | Strikethrough in the inline delimiter pass; autolink literals in `src/autolink.c` |
@@ -18,9 +18,9 @@ in `wasi-libc.txt`, `musl.txt`, `cloudlibc.txt` and `dlmalloc.txt`. Tree-sitter'
 retain the ICU notice in `icu.txt`. The SDK compiler runtime's Apache-2.0 license with LLVM
 exceptions is in `llvm.txt`.
 
-The CHAT grammar derives from the same MIT block grammar listed above. Its local math
+The math grammar derives from the same MIT block grammar listed above. Its local math
 rules, scanner profile, and native semantic adapter are described in the
-[CHAT math source inventory](https://github.com/ShaulLavo/tree-sitter-md/blob/0eca7c03eda2545cef04ebd63436ef17fcb97340/docs/chat-math.md#source-inventory). The pinned remark-math
+[math source inventory](https://github.com/ShaulLavo/tree-sitter-md/blob/0eca7c03eda2545cef04ebd63436ef17fcb97340/docs/chat-math.md#source-inventory). The pinned remark-math
 and Streamdown sources establish behavior only; no code from those projects is copied
 into this implementation.
 

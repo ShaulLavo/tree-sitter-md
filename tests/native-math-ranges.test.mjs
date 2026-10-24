@@ -314,7 +314,7 @@ function assertFresh(document, source, settings) {
 }
 
 for (const enabled of [false, true]) {
-  test('CHAT grammar profiles stay isolated through incremental delimiter and prefix edits: ' + enabled, () => {
+  test('math grammar profiles stay isolated through incremental delimiter and prefix edits: ' + enabled, () => {
     const settings = { ...options, math: enabled }
     const document = new MarkdownDocument(settings)
     const sibling = new MarkdownDocument({ ...options, math: !enabled })

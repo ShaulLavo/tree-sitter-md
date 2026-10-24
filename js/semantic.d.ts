@@ -52,7 +52,7 @@ export type SemanticCapabilities = {
 }
 export type SemanticSnapshot = {
   readonly revision: number
-  readonly profile: 'commonmark' | 'gfm' | 'fregat-chat'
+  readonly profile: 'commonmark' | 'gfm' | 'gfm-extended'
   readonly capabilities: SemanticCapabilities
   readonly root: SemanticRoot
 }
