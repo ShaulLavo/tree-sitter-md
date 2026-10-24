@@ -1,10 +1,10 @@
 # How to highlight and fold Markdown in an editor
 
-Feed keystrokes to a `MarkdownDocument` and read decoration records, highlight captures, folds and fence injections for the rows on screen. You need the package installed as in the [README quick start](../../README.md#quick-start).
+Feed keystrokes to a `MarkdownDocument` and read decoration records, highlight captures, folds and fence injections for the rows on screen. You need the package installed as in the [README install section](../../README.md#install).
 
 1. Create one document per open file and load the text.
 
-	```js
+	```ts
 	import { init, MarkdownDocument, Kind, CAPTURES } from 'tree-sitter-md'
 
 	await init()
@@ -16,19 +16,19 @@ Feed keystrokes to a `MarkdownDocument` and read decoration records, highlight c
 
 2. Call `reparse()` once, in idle time after `setText`. It makes the first keystroke cheap. On the 1 MB benchmark file it cuts the first keystroke from about 3.0 ms to 1.7 ms. See [Performance](../reference/performance.md).
 
-	```js
+	```ts
 	requestIdleCallback(() => doc.reparse())
 	```
 
 3. Forward every change as an `edit`. Offsets are UTF-16 code units, the units of JavaScript strings.
 
-	```js
+	```ts
 	doc.edit(start, oldEnd, inserted) // replaces [start, oldEnd) with inserted
 	```
 
 4. Read records for the rows you paint. Each decoration is `[start, end, kind, extra]` in a flat `Uint32Array`.
 
-	```js
+	```ts
 	const records = doc.decorationsForRows(firstRow, lastRow + 1)
 	for (let i = 0; i < records.length; i += 4) {
 		const [start, end, kind, extra] = records.subarray(i, i + 4)
@@ -38,7 +38,7 @@ Feed keystrokes to a `MarkdownDocument` and read decoration records, highlight c
 
 5. Read highlight captures, folds and fence injections for the same range.
 
-	```js
+	```ts
 	const captures = doc.highlights(from, to) // [start, end, capture]; CAPTURES[capture] is the name
 	const folds = doc.folds(from, to) // [start, end]
 	const fences = doc.injections(from, to) // [contentStart, contentEnd, languageStart, languageEnd]

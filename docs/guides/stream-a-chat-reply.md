@@ -1,10 +1,10 @@
 # How to render a streaming chat reply
 
-Append each chunk of a model reply to a `MarkdownDocument` and read an `'open'` presentation after each one. Unfinished bold, links and math render as they will end up. You need the package installed as in the [README quick start](../../README.md#quick-start).
+Append each chunk of a model reply to a `MarkdownDocument` and read an `'open'` presentation after each one. Unfinished bold, links and math render as they will end up. You need the package installed as in the [README install section](../../README.md#install).
 
 1. Create a document with the chat options.
 
-	```js
+	```ts
 	import { init, MarkdownDocument } from 'tree-sitter-md'
 
 	await init()
@@ -17,9 +17,9 @@ Append each chunk of a model reply to a `MarkdownDocument` and read an `'open'` 
 
 2. Append every chunk with `edit` and keep a running length.
 
-	```js
+	```ts
 	let length = 0
-	function append(chunk) {
+	function append(chunk: string) {
 		doc.edit(length, length, chunk)
 		length += chunk.length
 	}
@@ -27,7 +27,7 @@ Append each chunk of a model reply to a `MarkdownDocument` and read an `'open'` 
 
 3. After each chunk, read `presentation({ input: 'open' })` and render `root`.
 
-	```js
+	```ts
 	append(chunk)
 	const live = doc.presentation({ input: 'open' })
 	render(live.root)

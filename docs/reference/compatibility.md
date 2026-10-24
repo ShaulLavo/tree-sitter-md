@@ -21,7 +21,7 @@ The wasm modules are platform independent. Tested operating systems are macOS on
 
 tree-sitter-md needs tree-sitter-x because it needs the `heap` and `loadExtension` exports. They let the resolver share the host's WebAssembly memory and tree-sitter C API. tree-sitter-x is a fork of the tree-sitter web runtime that adds them. Stock `web-tree-sitter` has neither.
 
-The working install command, which the README quick start uses:
+The working install command, which the README install section uses:
 
 ```sh
 npm install github:ShaulLavo/tree-sitter-md#main web-tree-sitter@github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385

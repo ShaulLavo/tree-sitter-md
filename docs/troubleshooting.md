@@ -8,9 +8,9 @@ The failures people hit first, each reproduced against this repository.
 SyntaxError: The requested module 'web-tree-sitter' does not provide an export named 'heap'
 ```
 
-Your project resolved `web-tree-sitter` to the stock npm package. tree-sitter-md needs the tree-sitter-x build, which exports `heap` and `loadExtension`. Stock 0.26.9 and 0.27.1 both fail this way.
+Your project is running regular tree-sitter, the `web-tree-sitter` package from npm, instead of tree-sitter-x. tree-sitter-md needs tree-sitter-x, which exports `heap` and `loadExtension`. Regular tree-sitter 0.26.9 and 0.27.1 both fail this way.
 
-1. Run `npm ls web-tree-sitter` and find which package pulled the stock build.
+1. Run `npm ls web-tree-sitter` and find which package pulled the regular build.
 2. Install the pinned build and force it with `overrides`. See [Compatibility](reference/compatibility.md#host-runtime) for the exact `package.json`.
 
 The block grammar alone does not need tree-sitter-x. See [How to use the block grammar in another tree-sitter host](guides/use-the-grammar-alone.md).
@@ -55,7 +55,7 @@ TypeError: tree-sitter-md: edit requires a valid UTF-16 range and string
 
 `init()` resolves the default `.wasm` URLs relative to `js/index.js`, and the host runtime resolves its own `.wasm` the same way. Vite's dependency pre-bundling moves those files, so the URLs stop resolving. Import each file as a URL and pass it in. This is the setup that `bun run test:package` builds with Vite and runs in Chromium:
 
-```js
+```ts
 import { Parser } from 'web-tree-sitter'
 import host from 'web-tree-sitter/web-tree-sitter.wasm?url'
 import grammar from 'tree-sitter-md/tree-sitter-markdown.wasm?url'

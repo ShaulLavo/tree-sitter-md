@@ -4,11 +4,11 @@ The block grammar is an ordinary tree-sitter grammar. Use it without the resolve
 
 There are no packaged bindings for Rust, Python or other languages. You load the `.wasm` file in a web host, or compile `parser.c` and `scanner.c` into a native host.
 
-## Load the wasm grammar in JavaScript
+## Load the wasm grammar in TypeScript
 
 Install `web-tree-sitter` and take `tree-sitter-markdown.wasm` from the package. Stock `web-tree-sitter` 0.27.1 from npm works for the grammar alone:
 
-```js
+```ts
 import { Parser, Language } from 'web-tree-sitter'
 import { readFile } from 'node:fs/promises'
 

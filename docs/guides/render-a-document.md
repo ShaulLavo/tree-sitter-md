@@ -1,10 +1,10 @@
 # How to render a document from `semantics()`
 
-`semantics()` returns the whole document as a tree with decoded text, resolved links and source ranges. Walk it to produce HTML, terminal output, or any other view. You need the package installed as in the [README quick start](../../README.md#quick-start).
+`semantics()` returns the whole document as a tree with decoded text, resolved links and source ranges. Walk it to produce HTML, terminal output, or any other view. You need the package installed as in the [README install section](../../README.md#install).
 
 1. Parse the text and read the tree.
 
-	```js
+	```ts
 	import { init, MarkdownDocument } from 'tree-sitter-md'
 
 	await init()
@@ -20,33 +20,42 @@
 
 This renderer covers the common nodes, escapes text, and replaces unsafe link schemes:
 
-```js
-const escape = (text) => text.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
-const safeUrl = (url) => (/^(https?:|mailto:|#|\/)/i.test(url) ? url : '#')
+```ts
+import type { SemanticBlock, SemanticInline } from 'tree-sitter-md'
 
-const inline = (nodes) => nodes.map((node) => {
-	switch (node.type) {
-		case 'text': return escape(node.value)
-		case 'code': return `<code>${escape(node.value)}</code>`
-		case 'emphasis': return `<em>${inline(node.children)}</em>`
-		case 'strong': return `<strong>${inline(node.children)}</strong>`
-		case 'delete': return `<del>${inline(node.children)}</del>`
-		case 'link': return `<a href="${escape(safeUrl(node.url))}">${inline(node.children)}</a>`
-		case 'break': return '<br>'
-		default: return '' // html, image, math, footnoteReference: decide per app
-	}
-}).join('')
+const escape = (text: string) =>
+	text.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
+const safeUrl = (url: string) => (/^(https?:|mailto:|#|\/)/i.test(url) ? url : '#')
 
-const block = (nodes) => nodes.map((node) => {
-	switch (node.type) {
-		case 'heading': return `<h${node.depth}>${inline(node.children)}</h${node.depth}>`
-		case 'paragraph': return `<p>${inline(node.children)}</p>`
-		case 'quote': return `<blockquote>${block(node.children)}</blockquote>`
-		case 'code': return `<pre><code>${escape(node.value)}</code></pre>`
-		case 'list': return `<ul>${node.items.map((item) => `<li>${block(item.children)}</li>`).join('')}</ul>`
-		default: return '' // html, table, math, definition: decide per app
-	}
-}).join('\n')
+const inline = (nodes: readonly SemanticInline[]): string =>
+	nodes
+		.map((node) => {
+			switch (node.type) {
+				case 'text': return escape(node.value)
+				case 'code': return `<code>${escape(node.value)}</code>`
+				case 'emphasis': return `<em>${inline(node.children)}</em>`
+				case 'strong': return `<strong>${inline(node.children)}</strong>`
+				case 'delete': return `<del>${inline(node.children)}</del>`
+				case 'link': return `<a href="${escape(safeUrl(node.url))}">${inline(node.children)}</a>`
+				case 'break': return '<br>'
+				default: return '' // html, image, math, footnoteReference: decide per app
+			}
+		})
+		.join('')
+
+const block = (nodes: readonly SemanticBlock[]): string =>
+	nodes
+		.map((node) => {
+			switch (node.type) {
+				case 'heading': return `<h${node.depth}>${inline(node.children)}</h${node.depth}>`
+				case 'paragraph': return `<p>${inline(node.children)}</p>`
+				case 'quote': return `<blockquote>${block(node.children)}</blockquote>`
+				case 'code': return `<pre><code>${escape(node.value)}</code></pre>`
+				case 'list': return `<ul>${node.items.map((item) => `<li>${block(item.children)}</li>`).join('')}</ul>`
+				default: return '' // html, table, math, definition: decide per app
+			}
+		})
+		.join('\n')
 ```
 
 Run on `# Hello` and a paragraph with a safe link, an unsafe `javascript:` link and a `<script>` tag, it prints:
