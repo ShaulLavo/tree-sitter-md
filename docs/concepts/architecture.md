@@ -20,7 +20,7 @@ The [upstream tree-sitter-markdown](https://github.com/tree-sitter-grammars/tree
 | Part | Where | Job |
 | --- | --- | --- |
 | Block grammar | `grammar/`, built as `tree-sitter-markdown.wasm` | Block structure. One token per line. The scanner validates leading reference definitions with cmark. |
-| CHAT grammar | `grammar/chat/`, built as `tree-sitter-markdown-chat.wasm` | The same grammar plus `$$` flow math. Selected by `math: true`. See [ADR 004](../adr/004-chat-profile-as-a-separate-grammar.md). |
+| math grammar | `grammar/chat/`, built as `tree-sitter-markdown-chat.wasm` | The same grammar plus `$$` flow math. Selected by `math: true`. See [ADR 004](../adr/004-math-as-a-separate-grammar.md). |
 | Resolver | `src/` and `vendor/cmark/`, built as `tree-sitter-md.wasm` | Leaf mapping, cmark's inline pass, GFM autolinks, definitions, footnotes, records, highlights, folds, injections, semantic and presentation extraction. |
 | Binding | `js/` | `MarkdownDocument`. Writes UTF-16 text into shared memory and copies results out. |
 
@@ -39,7 +39,7 @@ A leaf is the unit of reuse. A very large single paragraph, table or code block 
 
 ## Why records and snapshots
 
-Editors ask for small answers about a few rows, many times per second. `decorations`, `highlights`, `folds` and `injections` return flat `Uint32Array` records for a range and nothing else. Renderers ask for the whole document once. `semantics()` returns a complete owned tree with decoded text. Both come from the same parse.
+Editors ask for small answers about a few rows, many times per second. `decorations`, `highlights` and `injections` return flat `Uint32Array` records for a range and nothing else. Renderers ask for the whole document once. `semantics()` returns a complete owned tree with decoded text. Both come from the same parse.
 
 `presentation({ input })` serves chat renderers. With `input: 'open'`, the resolver treats the end of the text as provisional, so an unclosed `**` renders as bold and an unclosed `[label` becomes a pending link. With `input: 'ended'`, it returns the exact tree. See the [chat guide](../guides/stream-a-chat-reply.md).
 

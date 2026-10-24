@@ -25,7 +25,7 @@ npm install github:ShaulLavo/tree-sitter-md#main web-tree-sitter@github:ShaulLav
 
 That installs tree-sitter-x under the name `web-tree-sitter`, which is the name tree-sitter-md imports. It needs Node 26 or later, or Bun 1.4.4. tree-sitter-x's runtime uses resizable WebAssembly memory, and Node 24 does not have it.
 
-tree-sitter-md is not on npm at its current version. The two npm releases predate `semantics()`, `presentation()` and the CHAT grammar.
+tree-sitter-md is not on npm at its current version. The two npm releases predate `semantics()`, `presentation()` and the math grammar.
 
 ## Use it
 
@@ -54,7 +54,7 @@ list
 
 ## What you can do
 
-- **Highlight and fold Markdown in an editor.** [How to highlight and fold Markdown in an editor](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/guides/highlight-an-editor.md)
+- **Highlight Markdown in an editor.** [How to highlight Markdown in an editor](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/guides/highlight-an-editor.md)
 - **Render a document to HTML or another view.** [How to render a document from `semantics()`](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/guides/render-a-document.md)
 - **Render a streaming chat reply.** Unclosed bold renders as bold, and a half-typed link stays pending until it closes. [How to render a streaming chat reply](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/guides/stream-a-chat-reply.md)
 - **Use only the block grammar.** [How to use the block grammar in another tree-sitter host](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/guides/use-the-grammar-alone.md)
@@ -62,7 +62,7 @@ list
 ## Why
 
 - **Cheap edits.** On an Apple M1, typing in a 1 MB document costs a median 0.66 ms per keystroke, including decorations for the 60 rows around the edit. lezer, in the same process on the same edits, took 0.95 ms. Numbers and method: [Performance](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/performance.md).
-- **Two kinds of reader, one parse.** Editors get flat records for the rows on screen: decorations, highlights, folds, fence injections. Renderers get a complete tree. Chat UIs get an `open` view of a partial message and an `ended` view of a finished one.
+- **Two kinds of reader, one parse.** Editors get flat records for the rows on screen: decorations, highlights, fence injections. Renderers get a complete tree. Chat UIs get an `open` view of a partial message and an `ended` view of a finished one.
 - **Checked against references.** All 676 CommonMark 0.31.2 and GFM examples match micromark, 183 of 183 chat messages and 489 of 497 repository documents match, and an incremental edit equals a fresh parse in 11,300 fuzzed edits. See [Supported syntax](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/syntax.md#conformance).
 
 <picture>
@@ -80,16 +80,16 @@ A block grammar for tree-sitter-x finds the blocks: headings, lists, quotes, fen
 
 - Guides: the four above.
 - Concepts: [How tree-sitter-md works](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/concepts/architecture.md)
-- Reference: [Supported syntax](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/syntax.md) · [Node types and record kinds](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/node-types.md) · [API](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/api.md) · [Snapshots](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/snapshots.md) · [Source fidelity](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/source-fidelity.md) · [CHAT profile](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/chat-profile.md) · [Compatibility and limits](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/compatibility.md) · [Performance](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/performance.md) · [Source provenance](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/provenance.md)
+- Reference: [Supported syntax](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/syntax.md) · [Node types and record kinds](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/node-types.md) · [API](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/api.md) · [Snapshots](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/snapshots.md) · [Source fidelity](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/source-fidelity.md) · [Math](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/math.md) · [Compatibility and limits](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/compatibility.md) · [Performance](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/performance.md) · [Source provenance](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/provenance.md)
 - [Troubleshooting](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/troubleshooting.md)
-- Decisions: [001](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/adr/001-block-grammar-one-token-per-line.md) · [002](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/adr/002-c-inline-resolver-from-cmark.md) · [003](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/adr/003-resolver-as-a-tree-sitter-x-extension.md) · [004](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/adr/004-chat-profile-as-a-separate-grammar.md)
+- Decisions: [001](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/adr/001-block-grammar-one-token-per-line.md) · [002](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/adr/002-c-inline-resolver-from-cmark.md) · [003](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/adr/003-resolver-as-a-tree-sitter-x-extension.md) · [004](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/adr/004-math-as-a-separate-grammar.md)
 - [Changelog](https://github.com/ShaulLavo/tree-sitter-md/blob/main/CHANGELOG.md) · [Development](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/development.md)
 
 ## Status
 
 Pre-1.0, at 0.1.32 in `package.json`. Expect changes between 0.1.x releases.
 
-- **npm.** `tree-sitter-md` on npm has only 0.1.0 and 0.1.1, both from 2026-09-28. 0.1.1 has no `semantics()`, no `presentation()`, no CHAT grammar and no `cjk` or `math` options. Install from Git as above.
+- **npm.** `tree-sitter-md` on npm has only 0.1.0 and 0.1.1, both from 2026-09-28. 0.1.1 has no `semantics()`, no `presentation()`, no math grammar and no `cjk` or `math` options. Install from Git as above.
 - **Runtimes.** Tested on Node 26, Bun 1.4.4 and Chromium 153. Node 24 fails at `init()`. Firefox and WebKit are not tested. See [Compatibility and limits](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/compatibility.md).
 - **Runtime.** It needs tree-sitter-x. Stock tree-sitter is not supported, apart from the block grammar alone, which still loads there today.
 - **Size.** `init()` loads all three `.wasm` files, 154,284 bytes gzip, plus the wrapper. See [Performance](https://github.com/ShaulLavo/tree-sitter-md/blob/main/docs/reference/performance.md#size).

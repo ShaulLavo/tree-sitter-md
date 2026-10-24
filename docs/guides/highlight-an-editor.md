@@ -1,6 +1,6 @@
-# How to highlight and fold Markdown in an editor
+# How to highlight Markdown in an editor
 
-Feed keystrokes to a `MarkdownDocument` and read decoration records, highlight captures, folds and fence injections for the rows on screen. You need the package installed as in the [README install section](../../README.md#install).
+Feed keystrokes to a `MarkdownDocument` and read decoration records, highlight captures and fence injections for the rows on screen. You need the package installed as in the [README install section](../../README.md#install).
 
 1. Create one document per open file and load the text.
 
@@ -36,11 +36,10 @@ Feed keystrokes to a `MarkdownDocument` and read decoration records, highlight c
 	}
 	```
 
-5. Read highlight captures, folds and fence injections for the same range.
+5. Read highlight captures and fence injections for the same range.
 
 	```ts
 	const captures = doc.highlights(from, to) // [start, end, capture]; CAPTURES[capture] is the name
-	const folds = doc.folds(from, to) // [start, end]
 	const fences = doc.injections(from, to) // [contentStart, contentEnd, languageStart, languageEnd]
 	```
 
@@ -59,7 +58,6 @@ CodeBlock(1)    69 89 "```js\nlet a = 1\n```\n"
 FenceMark(0)    69 72 "```"
 CodeInfo(0)     72 74 "js"
 FenceMark(0)    85 88 "```"
-folds [ 0, 88, 69, 88 ]
 fence js "let a = 1\n"
 ````
 

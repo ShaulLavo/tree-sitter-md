@@ -6,7 +6,7 @@ Set up, build, test and measure tree-sitter-md. For how the parts fit together, 
 
 | Path | Contents |
 | --- | --- |
-| `grammar/` | The base block grammar (`grammar.js`, `src/scanner.c`) and the CHAT profile in `grammar/chat/`. `src/` and `chat/src/` are generated. |
+| `grammar/` | The base block grammar (`grammar.js`, `src/scanner.c`) and the math grammar in `grammar/chat/`. `src/` and `chat/src/` are generated. |
 | `src/document.c` | The UTF-16 document, the incremental tree, definitions, the per-leaf cache, record walks and the wasm exports. |
 | `src/leaf.c` | Leaf content and continuation mapping. Runs cmark's inline pass with no block parse. |
 | `src/semantic.c`, `src/footnote.c` | `semantics()` and `presentation()` extraction, footnotes. |
@@ -91,7 +91,7 @@ PLAYWRIGHT=$PWD/../node_modules/playwright/index.js bun chromium.mjs   # cold lo
 cd .. && node bench/presentation.mjs --samples 15 --warmup 2           # complete-document reads
 ```
 
-`bench/chromium.mjs` defaults `PLAYWRIGHT` to a path on the owner's machine, so set it. Results and method are in [Performance](reference/performance.md). `bench/corpus.mjs` reads the [chat corpus](../bench/corpus/README.md) by default. Set `CHAT=/path/to/chat.json` to use another.
+`bench/chromium.mjs` defaults `PLAYWRIGHT` to a path on the owner's machine, so set it. Results and method are in [Performance](reference/performance.md). `bench/corpus.mjs` reads the [corpus of chat messages](../bench/corpus/README.md) by default. Set `CHAT=/path/to/chat.json` to use another.
 
 `scripts/compare-builds.sh` and `scripts/summarize.mjs` run paired timings of two builds. `scripts/snapshot-repositories.mjs` regenerates the repository corpus snapshot from checkouts of the two source repositories.
 

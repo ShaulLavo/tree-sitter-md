@@ -1,4 +1,4 @@
-# 004. Ship the CHAT profile as a second block grammar
+# 004. Ship the math grammar as a second block grammar
 
 Status: accepted
 Date: 2026-10-19
@@ -20,7 +20,7 @@ Derive a second grammar in `grammar/chat/`. `grammar/chat/grammar.js` extends th
 
 ## Consequences
 
-- `init()` loads both grammars even when no document uses math. The CHAT grammar is 143,368 bytes raw and 28,755 gzip.
+- `init()` loads both grammars even when no document uses math. The math grammar is 143,368 bytes raw and 28,755 gzip.
 - Two parsers to regenerate: `npm run generate` runs the tree-sitter CLI in `grammar/` and `grammar/chat/`.
-- The base grammar's behavior is unchanged by math work, and the CHAT grammar has its own tests in both profiles.
-- Documents never share scanner state across profiles. See [CHAT profile](../reference/chat-profile.md).
+- The base grammar's behavior is unchanged by math work, and the math grammar has its own tests in both profiles.
+- Documents never share scanner state across profiles. See [Math](../reference/math.md).

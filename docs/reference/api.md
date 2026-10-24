@@ -21,7 +21,7 @@ Loads the grammars and the resolver into the host's `web-tree-sitter` runtime. C
 | Option | Loads | Default |
 | --- | --- | --- |
 | `grammar` | The base block grammar. A `Language` that the host already loaded is used as is. | `../tree-sitter-markdown.wasm`, relative to `js/index.js`. |
-| `chatGrammar` | The CHAT block grammar, used by documents with `math: true`. Accepts the same inputs. | `../tree-sitter-markdown-chat.wasm`. |
+| `chatGrammar` | The math block grammar, used by documents with `math: true`. Accepts the same inputs. | `../tree-sitter-markdown-chat.wasm`. |
 | `resolver` | The inline resolver, loaded as a tree-sitter-x extension. | `../tree-sitter-md.wasm`. |
 
 - A default `file:` URL is read with `node:fs/promises`. Any other URL is fetched.
@@ -35,7 +35,7 @@ Loads the grammars and the resolver into the host's `web-tree-sitter` runtime. C
 new MarkdownDocument(options?: { gfm?: boolean; frontmatter?: boolean; cjk?: boolean; math?: boolean })
 ```
 
-Defaults are `gfm: true`, `frontmatter: false`, `cjk: false`, `math: false`. See [Supported syntax](syntax.md#options). The options are fixed for the life of the document. A document with `math: true` parses with the CHAT grammar. Documents do not share parser state.
+Defaults are `gfm: true`, `frontmatter: false`, `cjk: false`, `math: false`. See [Supported syntax](syntax.md#options). The options are fixed for the life of the document. A document with `math: true` parses with the math grammar. Documents do not share parser state.
 
 The constructor throws `Error: tree-sitter-md: call init() first` before `init` has resolved.
 

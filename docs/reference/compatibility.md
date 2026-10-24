@@ -69,4 +69,4 @@ The default `.wasm` URLs resolve from `import.meta.url`. Bundlers that move the 
 
 ## Stability
 
-Pre-1.0. The package is at 0.1.32. The `semantics()` and `presentation()` types gained fields between 0.1.x releases (see the [changelog](../../CHANGELOG.md)), and the project makes no compatibility promise across them. npm has only 0.1.0 and 0.1.1 (2026-09-28). 0.1.1 has the record methods (`decorations`, `highlights`, `folds`, `injections`) and no `semantics()`, `presentation()`, CHAT grammar, or `cjk` and `math` options. Install from Git.
+Pre-1.0. The package is at 0.1.32. The `semantics()` and `presentation()` types gained fields between 0.1.x releases (see the [changelog](../../CHANGELOG.md)), and the project makes no compatibility promise across them. npm has only 0.1.0 and 0.1.1 (2026-09-28). 0.1.1 has the record methods (`decorations`, `highlights`, `folds`, `injections`) and no `semantics()`, `presentation()`, math grammar, or `cjk` and `math` options. Install from Git.

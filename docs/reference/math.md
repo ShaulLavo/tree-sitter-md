@@ -1,6 +1,8 @@
-# CHAT profile
+# Math
 
-`math: true` selects a separate block grammar, `tree-sitter-markdown-chat.wasm`, and turns on `$$` math. `math: false` keeps the base grammar and its ordinary lazy paragraph continuations. The profile belongs to each document, and scanner state is not shared between documents.
+`math: true` turns on `$$` math. It does this by parsing blocks with a second block grammar, `tree-sitter-markdown-chat.wasm`. `math: false` keeps the base grammar and its ordinary lazy paragraph continuations. The choice belongs to each document, and scanner state is not shared between documents.
+
+The second grammar is the base grammar plus `$$` flow math blocks, and nothing else. The word "chat" in the file name, in the `chatGrammar` option of `init()`, and in the `'fregat-chat'` profile label is a historical name: the grammar was built for a chat panel, but nothing in it is specific to chat. Read it as "the math grammar".
 
 `semantics().profile` is `'fregat-chat'` when `gfm` is true and `cjk` or `math` is true. The `cjk` option alone does not change the grammar. It changes emphasis flanking and autolink trimming. See [Supported syntax](syntax.md#options).
 
@@ -34,4 +36,4 @@ Ranges use original UTF-16 offsets. A full container prefix received at the end 
 
 An unfinished block at eligible end of source becomes `pendingMath` in an `'open'` presentation. Leaving a container does not make a block pending. An `'ended'` presentation keeps exact `math`.
 
-The grammar nodes are `math_flow`, `math_flow_delimiter`, `math_flow_meta` and `math_flow_content`. See [Node types](node-types.md#added-by-the-chat-grammar). The source of the grammar changes is listed in [Source provenance](provenance.md).
+The grammar nodes are `math_flow`, `math_flow_delimiter`, `math_flow_meta` and `math_flow_content`. See [Node types](node-types.md#added-by-the-math-grammar). The source of the grammar changes is listed in [Source provenance](provenance.md).

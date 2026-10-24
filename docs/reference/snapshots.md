@@ -23,7 +23,7 @@ A presentation snapshot adds `input`, `source`, `provisional`, `suppressed` and 
 | `list` | `ordered`, `start` (number or `null`), `spread`, `items` |
 | `code` | `value`, `language`, `meta`, `fence` (`'open'`, `'closed'` or `'indented'`) |
 | `html` | `value` |
-| `math` | `value`, `meta` (CHAT only, nullable) |
+| `math` | `value`, `meta` (only with `math: true`, nullable) |
 | `thematicBreak` | none |
 | `table` | `align` (`'left'`, `'center'`, `'right'` or `null` per column), `rows` |
 | `definition` | `identifier`, `url`, `title` |

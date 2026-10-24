@@ -11,7 +11,7 @@ What the parser recognizes, which option turns each part on, and how closely it 
 | `gfm` | `true` | Pipe tables, task list items, strikethrough, GFM autolink literals, footnotes. |
 | `frontmatter` | `false` | A leading metadata block fenced by `---` or `+++`. |
 | `cjk` | `false` | CJK-aware emphasis flanking, and CJK boundary trimming for autolink literals. |
-| `math` | `false` | The CHAT profile: `$$` inline math and `$$` flow math. See [CHAT profile](chat-profile.md). |
+| `math` | `false` | The math grammar: `$$` inline math and `$$` flow math. See [Math](math.md). |
 
 With `gfm: false`, a pipe table is a paragraph, `~~x~~` and `www.example.com` stay text, `- [x]` stays text, and `[^1]` is not a footnote.
 
@@ -33,7 +33,7 @@ With `gfm: false`, a pipe table is a paragraph, `~~x~~` and `www.example.com` st
 | Task list items (`gfm`) | `[ ]` and `[x]`. `checked` is `null` for items without a task marker. |
 | Footnote definitions (`gfm`) | `[^label]: body`, with block content. |
 | Frontmatter (`frontmatter`) | The closing delimiter must match the opening one. Body offsets stay in original UTF-16 units. Definitions inside metadata do not resolve body links. `semantics()` omits the block. `decorations()` reports it as `Frontmatter`. |
-| Flow math (`math`) | A line starting with at least two `$`. See [CHAT profile](chat-profile.md#flow-blocks). |
+| Flow math (`math`) | A line starting with at least two `$`. See [Math](math.md#flow-blocks). |
 
 Containers nest to a depth of 200. A `>` or list marker past that depth is source text. Without the limit, the scanner state would overflow tree-sitter's fixed serialization buffer, and the resulting trap could damage other documents that share the runtime.
 

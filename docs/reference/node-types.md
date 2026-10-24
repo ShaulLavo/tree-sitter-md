@@ -12,7 +12,7 @@ The grammars parse block structure only. A paragraph, heading text, table row or
 
 ## Block grammar node types
 
-`tree-sitter-markdown.wasm` has 38 named types. The CHAT grammar adds the four `math_flow*` types, for 42. This is the complete list of the base grammar:
+`tree-sitter-markdown.wasm` has 38 named types. The math grammar adds the four `math_flow*` types, for 42. This is the complete list of the base grammar:
 
 ```text
 document section atx_heading setext_heading thematic_break paragraph inline
@@ -26,7 +26,7 @@ setext_h1_underline setext_h2_underline
 block_continuation block_quote_marker fenced_code_block_delimiter
 ```
 
-To regenerate the list, run this in a checkout of the repository (`git clone https://github.com/ShaulLavo/tree-sitter-md`). The `grammar/` directory is not part of the installed package. Use `grammar/chat/src/node-types.json` for the CHAT grammar.
+To regenerate the list, run this in a checkout of the repository (`git clone https://github.com/ShaulLavo/tree-sitter-md`). The `grammar/` directory is not part of the installed package. Use `grammar/chat/src/node-types.json` for the math grammar.
 
 ```sh
 node -e 'for (const n of JSON.parse(require("fs").readFileSync("grammar/src/node-types.json"))) if (n.named) console.log(n.type)'
@@ -56,9 +56,9 @@ Real output of `Parser.parse` on `# Title`, a paragraph, a pipe table, a fenced 
 | `reference_definition` | `[label]: destination "title"`. | `inline`. |
 | `block_continuation` | The container prefix at the start of a continuation line (for example `> `). | |
 
-### Added by the CHAT grammar
+### Added by the math grammar
 
-`tree-sitter-markdown-chat.wasm` is selected when `math: true`. See [CHAT profile](chat-profile.md).
+`tree-sitter-markdown-chat.wasm` is selected when `math: true`. See [Math](math.md).
 
 | Node type | Meaning |
 | --- | --- |

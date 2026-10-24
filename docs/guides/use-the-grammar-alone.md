@@ -6,20 +6,25 @@ There are no packaged bindings for Rust, Python or other languages. You load the
 
 ## Load the wasm grammar in TypeScript
 
-Install `web-tree-sitter` and take `tree-sitter-markdown.wasm` from the package. Stock `web-tree-sitter` 0.27.1 from npm works for the grammar alone:
+Install `web-tree-sitter` next to the package. Regular `web-tree-sitter` 0.27.1 from npm works for the grammar alone. The package's `exports` map publishes the `.wasm` files, so you resolve the grammar the way you resolve any module:
 
 ```ts
-import { Parser, Language } from 'web-tree-sitter'
-import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+import { Language, Parser } from 'web-tree-sitter'
 
 await Parser.init()
-const markdown = await Language.load(await readFile('node_modules/tree-sitter-md/tree-sitter-markdown.wasm'))
+const markdown = await Language.load(
+	fileURLToPath(import.meta.resolve('tree-sitter-md/tree-sitter-markdown.wasm')),
+)
+
 const parser = new Parser()
 parser.setLanguage(markdown)
 
 const tree = parser.parse('# Title\n\nSome *text*.\n\n- [x] done\n')
-console.log(tree.rootNode.toString())
+console.log(tree?.rootNode.toString())
 ```
+
+In a bundler, import the file as a URL instead, for example `tree-sitter-md/tree-sitter-markdown.wasm?url` in Vite, and pass that to `Language.load`.
 
 Real output, the same on stock 0.27.1 and on the tree-sitter-x build pinned in `package.json`:
 
@@ -27,7 +32,7 @@ Real output, the same on stock 0.27.1 and on the tree-sitter-x build pinned in `
 (document (section (atx_heading (atx_h1_marker) heading_content: (inline)) (paragraph (inline)) (list (list_item (list_marker_minus) (task_list_marker_checked) (paragraph (inline))))))
 ```
 
-Use `tree-sitter-markdown-chat.wasm` for the CHAT grammar, which adds `math_flow` nodes. The node names are in [Node types and record kinds](../reference/node-types.md).
+Use `tree-sitter-markdown-chat.wasm` for the math grammar, which adds `math_flow` nodes. The file name keeps the grammar's historical "chat" name. The node names are in [Node types and record kinds](../reference/node-types.md).
 
 ## Compile the grammar into a native host
 
@@ -66,7 +71,7 @@ clang -std=c11 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE \
 
 It prints the same tree as the JavaScript example. This was run against tree-sitter-x commit `5c7a2916cdfa93f107833ddaa67688ec16d88a7d`, the one CI uses for the native tests. Other tree-sitter runtimes that load ABI 15 grammars are untested.
 
-The CHAT grammar is `grammar/chat/src/parser.c` with `grammar/chat/scanner.c`, and its entry point is `tree_sitter_markdown_chat`.
+The math grammar is `grammar/chat/src/parser.c` with `grammar/chat/scanner.c`, and its entry point is `tree_sitter_markdown_chat`.
 
 ## Edit and reparse
 
