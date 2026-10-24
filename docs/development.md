@@ -1,100 +1,104 @@
 # Development
 
-Markdown for editors on [tree-sitter-x](https://github.com/ShaulLavo/tree-sitter-x): a
-tree-sitter block grammar (a fork of
-[tree-sitter-markdown](https://github.com/tree-sitter-grammars/tree-sitter-markdown) with one
-token per line) and a C inline resolver (cmark 0.31.2's delimiter and bracket stacks,
-document-wide reference definitions, GFM autolink literals). The resolver is a tree-sitter-x
-extension: it runs inside the same runtime and memory as every other language and walks trees in
-C. JavaScript gets compact records for the rows it asks about: decoration ranges and kinds,
-highlight captures, fold ranges and fence injections.
-
-`bun run check` requires all 676 CommonMark/GFM examples, the 183 chat fixtures and the pinned
-497-document repository corpus.
+Set up, build, test and measure tree-sitter-md. For how the parts fit together, read [How tree-sitter-md works](concepts/architecture.md) first.
 
 ## Layout
 
-| Path | What |
+| Path | Contents |
 | --- | --- |
-| `grammar/` | The base block grammar and scanner, plus the derived CHAT profile in `chat/` |
-| `src/document.c` | UTF-16 document, incremental tree, definitions, per-leaf cache, record walks and wasm exports |
-| `src/leaf.c` | Leaf content and continuation mapping; cmark inline pass with no block parse |
-| `src/autolink.c` | GFM autolink literals ported from cmark-gfm |
-| `src/highlight.c` | Highlight captures derived from decoration records |
-| `vendor/` | cmark 0.31.2 inline dependencies; tree-sitter-x's `api.h` |
-| `js/` | The JS binding and types |
-| `bench/` | Spec runner, corpus runner, keystroke benchmark, fuzz test, Chromium cold load, memory |
+| `grammar/` | The base block grammar (`grammar.js`, `src/scanner.c`) and the CHAT profile in `grammar/chat/`. `src/` and `chat/src/` are generated. |
+| `src/document.c` | The UTF-16 document, the incremental tree, definitions, the per-leaf cache, record walks and the wasm exports. |
+| `src/leaf.c` | Leaf content and continuation mapping. Runs cmark's inline pass with no block parse. |
+| `src/semantic.c`, `src/footnote.c` | `semantics()` and `presentation()` extraction, footnotes. |
+| `src/autolink.c`, `src/highlight.c` | GFM autolink literals ported from cmark-gfm. Highlight captures derived from decoration records. |
+| `vendor/` | cmark 0.31.2's inline pass and tree-sitter's `api.h`. See `vendor/README.md`. |
+| `js/` | The JavaScript binding and its types. |
+| `tests/` | JavaScript, native C and fixture tests. `tests/streaming/README.md` describes the streaming fixtures. |
+| `bench/` | Spec runner, corpus runner, keystroke, memory and Chromium benchmarks, fuzz test, benchmark inputs. |
+| `scripts/` | Build, check and gate scripts. |
+| `experiments/perf-next/` | Benchmark and stress probes that take a checkout path. Not part of the package or CI. |
+
+Generated files (`grammar/src/parser.c`, `grammar/chat/src/`) are never edited by hand. Change `grammar.js` and run `npm run generate`.
+
+## Install
+
+You need Node 26 or later and Bun 1.4.4 (the version CI pins).
+
+```sh
+bun install --frozen-lockfile
+cd bench && bun install --frozen-lockfile
+```
+
+The tests import the package from the working tree, and the benchmarks import it through `bench`'s `file:..` dependency. Install the `bench` dependencies before `npm test`, because `tests/semantics.mjs` reads `bench/node_modules/commonmark-spec`.
 
 ## Build
 
-The resolver builds with WASI SDK 34 as a side module (`-fPIC -shared`, no libc): tree-sitter
-and libc come from the tree-sitter-x runtime it is loaded into. Set `WASI_SDK` to the extracted
-SDK directory before building. The grammar builds with the same WASI SDK.
-The tree-sitter CLI is needed only to regenerate parse tables. `npm run generate`
-regenerates both profiles with CLI 0.26.9; generated files are never edited by hand.
-The [CHAT source inventory](chat-math.md#source-inventory) classifies the local changes.
-`web-tree-sitter` is tree-sitter-x's built package (`github:ShaulLavo/tree-sitter-x#<commit>`,
-its `web-tree-sitter` branch). The native tests compile tree-sitter-x's C runtime from a checkout:
-`TREE_SITTER_LIB` is its `lib/`, `../tree-sitter-x/lib` by default.
+The committed `.wasm` files are build outputs. Rebuild them after you change `src/`, `vendor/` or `grammar/`.
 
 ```sh
-npm run generate   # only when changing the grammar; tree-sitter CLI 0.26.9
-npm run build      # resolver, base grammar, and CHAT grammar wasm
-OPT=-Oz npm run build
-npm test           # focused wasm API regressions
-bun run test:types # public exact/presentation type contracts
-sh scripts/check-native.sh  # native clang, ASan + UBSan, incremental edits, leaf mapping and cursor oracle
-sh scripts/check-cursor.sh  # cursor byte/point seeks against sequential traversal, ASan + UBSan
-node bench/cursor-seek.mjs --check  # blank-line viewport cost across a heading-less 1 MB document
+export WASI_SDK=/path/to/wasi-sdk-34.0-x86_64-linux  # WASI SDK 34
+npm run build                                          # resolver and both grammars
+OPT=-Oz npm run build                                  # size build; the default is -O3
+npm run generate                                       # only after editing grammar.js; tree-sitter CLI 0.26.9
 ```
 
-The semantic suite compares complete rendered output with every official
-CommonMark/GFM example and tests decoded payloads, incremental results, source
-mapping and lifetime. Sixteen GFM spec/profile differences have individual
-source and output hashes in `tests/semantic-gfm-differences.json`; changed
-receipts fail the suite. Install `bench` dependencies before running `npm test`.
+`scripts/build.sh` compiles the resolver as a side module (`-fPIC -shared -nostdlib`) that imports tree-sitter's C API and libc from the host. It compiles each grammar with `vendor/cmark/*.c`, because the scanner calls cmark.
 
-The resolver imports only tree-sitter's C API and libc functions the tree-sitter-x runtime
-exports; `tests/resolver.mjs` checks this.
+This page was written without a WASI SDK, so the build commands are documented from `scripts/build.sh` and CI, and were not run here.
 
-## Benchmarks and the spec suite
+## Test
+
+| Command | Checks | Needs |
+| --- | --- | --- |
+| `npm test` | Every `tests/*.mjs` and `tests/*.test.ts` with `node --test`. 2,906 tests passed in about 20 seconds on Node 26.12.1. | Node 26, `bench` dependencies |
+| `bun run test:types` | The public `semantics()` and `presentation()` types in `tests/types/presentation.ts`. | TypeScript 7. If a `tsconfig.json` exists in a parent directory, `tsc` stops with TS5112. Run the command from `package.json` with `--ignoreConfig` added. |
+| `bun run check` | The gate: 676 of 676 spec examples, the 183 chat messages, the 497-document repository corpus against its committed difference manifest, 11,000 and 300 fuzz edits, and the negative controls. About 70 seconds. | `bench` dependencies |
+| `bun run test:browser` | `semantics()` with resizable memory in Chromium. Pass `chromium firefox webkit` to run more browsers. | `bunx playwright install chromium` |
+| `bun run test:package` | Packs the package, installs the tarball in a clean consumer, and runs Node, Bun and a Vite production build in Chromium, each in host-first, markdown-first and concurrent initialization order. | Playwright Chromium |
+| `TREE_SITTER_LIB=/path/to/tree-sitter-x/lib sh scripts/check-native.sh` | Native clang builds with ASan and UBSan: 2,000 incremental edits, leaf mapping, presentation, footnotes and nested lists. | Linux and a tree-sitter-x checkout. CI uses commit `5c7a2916cdfa93f107833ddaa67688ec16d88a7d`. On macOS the script aborts because ASan has no leak detection there. |
+| `TREE_SITTER_LIB=... sh scripts/check-cursor.sh` | Cursor seeks against sequential traversal. | The same as above. |
+| `node bench/cursor-seek.mjs --check` | Blank-line viewport cost in a 1 MB document with no headings. | `bench` dependencies |
+
+`bun run test:package` and `bun run test:browser` passed when this page was written. CI runs everything above except `check-cursor.sh` and `cursor-seek.mjs`, in `.github/workflows/check.yml`.
+
+### Streaming qualification
 
 ```sh
-cd bench && bun install
-node spec.mjs [--fail]                 # CommonMark 0.31.2 + GFM examples against micromark, beside lezer
-node corpus.mjs                       # repository docs (Platform, Editor at pinned commits) and chat messages
-node keystroke.mjs docs/big.md         # first frame, full parse, 200 keystrokes, lezer on the same edits
-node fuzz.mjs docs/agents.md 11000 1    # incremental result equals a fresh parse after random edits
-node memory.mjs                        # wasm memory per document
-bun chromium.mjs                       # cold load and first frame in Chromium, beside lezer
-sh run-all.sh                          # three runs of each keystroke case, then memory
+mkdir -p target/reports
+node --test tests/streaming-qualification.mjs tests/presentation-lifetime.mjs
+node scripts/check-streaming-qualification.mjs > target/reports/streaming-qualification.json
+node --test tests/streaming-driver.mjs tests/streaming.mjs   # authored fixtures
 ```
 
-For the full correctness gate, run `bun run check` from the repository root after
-installing the bench dependencies. This requires 676/676 spec cases, the bundled
-183-message chat corpus, exact differences for the bundled 497-document repository
-corpus, both edit counts and the negative control.
+The report exits 0 for `READY`, 1 for comparison failures and 2 for missing presentation checks. It records artifact hashes, corpus provenance, schedule seeds and failure witnesses. CI keeps the JSON as the `streaming-qualification` artifact. `bun run streaming:qualification` runs the same script.
 
-`bun run test:package` packs the publishable files, installs that tarball in an isolated
-consumer and checks Node, Bun and a Vite production build in Chromium. Install the browser
-with `bunx playwright install chromium` first. Each runtime tests host-first, Markdown-first
-and concurrent initialization, repeated initialization, sibling document isolation and
-continued host parsing. The browser must fetch all four wasm assets, including the host runtime.
+The matrix feeds every UTF-16 prefix and two-chunk boundary of 33 authored fixtures, plus fixed-seed schedules over the pinned chat and repository corpora, through fresh and edited exact, open and ended reads.
 
-`bun run test:browser` checks public semantics with resizable Wasm memory, including
-Unicode, heap growth, edits and retained results after disposal. Pass `chromium firefox webkit`
-to run all three installed Playwright browsers. Set `TREE_SITTER_RUNTIME` to a built runtime
-package directory to check that artifact.
+### Add a regression test
 
-The release workflow runs these checks plus all three wasm builds and native sanitizers.
-The native source revision is pinned separately from the built JavaScript host package. Paired timing checks use `scripts/compare-builds.sh` and
-`scripts/summarize.mjs`.
+Put the source text and expected output in a fixture under `tests/fixtures/` when it came from a saved observation, and keep the original UTF-16 source hash. Write `tests/<topic>.test.ts` beside the others. Compare against output from a reference implementation (cmark, cmark-gfm, micromark), never against this parser's own result. Test both grammar profiles for scanner changes, and edit-then-undo against a fresh parse for anything incremental.
 
-The normalizer (`bench/constructs.mjs`) and method are Plan 176's in the Platform repository, so
-numbers compare with its lezer and tree-sitter measurements. `corpus.mjs` reads the bundled [183-message chat corpus](../bench/corpus/README.md)
-by default. Set `CHAT=/path/to/chat.json` to supply another corpus.
+## Benchmark
+
+```sh
+cd bench
+node spec.mjs [--fail]            # spec examples against micromark, beside lezer
+node corpus.mjs                   # repository docs and chat messages
+sh run-all.sh                     # keystroke runs for both files, then memory
+node fuzz.mjs docs/agents.md 11000 1   # incremental equals fresh after random edits
+node memory.mjs                   # linear memory per document
+PLAYWRIGHT=$PWD/../node_modules/playwright/index.js bun chromium.mjs   # cold load in Chromium
+cd .. && node bench/presentation.mjs --samples 15 --warmup 2           # complete-document reads
+```
+
+`bench/chromium.mjs` defaults `PLAYWRIGHT` to a path on the owner's machine, so set it. Results and method are in [Performance](reference/performance.md). `bench/corpus.mjs` reads the [chat corpus](../bench/corpus/README.md) by default. Set `CHAT=/path/to/chat.json` to use another.
+
+`scripts/compare-builds.sh` and `scripts/summarize.mjs` run paired timings of two builds. `scripts/snapshot-repositories.mjs` regenerates the repository corpus snapshot from checkouts of the two source repositories.
+
+## Versions
+
+Each fix merged so far bumps the patch version in `package.json`, and the changelog has one entry per version. npm has only 0.1.0 and 0.1.1 (2026-09-28). See [Compatibility](reference/compatibility.md#stability).
 
 ## Licensing
 
-MIT, see [LICENSE](../LICENSE). Third-party code includes BSD-2-Clause, MIT and CC0 components. See
-[NOTICE.md](../NOTICE.md) and `licenses/`.
+MIT, see [LICENSE](../LICENSE). Third-party code includes BSD-2-Clause, MIT and CC0 components. See [NOTICE.md](../NOTICE.md), `licenses/` and [Source provenance](reference/provenance.md).

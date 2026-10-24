@@ -1,5 +1,11 @@
-ASCII run batching; a line with non-ASCII or NUL uses the original scalar conversion to its end, then batching resumes.
-Baseline: 680433b989ded6d633139614fd24514859200cc0
-Validation: https://github.com/ShaulLavo/tree-sitter-md/actions/runs/36274087199
+# perf-next
 
-Original correctness gates and comparative stress ran before branch publication. Existing baseline failures remain recorded; benchmark success is not automatic performance approval. The one-off validation workflow is deliberately not part of this branch.
+Benchmark and stress probes for comparing parser builds. Each script takes the path of a tree-sitter-md checkout (`stress.mjs` takes two, a baseline and a candidate) and imports `js/index.js` from it. They are not part of the package or CI.
+
+| Script | Measures |
+| --- | --- |
+| `bench-targets.mjs` | Targeted workloads: reference definitions, tables, continuations, large paragraphs, mixed scripts. |
+| `bench-encodings.mjs` | Edits in ASCII, Hebrew, Chinese and emoji paragraphs. |
+| `keystroke-isolated.mjs`, `warm-keystroke.mjs` | Keystroke cost on `agents.md` and `big.md`, cold and warmed. |
+| `stress.mjs` | Edit and undo sequences compared between a baseline and a candidate. |
+| `public-checks.mjs` | Runs the repository's public checks and writes their output to a directory. |
