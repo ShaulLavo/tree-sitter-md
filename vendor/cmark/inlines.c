@@ -1,3 +1,5 @@
+// Ordered delimiter resolution adapts micromark attention and resolve-all rules.
+// Copyright (c) Titus Wormer <tituswormer@gmail.com>. MIT, see licenses/micromark.txt.
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -975,13 +977,19 @@ static int opener_index(delimiter *closer) {
   }
 }
 
+static bool attention_pair_permitted(delimiter *opener, delimiter *closer) {
+  if (!opener->can_close && !closer->can_open)
+    return true;
+  // Fregat's attention profile applies the rule of three to the original runs.
+  return closer->length % 3 == 0 || (opener->length + closer->length) % 3 != 0;
+}
+
 static bool matching_delimiters(delimiter *opener, delimiter *closer) {
   if (opener->resolved || !opener->can_open || opener->delim_char != closer->delim_char)
     return false;
   if (closer->delim_char == '~')
     return opener->length == closer->length;
-  return !(closer->can_open || opener->can_close) || closer->length % 3 == 0 ||
-         (opener->length + closer->length) % 3 != 0;
+  return attention_pair_permitted(opener, closer);
 }
 
 static delimiter *find_opener(delimiter *closer, bufsize_t bottom) {
