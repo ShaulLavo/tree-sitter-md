@@ -34,7 +34,7 @@ Benchmark inputs, outside the npm package: `bench/spec/gfm-spec.txt` is the cmar
 CC-BY-SA 4.0, John MacFarlane. `bench/web/lezer.min.js` bundles `@lezer/markdown` and
 `@lezer/common`, MIT, Marijn Haverbeke. `bench/docs/` holds text from the
 [Platform](https://github.com/ShaulLavo/platform) repository: `AGENTS.md`, and `docs/` + `plans/`
-concatenated and cut at 1,000,143 characters, the files Plan 176 measured.
+concatenated and cut at 1,000,143 characters.
 
 The adapted GFM domain validator retains the cmark-gfm attribution above.
 Its local changes, the CJK boundary integration and the original regression tests are classified in

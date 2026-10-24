@@ -24,7 +24,7 @@
 - The scanner calls cmark to validate reference definitions. Native hosts compile `vendor/cmark/*.c` with the grammar.
 - Take expected values in new tests from cmark, cmark-gfm or micromark, never from this parser's output. Fixtures keep original UTF-16 source hashes.
 - `bench/docs/` and `bench/spec/` are benchmark inputs. Do not edit them.
-- `bench/chromium.mjs` needs `PLAYWRIGHT=<path to playwright/index.js>`. Its default path exists only on the owner's machine.
+- `bench/chromium.mjs` needs `PLAYWRIGHT=<path to playwright/index.js>`.
 - The resolver loads only into the tree-sitter-x build pinned in `package.json`. Stock `web-tree-sitter` fails on a missing `heap` export.
 - `.changeset/` has no config and no tool reads it.
 - Each fix PR bumps the patch version in `package.json` and adds an entry to `CHANGELOG.md`.

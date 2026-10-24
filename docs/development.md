@@ -59,7 +59,7 @@ This page was written without a WASI SDK, so the build commands are documented f
 | `TREE_SITTER_LIB=... sh scripts/check-cursor.sh` | Cursor seeks against sequential traversal. | The same as above. |
 | `node bench/cursor-seek.mjs --check` | Blank-line viewport cost in a 1 MB document with no headings. | `bench` dependencies |
 
-`bun run test:package` and `bun run test:browser` passed when this page was written. CI runs everything above except `check-cursor.sh` and `cursor-seek.mjs`, in `.github/workflows/check.yml`.
+CI runs everything above except `check-cursor.sh` and `cursor-seek.mjs`, in `.github/workflows/check.yml`.
 
 ### Streaming qualification
 
@@ -91,7 +91,7 @@ PLAYWRIGHT=$PWD/../node_modules/playwright/index.js bun chromium.mjs   # cold lo
 cd .. && node bench/presentation.mjs --samples 15 --warmup 2           # complete-document reads
 ```
 
-`bench/chromium.mjs` defaults `PLAYWRIGHT` to a path on the owner's machine, so set it. Results and method are in [Performance](reference/performance.md). `bench/corpus.mjs` reads the [corpus of chat messages](../bench/corpus/README.md) by default. Set `CHAT=/path/to/chat.json` to use another.
+`bench/chromium.mjs` reads the path of Playwright's `index.js` from the `PLAYWRIGHT` environment variable. Set it. Results and method are in [Performance](reference/performance.md). `bench/corpus.mjs` reads the [corpus of chat messages](../bench/corpus/README.md) by default. Set `CHAT=/path/to/chat.json` to use another.
 
 `scripts/compare-builds.sh` and `scripts/summarize.mjs` run paired timings of two builds. `scripts/snapshot-repositories.mjs` regenerates the repository corpus snapshot from checkouts of the two source repositories.
 

@@ -28,9 +28,10 @@ invent missing semantic structure, or use the expected observation as a fallback
 Exact-parser comparisons use the independent ended root and separately compare
 fresh versus incremental results.
 
-Whole input, codepoint appends, UTF-16-unit appends, and the explicitly named midpoint
-two-chunk schedule run in P0. The Textual regression also has an explicit three-append
-schedule. Exhaustive two-chunk splits and the broader lifecycle matrix remain P4 work.
+The suite runs these chunk schedules: whole input, codepoint appends, UTF-16-unit appends,
+and one named midpoint two-chunk split. The Textual regression also has an explicit
+three-append schedule. Exhaustive two-chunk splits and the broader lifecycle matrix are not
+covered.
 Checkpoints are actively evaluated whenever their source prefix is visited, and are
 also loaded independently so a chunk schedule cannot accidentally skip an oracle.
 
@@ -39,8 +40,7 @@ checkpoint, never a passing comparison. A candidate method's presence alone cann
 make qualification ready. Deliberately corrupted observations must fail through the
 same comparator used for actual candidates.
 
-The corpus currently has 33 fixtures, 76 checkpoints, and all 15 planned behavior
-rows. `fixtures.mjs` contains original authored expectations and source provenance.
+The corpus has 33 fixtures, 76 checkpoints, and 15 behavior rows. `fixtures.mjs` contains original authored expectations and source provenance.
 Its small constructors only build literal semantic nodes and ranges; they do not
 call a parser. Exact ended roots run against the real native parser. The Node
 suite requires every declared presentation checkpoint to pass. Native inline
@@ -59,15 +59,13 @@ bun run streaming:check
 
 The first command checks the corpus, exact parser, and corruption controls. The
 second prints a JSON report and exits `2` while presentation is missing, `1` for a
-comparison failure, or `0` when the declared P0 matrix passes. A passing P0 matrix
-does not establish P4's exhaustive streaming/lifecycle gates or Fregat readiness.
+comparison failure, or `0` when the declared matrix passes. A pass does not cover
+exhaustive chunk splits or the full lifecycle matrix.
 
 Reports include every comparison's result and denominator, a fixture-content hash,
 the recorded source baseline, actual runtime and package versions, runtime pin,
 WASM hashes, and Node/platform identity. They contain no machine-specific source
-paths. Current source inspection confirms that exact renderer semantics, math, CJK,
-and footnotes already exist. This driver exercises that delivered API and reports
-the remaining presentation differences honestly.
+paths. The driver exercises the public API and reports each presentation difference.
 
 The one explicit observer override exists to test the driver at its adapter boundary.
 Normal qualification calls `MarkdownDocument.presentation({ input })` directly; the

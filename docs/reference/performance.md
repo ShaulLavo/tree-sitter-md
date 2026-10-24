@@ -77,7 +77,7 @@ The chat messages come from `bench/corpus/chat.json` (183 messages). A full read
 cd bench && PLAYWRIGHT=$PWD/../node_modules/playwright/index.js bun chromium.mjs
 ```
 
-The script's default `PLAYWRIGHT` path is a checkout that exists only on the owner's machine, so set the variable.
+`PLAYWRIGHT` is the path of Playwright's `index.js`. Set it before running the script.
 
 | Milliseconds | `load` | `first frame` | `full` | `repeated` |
 | --- | ---: | ---: | ---: | ---: |

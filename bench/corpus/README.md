@@ -3,10 +3,7 @@
 `chat.json` contains the 183 assistant messages used by the chat gate in `scripts/check-gates.mjs`. It is a JSON array of unmodified strings ordered by creation time.
 The messages span 59 Platform sessions from September 5–25, 2026.
 
-The corpus was originally exported from Platform's production SQLite state store
-on September 26, 2026. The temporary exports were deleted after benchmarking.
-This copy was recovered from the production backup dated `20260926T133030Z`
-and published as test data at the owner's request.
+The messages come from Platform's SQLite state store.
 
 Extraction query:
 
