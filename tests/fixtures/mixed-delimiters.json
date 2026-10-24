@@ -1,0 +1,198 @@
+[
+  {
+    "source": "~_~a_~",
+    "html": "<p>~_<del>a_</del></p>\n"
+  },
+  {
+    "source": "*~~a*~~",
+    "html": "<p><em>~~a</em>~~</p>\n"
+  },
+  {
+    "source": "*~~*a~~*",
+    "html": "<p><em>~~</em>a~~*</p>\n"
+  },
+  {
+    "source": "~*~a*~",
+    "html": "<p>~*<del>a*</del></p>\n"
+  },
+  {
+    "source": "~~*a*~~",
+    "html": "<p><del><em>a</em></del></p>\n"
+  },
+  {
+    "source": "*~~a~~*",
+    "html": "<p><em><del>a</del></em></p>\n"
+  },
+  {
+    "source": "_~~a~~_",
+    "html": "<p><em><del>a</del></em></p>\n"
+  },
+  {
+    "source": "~~_a_~~",
+    "html": "<p><del><em>a</em></del></p>\n"
+  },
+  {
+    "source": "~_*a*_~",
+    "html": "<p><del><em><em>a</em></em></del></p>\n"
+  },
+  {
+    "source": "**~~a**~~",
+    "html": "<p><strong>~~a</strong>~~</p>\n"
+  },
+  {
+    "source": "~~**a~~**",
+    "html": "<p><del>**a</del>**</p>\n"
+  },
+  {
+    "source": "_~a_~",
+    "html": "<p><em>~a</em>~</p>\n"
+  },
+  {
+    "source": "~_a~_",
+    "html": "<p><del>_a</del>_</p>\n"
+  },
+  {
+    "source": "* ~_~a_~",
+    "html": "<ul>\n<li>~_<del>a_</del></li>\n</ul>\n"
+  },
+  {
+    "source": "_ ~_~a_~",
+    "html": "<p>_ <del><em>~a</em></del></p>\n"
+  },
+  {
+    "source": "*** ~_~a_~",
+    "html": "<p>*** <del><em>~a</em></del></p>\n"
+  },
+  {
+    "source": "~~~ ~_~a_~",
+    "html": "<pre><code class=\"language-~_~a_~\"></code></pre>\n"
+  },
+  {
+    "source": "a_ ~_~a_~",
+    "html": "<p>a_ <del><em>~a</em></del></p>\n"
+  },
+  {
+    "source": "~a~ *~~b*~~",
+    "html": "<p><del>a</del> *<del>b*</del></p>\n"
+  },
+  {
+    "source": "*a* ~_~b_~",
+    "html": "<p><em>a</em> <del><em>~b</em></del></p>\n"
+  },
+  {
+    "source": "~ ~_~a_~",
+    "html": "<p>~ ~_<del>a_</del></p>\n"
+  },
+  {
+    "source": "~_~a_~ *~~b*~~",
+    "html": "<p>~_<del>a_</del> *<del>b*</del></p>\n"
+  },
+  {
+    "source": "a***b**c* ~~d~~",
+    "html": "<p>a<em><strong>b</strong>c</em> <del>d</del></p>\n"
+  },
+  {
+    "source": "a****b**c** ~_~d_~",
+    "html": "<p>a****b<strong>c</strong> <del><em>~d</em></del></p>\n"
+  },
+  {
+    "source": "~~a ~b~ c~~",
+    "html": "<p><del>a <del>b</del> c</del></p>\n"
+  },
+  {
+    "source": "~a ~~b~~ c~",
+    "html": "<p><del>a <del>b</del> c</del></p>\n"
+  },
+  {
+    "source": "~~a *~b*~ c~~",
+    "html": "<p><del>a *<del>b*</del> c</del></p>\n"
+  },
+  {
+    "source": "*a ~~*b~~* c*",
+    "html": "<p><em>a ~~</em>b~~* c*</p>\n"
+  },
+  {
+    "source": "~~a _~b_~ c~~",
+    "html": "<p><del>a _<del>b_</del> c</del></p>\n"
+  },
+  {
+    "source": "[~_~a_~](/target)",
+    "html": "<p><a href=\"/target\">~_<del>a_</del></a></p>\n"
+  },
+  {
+    "source": "[*~~a*~~](/target)",
+    "html": "<p><a href=\"/target\">*<del>a*</del></a></p>\n"
+  },
+  {
+    "source": "[*~~*a~~*](/target)",
+    "html": "<p><a href=\"/target\"><em><del>*a</del></em></a></p>\n"
+  },
+  {
+    "source": "[*~~a*~~](/target) ~_~b_~",
+    "html": "<p><a href=\"/target\">*<del>a*</del></a> <del><em>~b</em></del></p>\n"
+  },
+  {
+    "source": "[~a~](/target) *~~b*~~",
+    "html": "<p><a href=\"/target\"><del>a</del></a> *<del>b*</del></p>\n"
+  },
+  {
+    "source": "![~_~a_~](/image)",
+    "html": "<p><img src=\"/image\" alt=\"~_a_\" /></p>\n"
+  },
+  {
+    "source": "[~_~a_~][ref]\n\n[ref]: /target",
+    "html": "<p><a href=\"/target\">~_<del>a_</del></a></p>\n"
+  },
+  {
+    "source": "`~_~a_~` *~~b*~~",
+    "html": "<p><code>~_~a_~</code> <em>~~b</em>~~</p>\n"
+  },
+  {
+    "source": "\\~_~a_~",
+    "html": "<p>~<em>~a</em>~</p>\n"
+  },
+  {
+    "source": "\\*~~a*~~",
+    "html": "<p>*<del>a*</del></p>\n"
+  },
+  {
+    "source": "和~_~字_~文",
+    "html": "<p>和<del>_</del>字_~文</p>\n"
+  },
+  {
+    "source": "😀~_~a_~😀",
+    "html": "<p>😀~_<del>a_</del>😀</p>\n"
+  },
+  {
+    "source": "~_~a_~\n*~~b*~~",
+    "html": "<p>~_<del>a_</del>\n*<del>b*</del></p>\n"
+  },
+  {
+    "source": "**~_~a_~**",
+    "html": "<p><strong><del><em>~a</em></del></strong></p>\n"
+  },
+  {
+    "source": "~~*~~a*~~",
+    "html": "<p>~~*<del>a*</del></p>\n"
+  },
+  {
+    "source": "***~~a***~~",
+    "html": "<p><em><strong>~~a</strong></em>~~</p>\n"
+  },
+  {
+    "source": "***~~*a~~***",
+    "html": "<p><strong><em>~~</em>a~~</strong>*</p>\n"
+  },
+  {
+    "source": "*~~a*~~ ~_~b_~",
+    "html": "<p><em>~~a</em>~~ <del><em>~b</em></del></p>\n"
+  },
+  {
+    "source": "_*~a*_~",
+    "html": "<p><em><em>~a</em></em>~</p>\n"
+  },
+  {
+    "source": "~_*a~_*",
+    "html": "<p><del>_*a</del>_*</p>\n"
+  }
+]
