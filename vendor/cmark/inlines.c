@@ -38,6 +38,7 @@ typedef struct delimiter {
   unsigned char delim_char;
   bool can_open;
   bool can_close;
+  bool resolved;
 } delimiter;
 
 typedef struct bracket {
@@ -64,6 +65,8 @@ typedef struct {
   cmark_chunk input;
   bufsize_t received_len;
   bool temporary_eof;
+  bool ordered_delimiters;
+  unsigned char first_delimiter;
   unsigned flags;
   int line;
   bufsize_t pos;
@@ -215,6 +218,8 @@ static void subject_from_buf(cmark_mem *mem, int line_number, int block_offset, 
   e->input = *chunk;
   e->received_len = chunk->len;
   e->temporary_eof = false;
+  e->ordered_delimiters = false;
+  e->first_delimiter = 0;
   e->flags = 0;
   e->line = line_number;
   e->pos = 0;
@@ -835,6 +840,11 @@ static cmark_node *handle_delim(subject *subj, unsigned char c, int options) {
       (c == '*' || c == '_' || (c == '~' && numdelims <= 2)))
     inl_text->presentation = CMARK_PRESENTATION_SUPPRESSED;
 
+  // Resolver registration includes successful tokens with neither flanking role.
+  if (!subj->first_delimiter && (c == '*' || c == '_' ||
+                                (c == '~' && numdelims <= 2)))
+    subj->first_delimiter = c == '~' ? '~' : '*';
+
   if ((c != '~' || numdelims == 1 || numdelims == 2) && (can_open || can_close) && (!(c == '\'' || c == '"') || smart)) {
     push_delimiter(subj, c, can_open, can_close, inl_text);
   }
@@ -948,110 +958,124 @@ static void open_delimiter(subject *subj, delimiter *opener) {
   cmark_node_free(marker);
 }
 
-static void process_emphasis(subject *subj, bufsize_t stack_bottom, bool temporary_eof) {
-  delimiter *candidate;
-  delimiter *closer = NULL;
-  delimiter *opener;
-  delimiter *old_closer;
-  bool opener_found;
-  int openers_bottom_index = 0;
-  bufsize_t openers_bottom[17] = {stack_bottom, stack_bottom, stack_bottom,
-                                  stack_bottom, stack_bottom, stack_bottom,
-                                  stack_bottom, stack_bottom, stack_bottom,
-                                  stack_bottom, stack_bottom, stack_bottom,
-                                  stack_bottom, stack_bottom, stack_bottom, stack_bottom, stack_bottom};
+static bool delimiter_group(delimiter *item, unsigned char group) {
+  if (!group)
+    return true;
+  return (item->delim_char == '~') == (group == '~');
+}
 
-  // move back to first relevant delim.
-  candidate = subj->last_delim;
-  while (candidate != NULL && candidate->position >= stack_bottom) {
-    closer = candidate;
-    candidate = candidate->previous;
+static int opener_index(delimiter *closer) {
+  switch (closer->delim_char) {
+  case '"': return 0;
+  case '\'': return 1;
+  case '_': return 2 + (closer->can_open ? 3 : 0) + closer->length % 3;
+  case '*': return 8 + (closer->can_open ? 3 : 0) + closer->length % 3;
+  case '~': return 14 + closer->length;
+  default: assert(false); return 0;
   }
+}
 
-  // now move forward, looking for closers, and handling each
-  while (closer != NULL) {
-    if (closer->can_close) {
-      switch (closer->delim_char) {
-      case '"':
-        openers_bottom_index = 0;
-        break;
-      case '\'':
-        openers_bottom_index = 1;
-        break;
-      case '_':
-        openers_bottom_index = 2 +
-                (closer->can_open ? 3 : 0) + (closer->length % 3);
-        break;
-      case '~':
-        openers_bottom_index = 14 + closer->length;
-        break;
-      case '*':
-        openers_bottom_index = 8 +
-                (closer->can_open ? 3 : 0) + (closer->length % 3);
-        break;
-      default:
-        assert(false);
-      }
+static bool matching_delimiters(delimiter *opener, delimiter *closer) {
+  if (opener->resolved || !opener->can_open || opener->delim_char != closer->delim_char)
+    return false;
+  if (closer->delim_char == '~')
+    return opener->length == closer->length;
+  return !(closer->can_open || opener->can_close) || closer->length % 3 == 0 ||
+         (opener->length + closer->length) % 3 != 0;
+}
 
-      // Now look backwards for first matching opener:
-      opener = closer->previous;
-      opener_found = false;
-      while (opener != NULL &&
-             opener->position >= openers_bottom[openers_bottom_index]) {
-        if (opener->can_open && opener->delim_char == closer->delim_char) {
-          // interior closer of size 2 can't match opener of size 1
-          // or of size 1 can't match 2
-          if ((closer->delim_char == '~' && opener->length == closer->length) ||
-              (closer->delim_char != '~' && (!(closer->can_open || opener->can_close) ||
-              closer->length % 3 == 0 ||
-              (opener->length + closer->length) % 3 != 0))) {
-            opener_found = true;
-            break;
-          }
-        }
-        opener = opener->previous;
-      }
-      old_closer = closer;
-      if (closer->delim_char == '*' || closer->delim_char == '_' || closer->delim_char == '~') {
-        if (opener_found) {
-          closer = S_insert_emph(subj, opener, closer);
-        } else {
-          closer = closer->next;
-        }
-      } else if (closer->delim_char == '\'' || closer->delim_char == '"') {
-        if (closer->delim_char == '\'') {
-          cmark_node_set_literal(closer->inl_text, RIGHTSINGLEQUOTE);
-        } else {
-          cmark_node_set_literal(closer->inl_text, RIGHTDOUBLEQUOTE);
-        }
-        closer = closer->next;
-        if (opener_found) {
-          if (old_closer->delim_char == '\'') {
-            cmark_node_set_literal(opener->inl_text, LEFTSINGLEQUOTE);
-          } else {
-            cmark_node_set_literal(opener->inl_text, LEFTDOUBLEQUOTE);
-          }
-          remove_delimiter(subj, opener);
-          remove_delimiter(subj, old_closer);
-        }
-      }
-      if (!opener_found) {
-        // set lower bound for future searches for openers
-        openers_bottom[openers_bottom_index] = old_closer->position;
-        if (!old_closer->can_open) {
-          // we can remove a closer that can't be an
-          // opener, once we've seen there's no
-          // matching opener:
-          remove_delimiter(subj, old_closer);
-        }
-      }
+static delimiter *find_opener(delimiter *closer, bufsize_t bottom) {
+  for (delimiter *opener = closer->previous; opener && opener->position >= bottom;
+       opener = opener->previous) {
+    if (matching_delimiters(opener, closer))
+      return opener;
+  }
+  return NULL;
+}
+
+static delimiter *first_delimiter(subject *subj, bufsize_t bottom, delimiter *limit) {
+  delimiter *first = limit;
+  delimiter *item = limit ? limit->previous : subj->last_delim;
+  while (item && item->position >= bottom) {
+    first = item;
+    item = item->previous;
+  }
+  return first;
+}
+
+static void resolve_delimiter_span(subject *subj, bufsize_t bottom, delimiter *limit);
+
+static delimiter *resolve_quotes(subject *subj, delimiter *opener, delimiter *closer) {
+  bool single = closer->delim_char == '\'';
+  cmark_node_set_literal(closer->inl_text, single ? RIGHTSINGLEQUOTE : RIGHTDOUBLEQUOTE);
+  delimiter *next = closer->next;
+  if (!opener)
+    return next;
+  cmark_node_set_literal(opener->inl_text, single ? LEFTSINGLEQUOTE : LEFTDOUBLEQUOTE);
+  remove_delimiter(subj, opener);
+  remove_delimiter(subj, closer);
+  return next;
+}
+
+static delimiter *resolve_matched_delimiters(subject *subj, delimiter *opener,
+                                              delimiter *closer) {
+  if (subj->ordered_delimiters)
+    resolve_delimiter_span(subj, opener->position + 1, closer);
+  return S_insert_emph(subj, opener, closer);
+}
+
+static void resolve_delimiter_group(subject *subj, bufsize_t bottom, delimiter *limit,
+                                    unsigned char group) {
+  bufsize_t openers_bottom[17];
+  for (size_t i = 0; i < 17; i++)
+    openers_bottom[i] = bottom;
+  delimiter *closer = first_delimiter(subj, bottom, limit);
+  while (closer != limit) {
+    if (closer->resolved || !delimiter_group(closer, group) || !closer->can_close) {
+      closer = closer->next;
+      continue;
+    }
+    int index = opener_index(closer);
+    delimiter *opener = find_opener(closer, openers_bottom[index]);
+    delimiter *old_closer = closer;
+    if (closer->delim_char == '\'' || closer->delim_char == '"') {
+      closer = resolve_quotes(subj, opener, closer);
+    } else if (opener) {
+      closer = resolve_matched_delimiters(subj, opener, closer);
     } else {
       closer = closer->next;
     }
+    if (opener)
+      continue;
+    openers_bottom[index] = old_closer->position;
+    if (!old_closer->can_open)
+      remove_delimiter(subj, old_closer);
   }
-  // free all delimiters in list until stack_bottom:
-  while (subj->last_delim != NULL &&
-         subj->last_delim->position >= stack_bottom) {
+  if (!group)
+    return;
+  // A finished resolver turns unmatched tokens into text. Keep openers only for EOF presentation.
+  for (delimiter *item = first_delimiter(subj, bottom, limit); item != limit; item = item->next) {
+    if (delimiter_group(item, group))
+      item->resolved = true;
+  }
+}
+
+static void resolve_delimiter_span(subject *subj, bufsize_t bottom, delimiter *limit) {
+  resolve_delimiter_group(subj, bottom, limit, '~');
+  resolve_delimiter_group(subj, bottom, limit, '*');
+}
+
+static void process_emphasis(subject *subj, bufsize_t stack_bottom, bool temporary_eof) {
+  if (!subj->ordered_delimiters) {
+    resolve_delimiter_group(subj, stack_bottom, NULL, 0);
+  } else if (stack_bottom) {
+    resolve_delimiter_span(subj, stack_bottom, NULL);
+  } else {
+    unsigned char first = subj->first_delimiter == '~' ? '~' : '*';
+    resolve_delimiter_group(subj, stack_bottom, NULL, first);
+    resolve_delimiter_group(subj, stack_bottom, NULL, first == '~' ? '*' : '~');
+  }
+  while (subj->last_delim && subj->last_delim->position >= stack_bottom) {
     if (temporary_eof)
       open_delimiter(subj, subj->last_delim);
     remove_delimiter(subj, subj->last_delim);
@@ -2017,6 +2041,8 @@ void cmark_parse_inlines(cmark_mem *mem, cmark_node *parent,
   subject_from_buf(mem, parent->start_line, parent->start_column - 1 + internal_offset, &subj, &content, refmap);
   cmark_chunk_rtrim(&subj.input);
   subj.temporary_eof = (options & CMARK_OPT_PRESENTATION) != 0;
+  subj.ordered_delimiters = (options & (CMARK_OPT_CJK | CMARK_OPT_GFM)) ==
+                            (CMARK_OPT_CJK | CMARK_OPT_GFM);
   subj.uses = uses;
   subj.source = source;
 

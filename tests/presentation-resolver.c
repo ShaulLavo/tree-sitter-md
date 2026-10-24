@@ -189,6 +189,40 @@ static void complete_and_exact(cmark_reference_map *map) {
   cmark_node_free(root);
 }
 
+static cmark_node *literal_sequence(cmark_node *node, const char *expected) {
+  size_t remaining = strlen(expected);
+  while (remaining) {
+    assert(node && node->type == CMARK_NODE_TEXT);
+    assert(node->len > 0 && (size_t)node->len <= remaining);
+    assert(!memcmp(node->data, expected, node->len));
+    remaining -= node->len;
+    expected += node->len;
+    node = node->next;
+  }
+  return node;
+}
+
+static void mixed_delimiters(cmark_reference_map *map) {
+  const struct {
+    const char *source, *prefix, *text, *suffix;
+    int type, start, end;
+  } cases[] = {
+    {"~_~a_~", "~_", "a_", "", CMARK_NODE_STRIKETHROUGH, 2, 6},
+    {"*~~a*~~", "", "~~a", "~~", CMARK_NODE_EMPH, 0, 5},
+    {"*~~*a~~*", "", "~~", "a~~*", CMARK_NODE_EMPH, 0, 4}
+  };
+  for (size_t i = 0; i < sizeof(cases) / sizeof(*cases); i++) {
+    cmark_node *root = parse(cases[i].source, CMARK_OPT_CJK | CMARK_OPT_GFM, map);
+    cmark_node *span = literal_sequence(root->first_child, cases[i].prefix);
+    assert(span && span->type == cases[i].type);
+    range(span, cases[i].start, cases[i].end);
+    assert(!literal_sequence(span->first_child, cases[i].text));
+    assert(!literal_sequence(span->next, cases[i].suffix));
+    exact_nodes(root->first_child);
+    cmark_node_free(root);
+  }
+}
+
 int main(void) {
   cmark_reference_map *map = cmark_reference_map_new(cmark_get_default_mem_allocator());
   nested(map);
@@ -197,6 +231,7 @@ int main(void) {
   literal_payloads(map);
   suppression(map);
   complete_and_exact(map);
+  mixed_delimiters(map);
   cmark_reference_map_free(map);
   puts("native inline presentation: ownership, nesting, destinations, payloads and exact scopes passed");
   return 0;
