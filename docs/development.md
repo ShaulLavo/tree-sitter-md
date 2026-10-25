@@ -22,7 +22,7 @@ Generated files (`grammar/src/parser.c`, `grammar/math/src/`) are never edited b
 
 ## Install
 
-You need Node 26 or later and Bun 1.4.4 (the version CI pins).
+You need Node 24 or later and Bun 1.4.4 (the version CI pins).
 
 ```sh
 bun install --frozen-lockfile
@@ -50,7 +50,7 @@ This page was written without a WASI SDK, so the build commands are documented f
 
 | Command | Checks | Needs |
 | --- | --- | --- |
-| `npm test` | Every `tests/*.mjs` and `tests/*.test.ts` with `node --test`. 2,906 tests passed in about 20 seconds on Node 26.12.1. | Node 26, `bench` dependencies |
+| `npm test` | Every `tests/*.mjs` and `tests/*.test.ts` with `node --test`. 2,906 tests passed in about 20 seconds on Node 26.12.1. | Node 24 or later, `bench` dependencies |
 | `bun run test:types` | The public `semantics()` and `presentation()` types in `tests/types/presentation.ts`. | TypeScript 7. If a `tsconfig.json` exists in a parent directory, `tsc` stops with TS5112. Run the command from `package.json` with `--ignoreConfig` added. |
 | `bun run check` | The gate: 676 of 676 spec examples, the 183 chat messages, the 497-document repository corpus against its committed difference manifest, 11,000 and 300 fuzz edits, and the negative controls. About 70 seconds. | `bench` dependencies |
 | `bun run test:browser` | `semantics()` with resizable memory in Chromium. Pass `chromium firefox webkit` to run more browsers. | `bunx playwright install chromium` |

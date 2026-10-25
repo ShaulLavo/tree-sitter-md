@@ -2,7 +2,7 @@
 
 ## Commands
 
-- Run Node 26 or later. Node 24 fails at `init()`.
+- Run Node 24 or later.
 - Install both dependency sets first: `bun install --frozen-lockfile && (cd bench && bun install --frozen-lockfile)`. `npm test` reads `bench/node_modules`.
 - Run one test file: `node --test tests/<file>`. Run all JavaScript tests: `npm test`.
 - Run the correctness gate after any change to `src/`, `vendor/` or `grammar/`: `bun run check` (about 70 seconds).

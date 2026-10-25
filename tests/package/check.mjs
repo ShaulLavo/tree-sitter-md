@@ -28,7 +28,7 @@ async function initialize(order, options, hostOptions) {
   }
   try { await initializeInOrder(order, options, hostOptions) }
   finally { WebAssembly.instantiate = instantiate }
-  const memory = Array.from(memories).find(value => value.toResizableBuffer() === heap().buffer)
+  const memory = Array.from(memories).find(value => value.buffer === heap().buffer)
   if (!(memory instanceof WebAssembly.Memory)) throw new Error('Packed runtime memory was not captured')
   return memory
 }
