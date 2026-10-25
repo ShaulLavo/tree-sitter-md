@@ -15,7 +15,7 @@ test('the host parser and both Markdown profiles initialize on the current runti
   const tree = parser.parse('# Heading\n')
   t.after(() => tree.delete())
   assert.equal(tree.rootNode.hasError, false)
-  assert.equal(tree.rootNode.namedChild(0).type, 'atx_heading')
+  assert.equal(tree.rootNode.descendantsOfType('atx_heading').length, 1)
   for (const math of [false, true]) {
     const document = new MarkdownDocument({ math })
     t.after(() => document.dispose())
