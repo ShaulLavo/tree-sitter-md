@@ -15,14 +15,6 @@ Your project is running regular tree-sitter, the `web-tree-sitter` package from 
 
 The block grammar alone does not need tree-sitter-x. See [How to use the block grammar in another tree-sitter host](guides/use-the-grammar-alone.md).
 
-## `toResizableBuffer is not a function`
-
-```text
-TypeError: exports.memory.toResizableBuffer is not a function
-```
-
-The host runtime needs resizable WebAssembly memory, which Node 24 does not have. `package.json` requires Node 26 or later. Check `node -v`.
-
 ## `call init() first`
 
 ```text

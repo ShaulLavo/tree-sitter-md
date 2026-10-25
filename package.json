@@ -31,7 +31,7 @@
     "licenses/"
   ],
   "engines": {
-    "node": ">=26"
+    "node": ">=24"
   },
   "license": "MIT",
   "sideEffects": false,

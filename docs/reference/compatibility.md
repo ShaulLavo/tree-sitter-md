@@ -6,12 +6,13 @@ What runs where, which host runtime it needs, and the hard limits. "Tested" mean
 
 | Environment | Status | Evidence |
 | --- | --- | --- |
-| Node 26 and later | Supported. `package.json` sets `engines.node` to `>=26`. | CI uses Node 26. `npm test` passed 2,906 tests on 26.12.1. |
-| Node 24 | Fails at `init()` with `exports.memory.toResizableBuffer is not a function`. | Run on 24.22.1. |
+| Node 24 and later | Supported. `package.json` sets `engines.node` to `>=24`. | `npm test` passed 2,963 tests with one skip on 24.22.1. CI checks parser, resolver, and allocation growth on Node 24 and runs the full suite on Node 26. |
 | Bun 1.4.4 | Supported. | CI pins 1.4.4. `bun run test:package` runs the packed package under Bun in all three initialization orders. |
 | Chromium | Supported through a Vite production build. | `bun run test:package` and `bun run test:browser` pass on Chromium 153. CI runs both. |
 | Firefox, WebKit | Not tested. `bun run test:browser` accepts `chromium firefox webkit`, but CI installs only Chromium. | |
 | Deno, Cloudflare Workers, other hosts | Not tested. | |
+
+The host uses resizable WebAssembly memory when `WebAssembly.Memory.prototype.toResizableBuffer` is available. On hosts such as Node 24, it refreshes fixed-buffer views after memory grows. Both paths start with a small allocation and can grow to 4 GiB. Call `heap()` again after any call that can allocate; fixed-buffer views become detached on growth. Markdown document methods already obtain the current heap, and returned records and snapshots own their data.
 
 The wasm modules are platform independent. Tested operating systems are macOS on Apple silicon (this page) and Ubuntu 24.04 on x86-64 (CI).
 
@@ -24,13 +25,13 @@ tree-sitter-md needs tree-sitter-x because it needs the `heap` and `loadExtensio
 The working install command, which the README install section uses:
 
 ```sh
-npm install github:ShaulLavo/tree-sitter-md#main web-tree-sitter@github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385
+npm install github:ShaulLavo/tree-sitter-md#main web-tree-sitter@github:ShaulLavo/tree-sitter-x#d4c988a02313fef32a307f8f254ab7a1dba18515
 ```
 
 | | |
 | --- | --- |
 | Peer dependency | `web-tree-sitter` `^0.28.1`. Not published on npm. |
-| Pinned build | `github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385`, version 0.28.4 (development and packed-consumer tests). |
+| Pinned build | `github:ShaulLavo/tree-sitter-x#d4c988a02313fef32a307f8f254ab7a1dba18515`, version 0.28.4 (development and packed-consumer tests). |
 | Stock `web-tree-sitter` 0.26.9 and 0.27.1 (latest on npm) | Fail on import: `The requested module 'web-tree-sitter' does not provide an export named 'heap'`. |
 | Language ABI | 15 (`TREE_SITTER_LANGUAGE_VERSION`) |
 
@@ -42,10 +43,10 @@ When another dependency pulls stock `web-tree-sitter`, force one build with an `
 {
 	"dependencies": {
 		"tree-sitter-md": "github:ShaulLavo/tree-sitter-md#main",
-		"web-tree-sitter": "github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385"
+		"web-tree-sitter": "github:ShaulLavo/tree-sitter-x#d4c988a02313fef32a307f8f254ab7a1dba18515"
 	},
 	"overrides": {
-		"web-tree-sitter": "github:ShaulLavo/tree-sitter-x#aab7db1518c19f61c1b13ec3f832b881cf5f1385"
+		"web-tree-sitter": "github:ShaulLavo/tree-sitter-x#d4c988a02313fef32a307f8f254ab7a1dba18515"
 	}
 }
 ```
